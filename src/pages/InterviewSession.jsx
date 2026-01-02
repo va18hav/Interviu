@@ -124,7 +124,7 @@ const InterviewSession = () => {
   async function generateFeedback(formattedTranscriptText) {
     try {
       console.log("Sending transcript to backend...")
-      const response = await fetch('http://localhost:5000/api/generate-feedback', {
+      const response = await fetch('https://intervyu.onrender.com/api/generate-feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
