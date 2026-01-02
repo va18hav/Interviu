@@ -337,7 +337,7 @@ const InterviewDashboard = () => {
               return (
                 <div
                   key={interview.id}
-                  className="group rounded-2xl border border-cyan-500/20 bg-white/5  backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
+                  className="group rounded-2xl border border-cyan-500/20 bg-white/10  backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
                 >
                   <div className="p-6 space-y-4">
                     {/* Icon */}
