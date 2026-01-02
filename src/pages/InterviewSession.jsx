@@ -53,7 +53,7 @@ const InterviewSession = () => {
         },
       };
 
-      vapi.current.start("d07c5b53-c660-4d2e-a426-14d0e9f7a305", assistantOverrides)
+      vapi.current.start("992cb9aa-adbd-47e2-b3aa-f881c7142262", assistantOverrides)
       console.log("Vapi call started")
 
       const speechStartHandler = () => {

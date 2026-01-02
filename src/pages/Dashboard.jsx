@@ -9,7 +9,6 @@ import meta from "../assets/images/meta.png"
 import popularInterviews from "./popularInterviews"
 import { supabase } from "../supabaseClient"
 
-
 const InterviewDashboard = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = React.useState(true)
@@ -87,6 +86,21 @@ const InterviewDashboard = () => {
   function viewinterview(interview) {
     // We stored the complex JSON in 'feedback_data' column
     navigate("/dashboard/past-interviews", { state: interview.feedback_data })
+  }
+
+  function startInterview(id) {
+    sessionStorage.removeItem("interviewEnded");
+    const interview = popularInterviews.find(interview => interview.id === id);
+    navigate("/dashboard/stored-interview", {
+      state: {
+        role: interview.role,
+        name: interview.name,
+        level: interview.level,
+        company: interview.company,
+        duration: interview.duration,
+        questionPool: interview.questions
+      }
+    })
   }
 
   // Mock data for popular interviews
@@ -370,8 +384,10 @@ const InterviewDashboard = () => {
                     </div>
 
                     {/* Action */}
-                    <button className="w-full py-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-white hover:bg-slate-700/50 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-cyan-500/30">
-                      Coming Soon
+                    <button
+                      onClick={() => startInterview(interview.id)}
+                      className="w-full py-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-white hover:bg-slate-700/50 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-cyan-500/30">
+                      Take Interview
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>

@@ -4,6 +4,132 @@ import { Upload, Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Cloc
 import logo from "../assets/images/logo.png"
 import peek from "../assets/images/peek.png"
 
+const TECH_ROLES = [
+  "AI Ethics Researcher",
+  "AI Research Scientist",
+  "Android Developer",
+  "Application Security Engineer",
+  "AR/VR Developer",
+  "Artificial Intelligence Engineer",
+  "Automation Engineer",
+  "Backend Developer",
+  "Big Data Engineer",
+  "Bioinformatics Scientist",
+  "Blockchain Developer",
+  "Business Analyst",
+  "Business Intelligence Analyst",
+  "Business Intelligence Developer",
+  "Business Systems Analyst",
+  "Chief Information Officer (CIO)",
+  "Chief Technology Officer (CTO)",
+  "Cloud Architect",
+  "Cloud Consultant",
+  "Cloud Engineer",
+  "Cloud Security Engineer",
+  "Computer Vision Engineer",
+  "Cybersecurity Analyst",
+  "Cybersecurity Consultant",
+  "Cybersecurity Engineer",
+  "Data Analyst",
+  "Data Architect",
+  "Data Engineer",
+  "Data Privacy Officer",
+  "Data Scientist",
+  "Data Warehouse Architect",
+  "Database Administrator (DBA)",
+  "Database Developer",
+  "DevOps Engineer",
+  "DevSecOps Engineer",
+  "Digital Marketing Specialist",
+  "Director of Engineering",
+  "E-commerce Specialist",
+  "Embedded Software Engineer",
+  "Embedded Systems Engineer",
+  "Enterprise Architect",
+  "ERP Consultant",
+  "Frontend Developer",
+  "Full Stack Developer",
+  "Game Designer",
+  "Game Developer",
+  "Geospatial Developer",
+  "Growth Hacker",
+  "Hardware Engineer",
+  "Help Desk Support",
+  "Information Security Analyst",
+  "Information Security Manager",
+  "iOS Developer",
+  "IT Auditor",
+  "IT Consultant",
+  "IT Director",
+  "IT Manager",
+  "IT Project Manager",
+  "IT Support Specialist",
+  "Java Developer",
+  "Junior Software Engineer",
+  "Lead Software Engineer",
+  "Linux Administrator",
+  "Machine Learning Engineer",
+  "Machine Learning Ops (MLOps) Engineer",
+  "Mainframe Developer",
+  "Mobile App Developer",
+  "Mobile Developer (Android)",
+  "Mobile Developer (iOS)",
+  "Multimedia Artist/Animator",
+  "Natural Language Processing Engineer",
+  "Network Administrator",
+  "Network Architect",
+  "Network Engineer",
+  "Network Security Engineer",
+  "Penetration Tester",
+  "Platform Engineer",
+  "Principal Software Engineer",
+  "Product Designer",
+  "Product Manager",
+  "Product Owner",
+  "Python Developer",
+  "QA Automation Engineer",
+  "QA Engineer",
+  "Quality Assurance Analyst",
+  "Quantum Computing Researcher",
+  "React Developer",
+  "Release Engineer",
+  "Robotics Engineer",
+  "Robotics Software Engineer",
+  "Sales Engineer",
+  "Salesforce Administrator",
+  "Salesforce Developer",
+  "Scrum Master",
+  "Security Analyst",
+  "Security Architect",
+  "Senior Software Engineer",
+  "SEO Specialist",
+  "Site Reliability Engineer (SRE)",
+  "Software Architect",
+  "Software Development Engineer in Test (SDET)",
+  "Software Engineer",
+  "Solutions Architect",
+  "Staff Software Engineer",
+  "System Administrator",
+  "Systems Analyst",
+  "Technical Lead",
+  "Technical Program Manager",
+  "Technical Recruiter",
+  "Technical Support Engineer",
+  "Technical Writer",
+  "Telecommunications Engineer",
+  "UI Designer",
+  "UI/UX Designer",
+  "UX Designer",
+  "UX Researcher",
+  "Video Game Producer",
+  "Virtual Reality Developer",
+  "VoIP Engineer",
+  "Web Administrator",
+  "Web Designer",
+  "Web Developer",
+  "WordPress Developer"
+];
+
 const CreateInterview = () => {
   // Navigaton
 
@@ -19,6 +145,10 @@ const CreateInterview = () => {
 
   })
 
+  // Dropdown states
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
+
   // Handle text / select / textarea changes
   function handleChange(e) {
     const { name, value } = e.target
@@ -29,6 +159,33 @@ const CreateInterview = () => {
     }))
 
   }
+
+  // Handle role selection
+  const handleRoleSelect = (role) => {
+    setFormData(prev => ({ ...prev, role: role }));
+    setIsDropdownOpen(false);
+    setSearchTerm("");
+  };
+
+  // Filter roles
+  const filteredRoles = TECH_ROLES.filter(role =>
+    role.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Close dropdown when clicking outside
+  const dropdownRef = React.useRef(null);
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
+
 
   // Handle form submit
   function handleGenerate(e) {
@@ -150,21 +307,58 @@ const CreateInterview = () => {
                   <p className="text-slate-400 text-sm">Customize your practice session</p>
                 </div>
 
-                {/* Job Role */}
-                <div className="space-y-2.5">
+                {/* Job Role Dropdown */}
+                <div className="space-y-2.5 relative" ref={dropdownRef}>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
                     <Briefcase className="w-4 h-4 text-cyan-400" />
                     Job Role
                     <span className="text-red-400 text-xs">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    placeholder="e.g. Frontend Developer, Full Stack Engineer"
-                    className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-600"
-                  />
+
+                  <div
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white focus:outline-none cursor-pointer hover:border-slate-600 flex items-center justify-between"
+                  >
+                    <span className={formData.role ? "text-white" : "text-slate-500"}>
+                      {formData.role || "Select a role..."}
+                    </span>
+                    <svg className={`w-4 h-4 text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+
+                  {isDropdownOpen && (
+                    <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 shadow-xl overflow-hidden max-h-80 flex flex-col">
+                      <div className="p-2 border-b border-slate-700 sticky top-0 bg-slate-900">
+                        <input
+                          type="text"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Search roles..."
+                          autoFocus
+                          className="w-full rounded-lg bg-slate-800 border-none px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      <div className="overflow-y-auto max-h-60">
+                        {filteredRoles.length > 0 ? (
+                          filteredRoles.map((role) => (
+                            <button
+                              key={role}
+                              onClick={() => handleRoleSelect(role)}
+                              className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+                            >
+                              {role}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-slate-500 text-center">
+                            No roles found matching "{searchTerm}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Experience Level and Interview Length - Side by side */}
@@ -278,7 +472,6 @@ const CreateInterview = () => {
         </div>
       </div>
     </main>
-
   )
 }
 
