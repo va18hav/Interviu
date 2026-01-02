@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate, } from "react-router-dom"
 import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2 } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import bot from "../assets/images/bot.png"
+import google from "../assets/images/google.png"
+import amazon from "../assets/images/amazon.png"
+import meta from "../assets/images/meta.png"
 import { supabase } from "../supabaseClient"
 
 const InterviewDashboard = () => {
@@ -88,8 +91,8 @@ const InterviewDashboard = () => {
   const popularInterviews = [
     {
       id: 1,
-      role: "React Developer",
-      icon: Code,
+      role: "Google SDE-II",
+      icon: google,
       level: "Mid-Level",
       participants: "12.5K",
       rating: 4.8,
@@ -98,8 +101,8 @@ const InterviewDashboard = () => {
     },
     {
       id: 2,
-      role: "System Design",
-      icon: Target,
+      role: "Amazon SDE-III",
+      icon: amazon,
       level: "Senior",
       participants: "8.3K",
       rating: 4.9,
@@ -108,44 +111,14 @@ const InterviewDashboard = () => {
     },
     {
       id: 3,
-      role: "Data Structures",
-      icon: Brain,
-      level: "All Levels",
+      role: "Meta Senior Frontend Engineer",
+      icon: meta,
+      level: "Senior",
       participants: "15.2K",
       rating: 4.7,
       duration: "25 min",
       color: "purple"
     },
-    {
-      id: 4,
-      role: "Product Manager",
-      icon: Briefcase,
-      level: "Mid-Level",
-      participants: "6.8K",
-      rating: 4.6,
-      duration: "35 min",
-      color: "pink"
-    },
-    {
-      id: 5,
-      role: "DevOps Engineer",
-      icon: Code,
-      level: "Senior",
-      participants: "9.1K",
-      rating: 4.8,
-      duration: "40 min",
-      color: "green"
-    },
-    {
-      id: 6,
-      role: "UI/UX Designer",
-      icon: Target,
-      level: "Junior",
-      participants: "7.4K",
-      rating: 4.5,
-      duration: "20 min",
-      color: "orange"
-    }
   ];
 
   const getScoreColor = (score) => {
@@ -345,7 +318,7 @@ const InterviewDashboard = () => {
                       </button>
                       <button
                         onClick={() => deleteinterview(interview.id)}
-                        className="cursor-pointer py-2.5 px-6 rounded-lg bg-gradient-to-br from-red-500 to-red-600 border border-red-600 text-white hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2">
+                        className="cursor-pointer py-2.5 px-6 rounded-lg bg-gradient-to-br from-red-600/20 to-red-500/20 hover:bg-gradient-to-br from-red-600/20 to-red-500/20 border border-red-500/50 text-white hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2">
                         Delete
                       </button>
                     </div>
@@ -393,12 +366,12 @@ const InterviewDashboard = () => {
               return (
                 <div
                   key={interview.id}
-                  className="group rounded-2xl border border-slate-800 bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-purple-500/20 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
+                  className="group rounded-2xl border border-cyan-500/20 bg-white/5  backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
                 >
                   <div className="p-6 space-y-4">
                     {/* Icon */}
                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className={`w-7 h-7 ${colors.text}`} />
+                      <img src={interview.icon} alt="" className="w-10 h-10" />
                     </div>
 
                     {/* Header */}
@@ -427,7 +400,7 @@ const InterviewDashboard = () => {
 
                     {/* Action */}
                     <button className="w-full py-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-white hover:bg-slate-700/50 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-cyan-500/30">
-                      Start Practice
+                      Coming Soon
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
