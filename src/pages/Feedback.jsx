@@ -12,6 +12,7 @@ const InterviewFeedback = () => {
     const navigate = useNavigate()
     const [expandedMetric, setExpandedMetric] = React.useState(null);
     const [showAnswersModal, setShowAnswersModal] = React.useState(false);
+    const [isAnswerExpanded, setIsAnswerExpanded] = React.useState(null)
     const feedbackData = location.state || {}
     console.log("This is the feedback data from the interview: ", location.state)
 
@@ -436,13 +437,22 @@ const InterviewFeedback = () => {
                         <div className="p-6 overflow-y-auto space-y-6">
                             {sampleQnA.map((item, index) => (
                                 <div key={index} className="space-y-2">
-                                    <div className="flex gap-3">
-                                        <span className="text-cyan-500 font-mono text-sm mt-1">0{index + 1}</span>
-                                        <h4 className="text-white font-medium text-lg leading-snug">{item.question}</h4>
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-cyan-500 font-mono text-sm mt-1">0{index + 1}</span>
+                                            <h4 className="text-white font-medium text-lg leading-snug">{item.question}</h4>
+                                        </div>
+                                        <button onClick={() => setIsAnswerExpanded(isAnswerExpanded === index ? null : index)}>
+                                            {isAnswerExpanded === index ?
+                                                <ChevronUp className="w-4 h-4 text-slate-500" /> :
+                                                <ChevronDown className="w-4 h-4 text-slate-500" />
+                                            }
+                                        </button>
+
                                     </div>
-                                    <div className="pl-9 text-slate-400 text-sm leading-relaxed bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
+                                    {isAnswerExpanded === index && <div className="pl-9 text-slate-400 text-sm leading-relaxed bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
                                         {item.answer}
-                                    </div>
+                                    </div>}
                                 </div>
                             ))}
                         </div>

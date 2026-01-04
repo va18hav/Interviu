@@ -211,12 +211,12 @@ const CreateInterview = () => {
 
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center px-5">
+      <main className="min-h-screen bg-black flex items-center justify-center px-5">
         <div className="w-full max-w-7xl">
           {/* Header */}
           <Navbar />
           {/* Main Card - Two Column Layout */}
-          <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl shadow-2xl overflow-hidden mt-5">
+          <div className="rounded-3xl border border-slate-800 bg-black/50 backdrop-blur-xl shadow-2xl overflow-hidden mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
 
               {/* Left Column - Feature Card (2 columns) */}

@@ -129,7 +129,7 @@ const InterviewDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black/90">
+    <div className="min-h-screen bg-black">
 
       {/* Header */}
       <Navbar />

@@ -11,7 +11,7 @@ const Navbar = () => {
     const [showProfile, setShowProfile] = React.useState(false);
     const [showMobileMenu, setShowMobileMenu] = React.useState(false);
     return (
-        <header className="border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50 mt-0 rounded-b-2xl w-full ">
+        <header className="border-b border-slate-800/50 bg-black/50 backdrop-blur-xl sticky top-0 z-50 mt-0 rounded-b-2xl w-full ">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
