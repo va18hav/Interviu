@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom"
-import { Star, TrendingUp, Award, Target, Brain, Zap, ThumbsUp, MessageSquare, ArrowRight, Download, Share2 } from 'lucide-react';
-
+import { Star, TrendingUp, Award, Target, Brain, Zap, ThumbsUp, MessageSquare, ArrowRight, Download, Share2, ChevronDown, ChevronUp, X, CheckCircle } from 'lucide-react';
+import Navbar from "../components/Navbar";
 const InterviewFeedback = () => {
     const [isgenerated, setIsGenerated] = React.useState(true)
     const [hoveredStar, setHoveredStar] = React.useState(0);
@@ -10,13 +10,34 @@ const InterviewFeedback = () => {
     const [isAnimating, setIsAnimating] = React.useState(true);
     const location = useLocation()
     const navigate = useNavigate()
-    const { role, level, focus, feedbackData } = location.state || {}
+    const [expandedMetric, setExpandedMetric] = React.useState(null);
+    const [showAnswersModal, setShowAnswersModal] = React.useState(false);
+    const feedbackData = location.state || {}
     console.log("This is the feedback data from the interview: ", location.state)
 
 
 
     // Mock feedback data
     const overallScore = feedbackData.overallScore;
+
+    const sampleQnA = [
+        {
+            question: "Can you explain the difference between let, const, and var?",
+            answer: "var is function-scoped and hoisted, let is block-scoped, and const is block-scoped and cannot be reassigned."
+        },
+        {
+            question: "What is a closure in JavaScript?",
+            answer: "A closure is the combination of a function bundled together (enclosed) with references to its surrounding state (the lexical environment)."
+        },
+        {
+            question: "Explain the concept of 'this' in JavaScript.",
+            answer: "The value of 'this' is determined by how a function is called (runtime binding). It can refer to the global object, the object calling the function, or a bound object."
+        },
+        {
+            question: "What are React Hooks?",
+            answer: "Functions that let you use state and other React features without writing a class. Examples include useState and useEffect."
+        }
+    ];
 
     // Animate score on mount
     React.useEffect(() => {
@@ -44,11 +65,41 @@ const InterviewFeedback = () => {
         requestAnimationFrame(animateScore);
     }, [overallScore]);
     const metrics = [
-        { label: "Technical Knowledge", score: feedbackData.technicalKnowledge, icon: Brain, color: "cyan" },
-        { label: "Communication Skills", score: feedbackData.communicationSkills, icon: MessageSquare, color: "blue" },
-        { label: "Problem Solving", score: feedbackData.problemSolving, icon: Target, color: "purple" },
-        { label: "Confidence Level", score: feedbackData.confidenceLevel, icon: Zap, color: "pink" },
-        { label: "Job Ready Score", score: feedbackData.jobReadyScore, icon: Award, color: "green" }
+        {
+            label: "Technical Knowledge",
+            score: feedbackData.technicalKnowledge,
+            icon: Brain,
+            color: "cyan",
+            description: "Evaluates your understanding of core concepts, coding proficiency, and ability to apply technical skills to solve problems."
+        },
+        {
+            label: "Communication Skills",
+            score: feedbackData.communicationSkills,
+            icon: MessageSquare,
+            color: "blue",
+            description: "Assesses how clearly and concisely you explain your thoughts, your listening skills, and ability to articulate complex ideas."
+        },
+        {
+            label: "Problem Solving",
+            score: feedbackData.problemSolving,
+            icon: Target,
+            color: "purple",
+            description: "Measures your analytical thinking, ability to break down complex problems, and effectiveness in deriving optimal solutions."
+        },
+        {
+            label: "Confidence Level",
+            score: feedbackData.confidenceLevel,
+            icon: Zap,
+            color: "pink",
+            description: "Reflects your self-assurance, tone of voice, and overall presence during the interview interaction."
+        },
+        {
+            label: "Job Ready Score",
+            score: feedbackData.jobReadyScore,
+            icon: Award,
+            color: "green",
+            description: "A comprehensive metric indicating your overall readiness for the role based on technical, behavioral, and soft skills."
+        }
     ];
 
     const strengths = feedbackData.keyStrengths;
@@ -76,22 +127,15 @@ const InterviewFeedback = () => {
     }
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-12 px-4">
-
-            {isgenerated === false && <div className="flex flex-col items-center justify-center h-screen">
-                <h1 className="text-5xl font-bold text-white">Generating Feedback...</h1>
-                <p className="text-lg text-slate-400">Please wait while we generate your feedback</p>
-            </div>}
-
-
-            {isgenerated === true && <div className="max-w-7xl mx-auto space-y-8">
+        <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-10 px-4">
+            <Navbar />
+            <div className="max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
                 <div className="text-center space-y-4">
-                    <h1 className="text-5xl font-bold text-white">
+                    <h1 className="text-5xl font-bold text-white mt-8">
                         Interview <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Complete!</span>
                     </h1>
-                    <p className="text-lg text-slate-400">Here's your detailed performance analysis</p>
                 </div>
 
                 {/* Main Content - Two Column Layout */}
@@ -155,7 +199,6 @@ const InterviewFeedback = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500" />
                         </div>
 
                         {/* Strengths */}
@@ -211,6 +254,7 @@ const InterviewFeedback = () => {
                         <div className="space-y-9 flex-1">
                             {metrics.map((metric, index) => {
                                 const Icon = metric.icon;
+                                const isExpanded = expandedMetric === index;
                                 const colorClasses = {
                                     cyan: "from-cyan-500 to-cyan-600",
                                     blue: "from-blue-500 to-blue-600",
@@ -221,30 +265,32 @@ const InterviewFeedback = () => {
 
                                 return (
                                     <div key={index} className="space-y-3">
-                                        <div className="flex items-center justify-between">
+                                        <button
+                                            onClick={() => setExpandedMetric(isExpanded ? null : index)}
+                                            className="w-full flex items-center justify-between group focus:outline-none"
+                                        >
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[metric.color]}/20 border border-${metric.color}-500/20 flex items-center justify-center`}>
                                                     <Icon className={`w-5 h-5 text-${metric.color}-400`} />
                                                 </div>
-                                                <span className="text-slate-300 font-medium">{metric.label}</span>
+                                                <span className="text-slate-300 font-medium text-left">{metric.label}</span>
                                             </div>
-                                            <span className={`text-xl font-bold ${getScoreColor(metric.score)}`}>
-                                                {metric.score}%
-                                            </span>
-                                        </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className={`text-xl font-bold ${getScoreColor(metric.score)}`}>
+                                                    {metric.score}%
+                                                </span>
+                                                {isExpanded ?
+                                                    <ChevronUp className="w-4 h-4 text-slate-500" /> :
+                                                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                                                }
+                                            </div>
+                                        </button>
 
-                                        {/* Animated Progress Bar */}
-                                        {/* <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
-                                            <div
-                                                className={`absolute top-0 left-0 h-full bg-gradient-to-r ${colorClasses[metric.color]} rounded-full transition-all duration-1000 ease-out`}
-                                                style={{
-                                                    width: `${metric.score}%`,
-                                                    animation: `slideIn 1s ease-out ${index * 0.1}s both`
-                                                }}
-                                            >
-                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                                        {isExpanded && (
+                                            <div className="text-sm text-slate-400 pl-14 pr-4 bg-slate-800/30 py-3 rounded-lg border border-slate-700/30 animate-fade-in">
+                                                {metric.description}
                                             </div>
-                                        </div> */}
+                                        )}
 
                                         {/* Score Indicator Bars */}
                                         <div className="flex items-center gap-2">
@@ -288,10 +334,13 @@ const InterviewFeedback = () => {
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
-                                        <div className="text-cyan-400 text-lg font-bold">15</div>
-                                        <div className="text-xs text-slate-500">Questions</div>
-                                    </div>
+                                    <button
+                                        onClick={() => setShowAnswersModal(true)}
+                                        className="bg-cyan-500/10 hover:bg-cyan-500/20 rounded-lg p-3 border border-cyan-500/30 hover:border-cyan-500/50 transition-all cursor-pointer text-left group"
+                                    >
+                                        <div className="text-cyan-400 text-lg font-bold group-hover:underline">View</div>
+                                        <div className="text-xs text-slate-500">Correct Answers</div>
+                                    </button>
                                     <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
                                         <div className="text-blue-400 text-lg font-bold">32m</div>
                                         <div className="text-xs text-slate-500">Duration</div>
@@ -362,7 +411,54 @@ const InterviewFeedback = () => {
                     </button>
                 </div>
 
-            </div>}
+            </div>
+
+            {/* Answers Modal */}
+            {showAnswersModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
+
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <CheckCircle className="w-6 h-6 text-green-400" />
+                                Correct Answers
+                            </h3>
+                            <button
+                                onClick={() => setShowAnswersModal(false)}
+                                className="text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto space-y-6">
+                            {sampleQnA.map((item, index) => (
+                                <div key={index} className="space-y-2">
+                                    <div className="flex gap-3">
+                                        <span className="text-cyan-500 font-mono text-sm mt-1">0{index + 1}</span>
+                                        <h4 className="text-white font-medium text-lg leading-snug">{item.question}</h4>
+                                    </div>
+                                    <div className="pl-9 text-slate-400 text-sm leading-relaxed bg-slate-800/50 p-4 rounded-lg border border-slate-700/50">
+                                        {item.answer}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-slate-800 bg-slate-900/50 text-center">
+                            <button
+                                onClick={() => setShowAnswersModal(false)}
+                                className="text-sm text-cyan-400 hover:underline"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
         @keyframes slideIn {
@@ -416,6 +512,7 @@ const InterviewFeedback = () => {
         }
       `}</style>
         </main >
+
     );
 };
 

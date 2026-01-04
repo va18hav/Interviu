@@ -6,7 +6,7 @@ import { supabase } from "../supabaseClient"
 
 const LoginPage = () => {
     const navigate = useNavigate();
-    const [isSignUp, setIsSignUp] = React.useState(false); // Toggle between Login and Signup
+    const [isSignUp, setIsSignUp] = React.useState(true); // Toggle between Login and Signup
     const [loading, setLoading] = React.useState(false);
 
     const [formData, setFormData] = React.useState({

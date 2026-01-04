@@ -3,10 +3,11 @@ import LoginPage from './pages/LoginPage'
 import Dashboard from "./pages/Dashboard"
 import CreateInterview from "./pages/CreateInterview"
 import InterviewSession from "./pages/InterviewSession"
-import PastInterviews from "./pages/PastInterviews"
-import StoredInterview from "./pages/StoredInterview"
 import Feedback from "./pages/Feedback"
 import ProfileSettings from "./pages/ProfileSettings"
+import PreviousInterviews from "./pages/PreviousInterviews"
+import PopularInterviewsPage from "./pages/PopularInterviewsPage"
+import Resume from "./pages/Resume"
 import './App.css'
 
 const App = () => {
@@ -17,9 +18,12 @@ const App = () => {
         <Route path="/" element={userCredentials ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/past-interviews" element={<PastInterviews />} />
-        <Route path="/dashboard/stored-interview" element={<StoredInterview />} />
-        <Route path="/dashboard/stored-interview/feedback" element={<Feedback />} />
+        <Route path="/dashboard/feedback" element={<Feedback />} />
+        <Route path="/resume" element={<Resume />} />
+        <Route path="/dashboard/all-previous-interviews" element={<PreviousInterviews />} />
+        <Route path="/dashboard/all-popular-interviews" element={<PopularInterviewsPage />} />
+        <Route path="/dashboard/interview" element={<InterviewSession />} />
+        <Route path="/dashboard/interview/feedback" element={<Feedback />} />
         <Route path="/create" element={<CreateInterview />} />
         <Route path="/create/interview/:id" element={<InterviewSession />} />
         <Route path="/create/interview/:id/feedback" element={<Feedback />} />
