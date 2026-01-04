@@ -58,7 +58,7 @@ const Resume = () => {
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1]; // Remove data:application/pdf;base64,
 
-            const response = await fetch('http://localhost:5000/api/analyze-resume', {
+            const response = await fetch('https://intervyu.onrender.com/api/analyze-resume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pdfBase64: base64 })
