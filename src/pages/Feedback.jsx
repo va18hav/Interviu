@@ -128,7 +128,7 @@ const InterviewFeedback = () => {
     }
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-10 px-4">
+        <main className="min-h-screen bg-black pb-10 px-4">
             <Navbar />
             <div className="max-w-7xl mx-auto space-y-8">
 

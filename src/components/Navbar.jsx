@@ -79,7 +79,7 @@ const Navbar = () => {
                                 <p className="text-sm font-medium text-white">{firstName + " " + lastName}</p>
                                 <p className="text-xs text-slate-400">{email}</p>
                             </div>
-                            <button onClick={() => setShowProfile(prev => !prev)} className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-lg">
+                            <button onClick={() => setShowProfile(prev => !prev)} className="cursor-pointer w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-lg">
                                 {showProfile ? "X" : firstName?.charAt(0).toUpperCase() + lastName?.charAt(0).toUpperCase()}
                             </button>
                         </div>

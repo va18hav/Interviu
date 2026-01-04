@@ -271,7 +271,7 @@ const InterviewSession = () => {
   );
 
   return (
-    <main className="h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 lg:p-10 flex flex-col relative overflow-hidden">
+    <main className="h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-5 flex flex-col relative overflow-hidden">
       {/* Animated background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-blue-950/40 via-slate-900/20 to-transparent"></div>
@@ -289,7 +289,7 @@ const InterviewSession = () => {
 
       {/* Header */}
       <header className="max-w-7xl mx-auto mb-4 sm:mb-6 w-full flex-shrink-0 relative z-10">
-        <div className="rounded-3xl shadow-2xl border border-white/20 px-4 sm:px-6 lg:px-4 py-1 sm:py-1">
+        <div className="">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
 

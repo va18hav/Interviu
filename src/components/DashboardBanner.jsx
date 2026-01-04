@@ -9,7 +9,7 @@ const DashboardBanner = () => {
         <div className="relative rounded-3xl overflow-hidden">
             {/* Background gradients */}
             <div className="absolute inset-0 bg-gradient-to-br from black/100 via black/60 to black/100" />
-            <div className="absolute -top-0 -right-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-cyan-500/30 rounded-full blur-3xl" />
+            <div className="absolute -top-0 -right-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-cyan-500/25 rounded-full blur-3xl" />
             <div className="absolute -bottom-0 -left-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-blue-500/30 rounded-full blur-3xl" />
 
             {/* Content */}
