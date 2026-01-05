@@ -15,12 +15,139 @@ import {
     FileIcon,
     Trash2,
     AlertCircle,
-    Check
+    Check,
+    Briefcase
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ResumeHero from '../components/ResumeHero';
 import resumeats from '../assets/images/resumeats.png';
+
+const TECH_ROLES = [
+    "AI Ethics Researcher",
+    "AI Research Scientist",
+    "Android Developer",
+    "Application Security Engineer",
+    "AR/VR Developer",
+    "Artificial Intelligence Engineer",
+    "Automation Engineer",
+    "Backend Developer",
+    "Big Data Engineer",
+    "Bioinformatics Scientist",
+    "Blockchain Developer",
+    "Business Analyst",
+    "Business Intelligence Analyst",
+    "Business Intelligence Developer",
+    "Business Systems Analyst",
+    "Chief Information Officer (CIO)",
+    "Chief Technology Officer (CTO)",
+    "Cloud Architect",
+    "Cloud Consultant",
+    "Cloud Engineer",
+    "Cloud Security Engineer",
+    "Computer Vision Engineer",
+    "Cybersecurity Analyst",
+    "Cybersecurity Consultant",
+    "Cybersecurity Engineer",
+    "Data Analyst",
+    "Data Architect",
+    "Data Engineer",
+    "Data Privacy Officer",
+    "Data Scientist",
+    "Data Warehouse Architect",
+    "Database Administrator (DBA)",
+    "Database Developer",
+    "DevOps Engineer",
+    "DevSecOps Engineer",
+    "Digital Marketing Specialist",
+    "Director of Engineering",
+    "E-commerce Specialist",
+    "Embedded Software Engineer",
+    "Embedded Systems Engineer",
+    "Enterprise Architect",
+    "ERP Consultant",
+    "Frontend Developer",
+    "Full Stack Developer",
+    "Game Designer",
+    "Game Developer",
+    "Geospatial Developer",
+    "Growth Hacker",
+    "Hardware Engineer",
+    "Help Desk Support",
+    "Information Security Analyst",
+    "Information Security Manager",
+    "iOS Developer",
+    "IT Auditor",
+    "IT Consultant",
+    "IT Director",
+    "IT Manager",
+    "IT Project Manager",
+    "IT Support Specialist",
+    "Java Developer",
+    "Junior Software Engineer",
+    "Lead Software Engineer",
+    "Linux Administrator",
+    "Machine Learning Engineer",
+    "Machine Learning Ops (MLOps) Engineer",
+    "Mainframe Developer",
+    "Mobile App Developer",
+    "Mobile Developer (Android)",
+    "Mobile Developer (iOS)",
+    "Multimedia Artist/Animator",
+    "Natural Language Processing Engineer",
+    "Network Administrator",
+    "Network Architect",
+    "Network Engineer",
+    "Network Security Engineer",
+    "Penetration Tester",
+    "Platform Engineer",
+    "Principal Software Engineer",
+    "Product Designer",
+    "Product Manager",
+    "Product Owner",
+    "Python Developer",
+    "QA Automation Engineer",
+    "QA Engineer",
+    "Quality Assurance Analyst",
+    "Quantum Computing Researcher",
+    "React Developer",
+    "Release Engineer",
+    "Robotics Engineer",
+    "Robotics Software Engineer",
+    "Sales Engineer",
+    "Salesforce Administrator",
+    "Salesforce Developer",
+    "Scrum Master",
+    "Security Analyst",
+    "Security Architect",
+    "Senior Software Engineer",
+    "SEO Specialist",
+    "Site Reliability Engineer (SRE)",
+    "Software Architect",
+    "Software Development Engineer in Test (SDET)",
+    "Software Engineer",
+    "Solutions Architect",
+    "Staff Software Engineer",
+    "System Administrator",
+    "Systems Analyst",
+    "Technical Lead",
+    "Technical Program Manager",
+    "Technical Recruiter",
+    "Technical Support Engineer",
+    "Technical Writer",
+    "Telecommunications Engineer",
+    "UI Designer",
+    "UI/UX Designer",
+    "UX Designer",
+    "UX Researcher",
+    "Video Game Producer",
+    "Virtual Reality Developer",
+    "VoIP Engineer",
+    "Web Administrator",
+    "Web Designer",
+    "Web Developer",
+    "WordPress Developer"
+];
 
 const Resume = () => {
     const navigate = useNavigate();
@@ -30,6 +157,38 @@ const Resume = () => {
     const fileInputRef = useRef(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState(null);
+
+    // New State for Job Role and Description
+    const [jobRole, setJobRole] = useState("");
+    const [jobDescription, setJobDescription] = useState("");
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef(null);
+
+    // Filter roles
+    const filteredRoles = TECH_ROLES.filter(role =>
+        role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Handle role selection
+    const handleRoleSelect = (role) => {
+        setJobRole(role);
+        setIsDropdownOpen(false);
+        setSearchTerm("");
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [dropdownRef]);
 
     function handleResumeChange(event) {
         const file = event.target.files[0];
@@ -58,10 +217,10 @@ const Resume = () => {
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1]; // Remove data:application/pdf;base64,
 
-            const response = await fetch('https://intervyu.onrender.com/api/analyze-resume', {
+            const response = await fetch('http://localhost:5000/api/analyze-resume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pdfBase64: base64 })
+                body: JSON.stringify({ pdfBase64: base64, jobRole, jobDescription })
             });
 
             let analysis = await response.json();
@@ -211,7 +370,6 @@ const Resume = () => {
                                                 {/* Recommendations */}
                                                 <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
                                                     <h3 className="flex items-center gap-2 text-lg font-semibold text-white mb-3">
-                                                        <Sparkles className="w-5 h-5 text-blue-400" />
                                                         AI Recommendation
                                                     </h3>
                                                     <p className="text-slate-300 leading-relaxed">
@@ -293,10 +451,82 @@ const Resume = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="p-8">
+                                        <div className="p-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
                                             <div className="text-center space-y-2 mb-8">
                                                 <h3 className="text-lg font-medium text-white">Upload your Resume</h3>
                                                 <p className="text-slate-400 text-sm">Upload your resume (PDF or DOCX) to get a detailed compatibility score and improvement suggestions.</p>
+                                            </div>
+
+                                            <div className="space-y-6 mb-8">
+                                                {/* Job Role Dropdown */}
+                                                <div className="space-y-2 relative" ref={dropdownRef}>
+                                                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                                                        <Briefcase className="w-4 h-4 text-blue-400" />
+                                                        Job Role
+                                                        <span className="text-red-400 text-xs">*</span>
+                                                    </label>
+
+                                                    <div
+                                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                        className="w-full rounded-lg border border-slate-700/50 bg-slate-800/50 px-4 py-3 text-sm text-white focus:outline-none cursor-pointer hover:border-slate-600 flex items-center justify-between"
+                                                    >
+                                                        <span className={jobRole ? "text-white" : "text-slate-500"}>
+                                                            {jobRole || "Select a role..."}
+                                                        </span>
+                                                        <svg className={`w-4 h-4 text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </div>
+
+                                                    {isDropdownOpen && (
+                                                        <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 shadow-xl overflow-hidden max-h-60 flex flex-col">
+                                                            <div className="p-2 border-b border-slate-700 sticky top-0 bg-slate-900">
+                                                                <input
+                                                                    type="text"
+                                                                    value={searchTerm}
+                                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                                    placeholder="Search roles..."
+                                                                    autoFocus
+                                                                    className="w-full rounded-lg bg-slate-800 border-none px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                            </div>
+                                                            <div className="overflow-y-auto max-h-48 custom-scrollbar">
+                                                                {filteredRoles.length > 0 ? (
+                                                                    filteredRoles.map((role) => (
+                                                                        <button
+                                                                            key={role}
+                                                                            onClick={() => handleRoleSelect(role)}
+                                                                            className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-blue-500/10 hover:text-blue-400 transition-colors"
+                                                                        >
+                                                                            {role}
+                                                                        </button>
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="px-4 py-3 text-sm text-slate-500 text-center">
+                                                                        No roles found
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Job Description */}
+                                                <div className="space-y-2">
+                                                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                                                        <FileText className="w-4 h-4 text-blue-400" />
+                                                        Job Description
+                                                        <span className="text-slate-500 text-xs">(Entering job description will get you more accurate results)</span>
+                                                    </label>
+                                                    <textarea
+                                                        value={jobDescription}
+                                                        onChange={(e) => setJobDescription(e.target.value)}
+                                                        rows={3}
+                                                        placeholder="Paste the job description for better analysis..."
+                                                        className="w-full resize-none rounded-lg border border-slate-700/50 bg-slate-800/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all hover:border-slate-600"
+                                                    />
+                                                </div>
                                             </div>
 
                                             {!resume ? (
@@ -368,8 +598,8 @@ const Resume = () => {
                                                 </button>
                                                 <button
                                                     onClick={handleAnalyzeResume}
-                                                    disabled={!resume || isAnalyzing}
-                                                    className={`px-6 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 ${(!resume || isAnalyzing) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                                    disabled={!resume || !jobRole || isAnalyzing}
+                                                    className={`px-6 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 ${(!resume || !jobRole || isAnalyzing) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                                     {isAnalyzing ? (
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

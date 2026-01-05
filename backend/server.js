@@ -81,7 +81,7 @@ app.post('/api/generate-feedback', async (req, res) => {
 
 app.post('/api/analyze-resume', async (req, res) => {
     try {
-        const { pdfBase64 } = req.body;
+        const { pdfBase64, jobRole, jobDescription } = req.body;
         if (!pdfBase64) return res.status(400).json({ error: "No PDF data provided" })
         // Convert base64 to buffer
         const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
@@ -92,16 +92,99 @@ app.post('/api/analyze-resume', async (req, res) => {
 
         console.log('Extracted text:', resumeText.substring(0, 200)); // Log first 200 chars
 
+        // Construct context string based on optional inputs
+        let contextInstruction = "";
+        if (jobRole) {
+            contextInstruction += `\nTARGET ROLE: ${jobRole}\n`;
+        }
+        if (jobDescription) {
+            contextInstruction += `\nTARGET JOB DESCRIPTION: ${jobDescription}\nEvaluate how well the resume matches this specific job description.\n`;
+        }
+
         // Call Groq API for analysis
 
         const chatCompletion = await groq.chat.completions.create({
             model: 'llama-3.3-70b-versatile',
             messages: [{
                 role: 'user',
-                content: `You are an expert ATS (Applicant Tracking System) analyzer. Analyze this resume and provide a detailed ATS score and feedback.
+                content: `You are an ATS (Applicant Tracking System) parser, not a human recruiter. You must score based on how well a MACHINE can parse and match this resume, not how impressive it looks to humans.
+${contextInstruction}
+IMPORTANT: Look at these REAL examples to calibrate your scoring:
 
-Resume:
-${resumeText}
+EXAMPLE 1 - Score 64/100 (Average):
+- Has basic experience but descriptions are vague
+- Missing quantifiable achievements (no numbers/percentages)
+- Generic summary/objective
+- Some formatting issues
+- Missing several important keywords
+- Contact info present but no LinkedIn
+This is what a 60-65 score looks like.
+
+EXAMPLE 2 - Score 68/100 (Slightly above average):
+- Clear job descriptions but could be more detailed
+- 1-2 quantifiable achievements but needs more
+- Decent formatting with minor inconsistencies
+- Has LinkedIn but profile incomplete
+- Missing some industry keywords
+- Action verbs used but not consistently
+This is what a 65-70 score looks like.
+
+EXAMPLE 3 - Score 85/100 (Very good - rare):
+- Multiple quantifiable achievements (increased sales by 40%, managed team of 15)
+- Perfect formatting, consistent styling
+- All contact info including active LinkedIn
+- Strong action verbs throughout
+- Tailored to specific role with relevant keywords
+- No grammar/spelling errors
+- Professional summary with clear value proposition
+Only 10% of resumes reach this level.
+
+CRITICAL: ATS systems are VERY STRICT. Average score is 60-65/100.
+
+ATS SCORING FACTORS (in order of importance):
+1. KEYWORD MATCHING (30% weight):
+   - Count exact keyword matches for: job title, technical skills, tools, frameworks
+   - Missing even 3-5 key terms → deduct 15-20 points
+   - Generic terms like "Java developer" without specifics → lower score
+   ${jobDescription ? "- CHECK MATCH AGAINST PROVIDED JOB DESCRIPTION KEYWORDS." : ""}
+
+2. FORMATTING FOR MACHINES (25% weight):
+   - Complex formatting (tables, columns, graphics) → -20 points
+   - Non-standard section headers → -10 points
+   - Special characters or symbols → -10 points
+   - Multiple fonts/sizes → -5 points
+
+3. QUANTIFIABLE ACHIEVEMENTS (20% weight):
+   - Has numbers/percentages → +10 points
+   - Vague claims without metrics → -15 points
+
+4. COMPLETENESS (15% weight):
+   - Missing: email (-10), phone (-10), location (-5), LinkedIn (-5)
+   
+5. LENGTH & STRUCTURE (10% weight):
+   - Too long (>2 pages) or too short (<1 page) → -10 points
+   - Inconsistent date formats → -5 points
+
+BENCHMARK EXAMPLES:
+- Score 65: Decent resume but missing 5+ keywords, some formatting issues
+- Score 75: Good resume, minor keyword gaps, clean format
+- Score 85: Excellent keyword match, perfect ATS formatting (top 5%)
+
+ANALYSIS INSTRUCTIONS:
+1. List specific keywords this resume is MISSING (be harsh - assume a competitive tech job${jobRole ? ` as a ${jobRole}` : ""})
+2. Note any formatting that would confuse ATS parsers
+3. Count the quantifiable achievements
+4. Calculate starting from 60 (average), then add/subtract
+
+Resume: ${resumeText}
+
+Count the specific issues in this resume. Be critical. Start at 60 and adjust based on what you find.
+
+If this resume has:
+- Vague descriptions without numbers → score should be 55-65
+- Some achievements but missing keywords → score should be 65-75
+- Multiple achievements, good formatting, all keywords → score should be 75-85
+- Perfect in every way (extremely rare) → score 85-95
 
 Respond with ONLY valid JSON in this exact format:
 
@@ -129,10 +212,10 @@ Respond with ONLY valid JSON in this exact format:
   ],
   "recommendations": "Brief paragraph with actionable recommendations"
 }
-
+FINAL CHECK: If your atsScore is above 75, review the resume again and find at least 3 major issues that should lower the score. A score above 75 means this resume is better than 75% of all resumes - is that really true?
 All scores must be between 0-100. Provide exactly 3 strengths, 3 improvements, and up to 5 missing keywords.`
             }],
-            temperature: 0.3,
+            temperature: 0.1,
             response_format: { type: "json_object" }
         })
 
