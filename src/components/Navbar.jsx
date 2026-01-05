@@ -3,6 +3,7 @@ import logo from "../assets/images/logo.png"
 import { supabase } from "../supabaseClient"
 import { Link, useNavigate } from "react-router-dom"
 import { useState } from 'react'
+import { Zap } from 'lucide-react'
 
 const Navbar = () => {
     const navigate = useNavigate()
@@ -10,6 +11,22 @@ const Navbar = () => {
     const { firstName, lastName, email } = userCredentials || {};
     const [showProfile, setShowProfile] = React.useState(false);
     const [showMobileMenu, setShowMobileMenu] = React.useState(false);
+    const [credits, setCredits] = useState(0);
+
+    React.useEffect(() => {
+        const fetchCredits = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('credits')
+                    .eq('id', user.id)
+                    .single();
+                if (data) setCredits(data.credits);
+            }
+        };
+        fetchCredits();
+    }, []);
     return (
         <header className="border-b border-slate-800/50 bg-black/50 backdrop-blur-xl sticky top-0 z-50 mt-0 rounded-b-2xl w-full ">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
@@ -75,10 +92,15 @@ const Navbar = () => {
                     {/* User Profile */}
                     <div className="hidden md:flex items-center gap-4">
                         <div className="flex items-center gap-3 pl-4">
-                            <div className="hidden md:block text-right">
+                            <div className="flex items-center gap-2 mr-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50 shadow-sm">
+                                <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                <span className="text-sm font-bold text-white tabular-nums">{credits}</span>
+                                <span className="text-xs text-slate-400 font-medium">credits</span>
+                            </div>
+                            {/* <div className="hidden md:block text-right">
                                 <p className="text-sm font-medium text-white">{firstName + " " + lastName}</p>
                                 <p className="text-xs text-slate-400">{email}</p>
-                            </div>
+                            </div> */}
                             <button onClick={() => setShowProfile(prev => !prev)} className="cursor-pointer w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-lg">
                                 {showProfile ? "X" : firstName?.charAt(0).toUpperCase() + lastName?.charAt(0).toUpperCase()}
                             </button>

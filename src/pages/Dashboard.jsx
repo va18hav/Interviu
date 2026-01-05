@@ -10,6 +10,7 @@ import popularInterviews from "./popularInterviews"
 import { supabase } from "../supabaseClient"
 import Navbar from "../components/Navbar"
 import DashboardBanner from "../components/DashboardBanner"
+import PopularInterviewsBanner from "../components/PopularInterviewsBanner"
 
 const InterviewDashboard = () => {
   const navigate = useNavigate()
@@ -90,7 +91,23 @@ const InterviewDashboard = () => {
     navigate("/dashboard/feedback", { state: interview.feedback_data })
   }
 
-  function startInterview(id) {
+  async function startInterview(id) {
+    // --- CHECK CREDITS START ---
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile || profile.credits < 5) {
+        alert("You need at least 5 credits to start an interview!");
+        return;
+      }
+    }
+    // --- CHECK CREDITS END ---
+
     sessionStorage.removeItem("interviewEnded");
     const interview = popularInterviews.find(interview => interview.id === id);
     navigate("/dashboard/interview", {
@@ -237,6 +254,7 @@ const InterviewDashboard = () => {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+          <PopularInterviewsBanner />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {popularInterviews.map((interview) => {
@@ -254,11 +272,13 @@ const InterviewDashboard = () => {
               return (
                 <div
                   key={interview.id}
-                  className="group rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
+                  className="relative group rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
                 >
+                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-purple-500/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
                   <div className="p-6 space-y-4">
                     {/* Icon */}
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-14 h-14 rounded-xl border border-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                       <img src={interview.icon} alt="" className="w-10 h-10" />
                     </div>
 

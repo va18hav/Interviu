@@ -21,6 +21,8 @@ const InterviewSession = () => {
   const [transcriptArray, setTranscriptArray] = React.useState([])
   const [formattedTranscript, setFormattedTranscript] = React.useState([])
   const [feedbackData, setFeedbackData] = React.useState(null)
+  const [elapsedTime, setElapsedTime] = React.useState(0)
+  const [isTimerActive, setIsTimerActive] = React.useState(false)
   const interviewEnded = React.useRef(false)
   const vapi = React.useRef(null)
 
@@ -141,6 +143,24 @@ const InterviewSession = () => {
 
     , [])
 
+  React.useEffect(() => {
+    let interval
+    if (isTimerActive) {
+      interval = setInterval(() => {
+        setElapsedTime((prev) => prev + 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isTimerActive])
+
+  React.useEffect(() => {
+    if (interviewState === 'ai-speaking' && !isTimerActive) {
+      setIsTimerActive(true)
+    } else if (interviewState === 'ending') {
+      setIsTimerActive(false)
+    }
+  }, [interviewState, isTimerActive])
+
 
 
   async function generateFeedback(formattedTranscriptText) {
@@ -217,6 +237,30 @@ const InterviewSession = () => {
             .insert([newInterview]);
           if (error) throw error;
           console.log("Interview saved to Supabase!");
+
+          // --- CREDIT DEDUCTION START ---
+          const durationInMinutes = Math.ceil(elapsedTime / 60);
+          const creditCost = durationInMinutes > 0 ? durationInMinutes : 1; // Minimum 1 credit
+
+          // Fetch current credits
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits')
+            .eq('id', user.id)
+            .single();
+
+          if (profile) {
+            const newBalance = Math.max(0, profile.credits - creditCost);
+
+            // Update credits in database
+            await supabase
+              .from('profiles')
+              .update({ credits: newBalance })
+              .eq('id', user.id);
+
+            console.log(`Deducted ${creditCost} credits. New balance: ${newBalance}`);
+          }
+          // --- CREDIT DEDUCTION END ---
         }
       } catch (err) {
         console.error("Failed to save interview:", err);
@@ -299,25 +343,30 @@ const InterviewSession = () => {
                 {role} <span className="text-blue-300">Interview</span>
               </h2>
             </div>
-            {interviewState !== "ended" && <button
-              className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-xl hover:from-red-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105"
-              onClick={handleLeave}
-            >
-              <svg className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Leave Interview
-            </button>}
 
-            {interviewState === "ended" && <button
-              className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-green-400 rounded-xl hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105"
-              onClick={getFeedback}
-            >
-              <svg className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Get Feedback
-            </button>}
+            <div className="flex flex-row items-center gap-4 justify-between px-2">
+              <div className="font-mono text-xl font-semibold text-white/90 tabular-nums bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm backdrop-blur-sm">
+                {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
+              </div>
+              {interviewState !== "ended" && <button
+                className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-xl hover:from-red-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105"
+                onClick={handleLeave}
+              >
+                <svg className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Leave Interview
+              </button>}
+              {interviewState === "ended" && <button
+                className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-green-400 rounded-xl hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105"
+                onClick={getFeedback}
+              >
+                <svg className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Get Feedback
+              </button>}
+            </div>
           </div>
         </div>
       </header>
