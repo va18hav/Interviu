@@ -287,7 +287,7 @@ const TechInterviews = [
                 "title": "Leadership Principles Deep Dive",
                 "id": "behavioral-1",
                 "type": "behavioral",
-                "duration": "30 min",
+                "duration": "10 min",
                 "overview": "Dedicated Bar Raiser-style round probing Amazon's 16 Leadership Principles via STAR stories. Every technical round also includes 2-3 LP questions; demonstrate Customer Obsession, Ownership, Dive Deep.",
 
                 "questions": [

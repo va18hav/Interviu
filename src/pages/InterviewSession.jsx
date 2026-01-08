@@ -61,31 +61,34 @@ const InterviewSession = () => {
     else if (!isEnded) {
       console.log("useEffect starting - initializing Vapi")
 
+      // Initialize Vapi Instance
       vapi.current = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY)
-      console.log("Vapi instance created:", vapi.current)
+      console.log("Vapi instance created")
 
+      // Define Overrides
       const assistantOverrides = {
         recordingEnabled: false,
         variableValues: {
-          firstName,
-          role,
-          level,
-          focus,
-          length,
-          description,
-          company,
-          type,
-          questionPool
+          firstName: firstName || "User",
+          role: role || "Candidate",
+          level: level || "Intermediate",
+          focus: Array.isArray(focus) ? focus.join(", ") : (focus || ""),
+          length: length || "30 min",
+          description: description || "Technical Interview",
+          company: company || "Tech Company",
+          type: type || "technical",
+          questionPool: Array.isArray(questionPool) ? questionPool.join("\n") : (questionPool || "")
         },
       }
+
+      console.log("Starting Vapi with overrides:", assistantOverrides)
 
       const assistantId = customInterview
         ? "992cb9aa-adbd-47e2-b3aa-f881c7142262"
         : "b8483ed5-2f95-4f92-b5ea-69051eee5acf";
 
-      vapi.current.start(assistantId, assistantOverrides)
-      console.log("Vapi call started")
 
+      // Define Handlers
       const speechStartHandler = () => {
         console.log("✅ Speech start event fired")
         setInterviewState("ai-speaking")
@@ -111,9 +114,7 @@ const InterviewSession = () => {
 
         if (message.transcriptType === "final" && message.type === "transcript") {
           setTranscriptArray((prevTranscripts) => [...prevTranscripts, { role: message.role, transcript: message.transcript }])
-          console.log("Transcript array:", transcriptArray)
         }
-
       }
 
       const callEndHandler = () => {
@@ -123,8 +124,11 @@ const InterviewSession = () => {
 
       const errorHandler = (e) => {
         console.error("❌ Vapi error:", e)
+        alert("Connection error. Please try again.")
+        navigate("/dashboard")
       }
 
+      // Attach Listeners BEFORE start
       vapi.current.on("speech-start", speechStartHandler)
       vapi.current.on("speech-end", speechEndHandler)
       vapi.current.on("message", messageHandler)
@@ -132,6 +136,14 @@ const InterviewSession = () => {
       vapi.current.on("error", errorHandler)
 
       console.log("✅ All event listeners attached")
+
+      // Start Call
+      vapi.current.start(assistantId, assistantOverrides)
+        .then((res) => console.log("Crucial: Call started successfully", res))
+        .catch((err) => {
+          console.error("Crucial: Failed to start call", err);
+          errorHandler(err);
+        });
 
       return () => {
         console.log("🧹 Cleanup function running")

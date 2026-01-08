@@ -196,7 +196,8 @@ const InterviewDetails = () => {
                 roundKey: roundKey,
                 questionPool: selectedRound ? selectedRound.questions : [],
                 focus: selectedRound ? selectedRound.focus : [],
-                type: selectedRound ? selectedRound.type : 'technical'
+                type: selectedRound ? selectedRound.type : 'technical',
+                description: selectedRound ? selectedRound.overview : interview.overview
 
             }
         });
