@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom"
-import { Star, TrendingUp, Award, Target, Brain, Zap, ThumbsUp, MessageSquare, ArrowRight, Download, Share2, ChevronDown, ChevronUp, X, CheckCircle } from 'lucide-react';
+import { Star, TrendingUp, Award, Target, Brain, Zap, ThumbsUp, MessageSquare, ArrowRight, ArrowDown, Download, Share2, ChevronDown, ChevronUp, X, CheckCircle, Clock, Calendar, User, Building2, Layers } from 'lucide-react';
 import Navbar from "../components/Navbar";
 const InterviewFeedback = () => {
     const [isgenerated, setIsGenerated] = React.useState(true)
@@ -12,6 +12,7 @@ const InterviewFeedback = () => {
     const navigate = useNavigate()
     const [expandedMetric, setExpandedMetric] = React.useState(null);
     const [showAnswersModal, setShowAnswersModal] = React.useState(false);
+    const [showSummaryModal, setShowSummaryModal] = React.useState(false);
     const [isAnswerExpanded, setIsAnswerExpanded] = React.useState(null)
     const feedbackData = location.state || {}
     console.log("This is the feedback data from the interview: ", location.state)
@@ -20,25 +21,7 @@ const InterviewFeedback = () => {
 
     // Mock feedback data
     const overallScore = feedbackData.overallScore;
-
-    const sampleQnA = [
-        {
-            question: "Can you explain the difference between let, const, and var?",
-            answer: "var is function-scoped and hoisted, let is block-scoped, and const is block-scoped and cannot be reassigned."
-        },
-        {
-            question: "What is a closure in JavaScript?",
-            answer: "A closure is the combination of a function bundled together (enclosed) with references to its surrounding state (the lexical environment)."
-        },
-        {
-            question: "Explain the concept of 'this' in JavaScript.",
-            answer: "The value of 'this' is determined by how a function is called (runtime binding). It can refer to the global object, the object calling the function, or a bound object."
-        },
-        {
-            question: "What are React Hooks?",
-            answer: "Functions that let you use state and other React features without writing a class. Examples include useState and useEffect."
-        }
-    ];
+    const qnaData = feedbackData.qna || [];
 
     // Animate score on mount
     React.useEffect(() => {
@@ -71,35 +54,35 @@ const InterviewFeedback = () => {
             score: feedbackData.technicalKnowledge,
             icon: Brain,
             color: "cyan",
-            description: "Evaluates your understanding of core concepts, coding proficiency, and ability to apply technical skills to solve problems."
+            description: feedbackData.technicalKnowledgeJustification
         },
         {
             label: "Communication Skills",
             score: feedbackData.communicationSkills,
             icon: MessageSquare,
             color: "blue",
-            description: "Assesses how clearly and concisely you explain your thoughts, your listening skills, and ability to articulate complex ideas."
+            description: feedbackData.communicationSkillsJustification
         },
         {
             label: "Problem Solving",
             score: feedbackData.problemSolving,
             icon: Target,
             color: "purple",
-            description: "Measures your analytical thinking, ability to break down complex problems, and effectiveness in deriving optimal solutions."
+            description: feedbackData.problemSolvingJustification
         },
         {
             label: "Confidence Level",
             score: feedbackData.confidenceLevel,
             icon: Zap,
             color: "pink",
-            description: "Reflects your self-assurance, tone of voice, and overall presence during the interview interaction."
+            description: feedbackData.confidenceLevelJustification
         },
         {
             label: "Job Ready Score",
             score: feedbackData.jobReadyScore,
             icon: Award,
             color: "green",
-            description: "A comprehensive metric indicating your overall readiness for the role based on technical, behavioral, and soft skills."
+            description: feedbackData.jobReadyScoreJustification
         }
     ];
 
@@ -134,9 +117,43 @@ const InterviewFeedback = () => {
 
                 {/* Header */}
                 <div className="text-center space-y-4">
-                    <h1 className="text-5xl font-bold text-white mt-8">
-                        Interview <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Complete!</span>
+                    <h1 className="text-5xl font-bold text-white mt-2">
+                        Interview <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Completed!</span>
                     </h1>
+                </div>
+
+                {/* Interview Details Row */}
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-slate-400 -mt-2 mb-6 animate-fade-in">
+                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-cyan-500/30 transition-colors">
+                        <User className="w-4 h-4 text-cyan-400 bg-cyan-500/10 rounded p-0.5" />
+                        <span className="text-sm font-medium">{feedbackData.role || "Software Engineer"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-purple-500/30 transition-colors">
+                        <TrendingUp className="w-4 h-4 text-purple-400 bg-purple-500/10 rounded p-0.5" />
+                        <span className="text-sm font-medium">{feedbackData.level || "Mid-Level"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-blue-500/30 transition-colors">
+                        <Clock className="w-4 h-4 text-blue-400 bg-blue-500/10 rounded p-0.5" />
+                        <span className="text-sm font-medium">{feedbackData.duration || "25m 12s"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-green-500/30 transition-colors">
+                        <Calendar className="w-4 h-4 text-green-400 bg-green-500/10 rounded p-0.5" />
+                        <span className="text-sm font-medium">{feedbackData.date || "Oct 24, 2024"}</span>
+                    </div>
+
+                    {!feedbackData.customInterview && feedbackData.company && (
+                        <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-orange-500/30 transition-colors">
+                            <Building2 className="w-4 h-4 text-orange-400 bg-orange-500/10 rounded p-0.5" />
+                            <span className="text-sm font-medium">{feedbackData.company}</span>
+                        </div>
+                    )}
+
+                    {!feedbackData.customInterview && feedbackData.roundType && (
+                        <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-pink-500/30 transition-colors">
+                            <Layers className="w-4 h-4 text-pink-400 bg-pink-500/10 rounded p-0.5" />
+                            <span className="text-sm font-medium">{feedbackData.roundType}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Content - Two Column Layout */}
@@ -257,11 +274,11 @@ const InterviewFeedback = () => {
                                 const Icon = metric.icon;
                                 const isExpanded = expandedMetric === index;
                                 const colorClasses = {
-                                    cyan: "from-cyan-500 to-cyan-600",
-                                    blue: "from-blue-500 to-blue-600",
-                                    purple: "from-purple-500 to-purple-600",
-                                    pink: "from-pink-500 to-pink-600",
-                                    green: "from-green-500 to-green-600"
+                                    cyan: "from-cyan-500/80 to-cyan-600/80",
+                                    blue: "from-blue-500/80 to-blue-600/80",
+                                    purple: "from-purple-500/80 to-purple-600/80",
+                                    pink: "from-pink-500/80 to-pink-600/80",
+                                    green: "from-green-500/80 to-green-600/80"
                                 };
 
                                 return (
@@ -281,8 +298,8 @@ const InterviewFeedback = () => {
                                                     {metric.score}%
                                                 </span>
                                                 {isExpanded ?
-                                                    <ChevronUp className="w-4 h-4 text-slate-500" /> :
-                                                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                                                    <p className="text-slate-500 text-sm text-white">Hide</p> :
+                                                    <div className="text-white text-sm flex items-center gap-1">More <ChevronDown className="w-4 h-5 text-white" /></div>
                                                 }
                                             </div>
                                         </button>
@@ -294,20 +311,12 @@ const InterviewFeedback = () => {
                                         )}
 
                                         {/* Score Indicator Bars */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1 flex items-center gap-1">
-                                                {[20, 40, 60, 80, 100].map((threshold) => (
-                                                    <div
-                                                        key={threshold}
-                                                        className={`h-1.5 flex-1 rounded-full transition-all duration-500 delay-${index * 100} ${metric.score >= threshold
-                                                            ? `bg-gradient-to-r ${colorClasses[metric.color]}`
-                                                            : 'bg-slate-700'
-                                                            }`}
-                                                        style={{
-                                                            animation: metric.score >= threshold ? `fadeIn 0.3s ease-out ${(index * 0.1) + (threshold / 500)}s both` : 'none'
-                                                        }}
-                                                    />
-                                                ))}
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full bg-gradient-to-r ${colorClasses[metric.color]} transition-all duration-1000 ease-out`}
+                                                    style={{ width: `${metric.score}%` }}
+                                                />
                                             </div>
                                             <span className="text-xs text-slate-500 font-medium min-w-[60px] text-right">
                                                 {metric.score >= 80 ? 'Excellent' : metric.score >= 60 ? 'Good' : 'Fair'}
@@ -342,13 +351,16 @@ const InterviewFeedback = () => {
                                         <div className="text-cyan-400 text-lg font-bold group-hover:underline">View</div>
                                         <div className="text-xs text-slate-500">Correct Answers</div>
                                     </button>
+                                    <button
+                                        onClick={() => setShowSummaryModal(true)}
+                                        className="bg-purple-500/10 hover:bg-purple-500/20 rounded-lg p-3 border border-purple-500/30 hover:border-purple-500/50 transition-all cursor-pointer text-left group"
+                                    >
+                                        <div className="text-purple-400 text-lg font-bold group-hover:underline">View</div>
+                                        <div className="text-xs text-slate-500">Summary</div>
+                                    </button>
                                     <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
-                                        <div className="text-blue-400 text-lg font-bold">32m</div>
+                                        <div className="text-blue-400 text-lg font-bold">{feedbackData.duration || "25m 12s"}</div>
                                         <div className="text-xs text-slate-500">Duration</div>
-                                    </div>
-                                    <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
-                                        <div className="text-purple-400 text-lg font-bold">8/10</div>
-                                        <div className="text-xs text-slate-500">Accuracy</div>
                                     </div>
                                 </div>
                             </div>
@@ -435,7 +447,7 @@ const InterviewFeedback = () => {
 
                         {/* Modal Content */}
                         <div className="p-6 overflow-y-auto space-y-6">
-                            {sampleQnA.map((item, index) => (
+                            {qnaData.map((item, index) => (
                                 <div key={index} className="space-y-2">
                                     <div className="flex justify-between items-center">
                                         <div className="flex items-center gap-3">
@@ -462,6 +474,45 @@ const InterviewFeedback = () => {
                             <button
                                 onClick={() => setShowAnswersModal(false)}
                                 className="text-sm text-cyan-400 hover:underline"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Summary Modal */}
+            {showSummaryModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col shadow-2xl">
+
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <MessageSquare className="w-6 h-6 text-purple-400" />
+                                Interview Summary
+                            </h3>
+                            <button
+                                onClick={() => setShowSummaryModal(false)}
+                                className="text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto">
+                            <div className="text-slate-300 text-base leading-relaxed whitespace-pre-line bg-slate-800/30 p-6 rounded-xl border border-slate-700/50">
+                                {feedbackData.summary || "No summary available for this interview."}
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-slate-800 bg-slate-900/50 text-center">
+                            <button
+                                onClick={() => setShowSummaryModal(false)}
+                                className="text-sm text-purple-400 hover:underline"
                             >
                                 Close
                             </button>

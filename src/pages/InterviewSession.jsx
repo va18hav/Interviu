@@ -29,14 +29,20 @@ const InterviewSession = () => {
   // Consolidated destructuring for both interview types
   const {
     role,
+    icon,
     level,
-    focus = location.state?.role, // Fallback for stored interviews
-    length = location.state?.duration, // Map duration to length
-    description = "",
-    name = "",
-    company = "",
-    questionPool = []
+    focus,
+    length,
+    description,
+    name,
+    company,
+    type,
+    questionPool,
+    roundKey,
+    roundId
   } = location.state || {}
+
+  console.log(location.state)
 
   React.useEffect(() => {
 
@@ -65,10 +71,10 @@ const InterviewSession = () => {
           role,
           level,
           focus,
-          length, // Maps to 'limit' or 'duration' in prompt
+          length,
           description,
           company,
-          name,
+          type,
           questionPool
         },
       }
@@ -191,96 +197,152 @@ const InterviewSession = () => {
   async function handleLeave() {
     if (!vapi.current) return
 
-    setInterviewState("ending")
-
     // Stop the call
     vapi.current.stop()
-
     interviewEnded.current = true
     sessionStorage.setItem("interviewEnded", "true")
 
-    console.log("Transcript array:", transcriptArray)
+    // --- CREDIT DEDUCTION START ---
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const durationInMinutes = Math.ceil(elapsedTime / 60);
+        const creditCost = durationInMinutes > 0 ? durationInMinutes : 1; // Minimum 1 credit
 
-    // Format the transcript
-    const formattedTranscriptText = transcriptArray
-      .map(item => `${item.role.toUpperCase()}: ${item.transcript}`)
-      .join("\n");
+        // Fetch current credits
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('credits')
+          .eq('id', user.id)
+          .single();
 
-    console.log("Formatted transcript:", formattedTranscriptText)
+        if (profile) {
+          const newBalance = Math.max(0, profile.credits - creditCost);
 
-    // Call backend API to generate feedback
-    const feedback = await generateFeedback(formattedTranscriptText)
-    console.log("Feedback received:", feedback)
+          // Update credits in database
+          await supabase
+            .from('profiles')
+            .update({ credits: newBalance })
+            .eq('id', user.id);
 
-    // Check if feedback was successfully generated
-    if (feedback) {
-      setFeedbackData(feedback)
-      sessionStorage.setItem("feedbackData", JSON.stringify(feedback))
-      try {
+          console.log(`Deducted ${creditCost} credits. New balance: ${newBalance}`);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to deduct credits:", err);
+    }
+    // --- CREDIT DEDUCTION END ---
+
+    setInterviewState("ended")
+  }
+
+  async function getFeedback() {
+    setInterviewState("ending"); // Show "Generating Feedback" loader
+
+    try {
+      // Format the transcript
+      const formattedTranscriptText = transcriptArray
+        .map(item => `${item.role.toUpperCase()}: ${item.transcript}`)
+        .join("\n");
+
+      console.log("Formatted transcript:", formattedTranscriptText)
+
+      // Call backend API to generate feedback
+      const feedback = await generateFeedback(formattedTranscriptText)
+      console.log("Feedback received:", feedback)
+
+      // Check if feedback was successfully generated
+      if (feedback) {
+        setFeedbackData(feedback)
+        sessionStorage.setItem("feedbackData", JSON.stringify(feedback))
+
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
-          // Extract score from feedback string or default to random for demo
-          // (Ideally your backend returns a structured JSON with a 'score' field)
-
           const newInterview = {
             user_id: user.id,
             role: role || "General",
             date: new Date().toLocaleDateString(),
             duration: length || "15 min",
-            score: feedback.overallScore, // Replace with feedback.score if available
-            feedback_data: feedback, // Storing the full JSON
+            score: feedback.overallScore,
+            feedback_data: feedback,
             created_at: new Date().toISOString()
           };
+
+          // Add round identifier to feedback data for future retrieval
+          if (roundId || roundKey) {
+            feedback.roundKey = roundKey || roundId;
+          }
+          if (company) {
+            feedback.company = company;
+          }
+
+          // Delete existing attempt for this round if exists (Retry logic)
+          if ((roundId || roundKey) && company) {
+            const rKey = roundKey || roundId;
+
+            // Fetch all interviews for this user and role first to filter safely
+            const { data: existingInterviews } = await supabase
+              .from('interviews')
+              .select('id, feedback_data')
+              .eq('user_id', user.id)
+              .eq('role', role);
+
+            if (existingInterviews && existingInterviews.length > 0) {
+              const idsToDelete = [];
+              existingInterviews.forEach(interview => {
+                const fb = interview.feedback_data;
+                if (fb && fb.roundKey === rKey && fb.company === company) {
+                  idsToDelete.push(interview.id);
+                }
+              });
+
+              if (idsToDelete.length > 0) {
+                console.log("Deleting previous attempts:", idsToDelete);
+                await supabase
+                  .from('interviews')
+                  .delete()
+                  .in('id', idsToDelete);
+              }
+            }
+          }
+
           const { error } = await supabase
             .from('interviews')
             .insert([newInterview]);
           if (error) throw error;
           console.log("Interview saved to Supabase!");
 
-          // --- CREDIT DEDUCTION START ---
-          const durationInMinutes = Math.ceil(elapsedTime / 60);
-          const creditCost = durationInMinutes > 0 ? durationInMinutes : 1; // Minimum 1 credit
+          // Navigate only after success
+          // Navigate only after success
+          console.log("Navigating to feedback page with data:", feedback)
 
-          // Fetch current credits
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('credits')
-            .eq('id', user.id)
-            .single();
+          // Add metadata for feedback page display
+          const feedbackWithMetadata = {
+            ...feedback,
+            role: role || "General",
+            level: level || "Mid-Level",
+            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+            duration: `${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`,
+            company: company,
+            roundType: type,
+            customInterview: customInterview
+          };
 
-          if (profile) {
-            const newBalance = Math.max(0, profile.credits - creditCost);
-
-            // Update credits in database
-            await supabase
-              .from('profiles')
-              .update({ credits: newBalance })
-              .eq('id', user.id);
-
-            console.log(`Deducted ${creditCost} credits. New balance: ${newBalance}`);
-          }
-          // --- CREDIT DEDUCTION END ---
+          navigate("/create/interview/id:/feedback", {
+            state: feedbackWithMetadata
+          })
         }
-      } catch (err) {
-        console.error("Failed to save interview:", err);
+      } else {
+        console.error("Failed to generate feedback")
+        setInterviewState("ended")
+        alert("Could not generate feedback. Please try again.");
       }
-      // --- NEW SUPABASE CODE ENDS HERE ---
+    } catch (err) {
+      console.error("Error in getFeedback:", err);
       setInterviewState("ended");
-
+      alert("An error occurred while generating feedback.");
     }
-
-    else {
-      console.error("Failed to generate feedback")
-      setInterviewState("ended") // Still change state even if feedback failed
-    }
-  }
-
-  function getFeedback() {
-    console.log("Navigating to feedback page with data:", feedbackData)
-    navigate("/create/interview/id:/feedback", {
-      state: feedbackData
-    })
   }
 
 
@@ -303,12 +365,21 @@ const InterviewSession = () => {
     animation: "slideUp 0.8s ease-out forwards"
   };
 
+  const durationMinutes = parseInt(length) || 15;
+  const isEligibleForFeedback = elapsedTime > (durationMinutes * 60) / 2;
+
   const FeedbackGeneratedCards = () => (
     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 h-full items-center justify-center p-12">
       <div className="flex flex-col items-center gap-6">
         <div className="text-center space-y-2">
-          <h3 className="text-xl font-semibold text-white">Feedback Generated</h3>
-          <p className="text-slate-400 text-sm">Please check your feedback to view the detailed insights of your interview</p>
+          <h3 className="text-xl font-semibold text-white">
+            {isEligibleForFeedback ? "Interview Ended" : "Cannot Generate Feedback"}
+          </h3>
+          <p className="text-slate-400 text-sm">
+            {isEligibleForFeedback
+              ? "Click 'Get Feedback' to generate your detailed performance report"
+              : "The interview duration was too short to generate meaningful feedback."}
+          </p>
         </div>
       </div>
     </div>
@@ -337,10 +408,10 @@ const InterviewSession = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
 
-              <img src={logo} alt="Logo" className="w-15 h-15" />
+              <img src={(!customInterview ? icon : logo)} alt="Logo" className="w-10 h-10" />
 
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                {role} <span className="text-blue-300">Interview</span>
+                {(!customInterview ? name : role)} <span className="text-blue-300">Interview</span>
               </h2>
             </div>
 
@@ -348,7 +419,7 @@ const InterviewSession = () => {
               <div className="font-mono text-xl font-semibold text-white/90 tabular-nums bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm backdrop-blur-sm">
                 {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
               </div>
-              {interviewState !== "ended" && <button
+              {interviewState !== "ended" && interviewState !== "ending" && <button
                 className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-xl hover:from-red-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105"
                 onClick={handleLeave}
               >
@@ -357,7 +428,7 @@ const InterviewSession = () => {
                 </svg>
                 Leave Interview
               </button>}
-              {interviewState === "ended" && <button
+              {interviewState === "ended" && isEligibleForFeedback && <button
                 className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-green-400 rounded-xl hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105"
                 onClick={getFeedback}
               >
@@ -365,6 +436,13 @@ const InterviewSession = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 Get Feedback
+              </button>}
+
+              {interviewState === "ended" && !isEligibleForFeedback && <button
+                className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-slate-700/50 rounded-xl hover:bg-slate-700 focus:outline-none transition-all duration-200"
+                onClick={() => navigate('/dashboard')}
+              >
+                Go to Dashboard
               </button>}
             </div>
           </div>
@@ -403,11 +481,14 @@ const InterviewSession = () => {
       </div>
 
       {/* Status Textbox */}
-      <StatusBox
-        interviewState={interviewState}
-        currentQuestion={currentQuestion}
-        currentAnswer={currentAnswer}
-      />
+      {/* Status Textbox */}
+      {interviewState !== "ending" && (
+        <StatusBox
+          interviewState={interviewState}
+          currentQuestion={currentQuestion}
+          currentAnswer={currentAnswer}
+        />
+      )}
     </main>
   )
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import { ArrowRight } from 'lucide-react'
 import resumebanner from '../assets/images/resumebanner.png'
 
-const ResumeHero = () => {
+const ResumeHero = (props) => {
     return (
         <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-gradient-to-br from black/100 via black/60 to black/100 backdrop-blur-sm'>
             {/* Background decoration */}
@@ -19,9 +19,16 @@ const ResumeHero = () => {
                     </h1>
 
                     <p className='font-space text-md lg:text-lg text-slate-400 max-w-sm lg:max-w-xl leading-relaxed'>
-                        Optimize your professional story with our advanced AI tools.
-                        Analyze, enhance, or build your resume to beat the ATS and impress recruiters.
+                        Our AI doesn't just score you—it gives you a line-by-line roadmap to beat the ATS and impress recruiters.
                     </p>
+
+                    <button
+                        onClick={props.onButtonClick}
+                        className="group flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-black bg-gradient-to-r from-yellow-300/90 to-yellow-600/80 border border-yellow-500/30 hover:opacity-90 transition-all z-20 cursor-pointer"
+                    >
+                        {props.buttonText || "Check Score"}
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
                 </div>
                 <div
                     className="hidden md:block relative z-20"

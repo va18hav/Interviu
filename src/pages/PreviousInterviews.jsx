@@ -29,7 +29,13 @@ const PreviousInterviews = () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            if (data) setInterviews(data);
+            if (data) {
+                // Filter out popular interviews (those with roundKey or roundId)
+                const customInterviews = data.filter(interview =>
+                    !interview.feedback_data?.roundKey && !interview.feedback_data?.roundId
+                );
+                setInterviews(customInterviews);
+            }
 
         } catch (error) {
             console.error("Error fetching interviews:", error.message);

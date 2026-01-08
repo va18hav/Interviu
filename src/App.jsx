@@ -8,6 +8,7 @@ import ProfileSettings from "./pages/ProfileSettings"
 import PreviousInterviews from "./pages/PreviousInterviews"
 import PopularInterviewsPage from "./pages/PopularInterviewsPage"
 import Resume from "./pages/Resume"
+import InterviewDetails from "./pages/InterviewDetails"
 import './App.css'
 
 const App = () => {
@@ -22,6 +23,8 @@ const App = () => {
         <Route path="/resume" element={<Resume />} />
         <Route path="/dashboard/all-previous-interviews" element={<PreviousInterviews />} />
         <Route path="/dashboard/all-popular-interviews" element={<PopularInterviewsPage />} />
+        <Route path="/dashboard/interview-details/:id" element={<InterviewDetails />} />
+        <Route path="/dashboard/interview-details/:id/:roundId" element={<InterviewSession />} />
         <Route path="/dashboard/interview" element={<InterviewSession />} />
         <Route path="/dashboard/interview/feedback" element={<Feedback />} />
         <Route path="/create" element={<CreateInterview />} />

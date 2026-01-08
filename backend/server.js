@@ -38,24 +38,37 @@ app.post('/api/generate-feedback', async (req, res) => {
             messages: [
                 {
                     role: "system",
-                    content: "You are an expert interview analyzer. You must respond with ONLY valid JSON."
+                    content: "You are a Senior Technical Hiring Committee Member. Your goal is to provide a balanced, highly accurate evaluation of a candidate's performance. You must respond with ONLY valid JSON."
                 },
                 {
                     role: "user",
                     content: `Analyze this ${role} mock interview for a ${level} candidate focusing on ${focus}.
                     Transcript: ${formattedTranscript}. Some important instructions:
                     1. If the transcript is very small or if the user has ended the interview without speaking much, keep all the scores as 0 and return empty arrays for key strengths. Add three points in areas to improve that indiacate the user had left the interview without speaking much.
-                    2. Keep the scores realistic and based on the transcript. Do not overestimate or underestimate.
+                    2. Keep the scores realistic and based on the transcript. Do not underestimate.
+                    3. Return the summary as a string. The summary must have the entire summary of the conversation in the form of a paragraph, should precisely point where the candidate is technically sound, confident, and where the candidate is not. 
                     Respond in this exact JSON format:
+                    4. Return the qna as an object with questions from the ${formattedTranscript} and answers from your own perspective. Think of it like, what would be the best answer for the particular question, of course in questions where there are multiple possiblities such as explaining a project, or a follow-up question regarding that,
+                       or if the interview is a behavioural interview, what would you do if you were in the candidate's shoes, with the same project explanations, this should focus on the framing and explaining technical depth of the same project
                     {
                       "overallScore": 0-100,
                       "technicalKnowledge": 0-100,
+                      "technicalKnowledgeJustification": "string",
                       "communicationSkills": 0-100,
+                      "communicationSkillsJustification": "string",
                       "problemSolving": 0-100,
+                      "problemSolvingJustification": "string",
                       "confidenceLevel": 0-100,
+                      "confidenceLevelJustification": "string",
                       "jobReadyScore": 0-100,
+                      "jobReadyScoreJustification": "string",
                       "keyStrengths": ["string", "string", "string"],
                       "areasToImprove": ["string", "string", "string"]
+                      "summary" : "string"
+                      "qna": [
+  { "question": "Question text...", "answer": "Suggested answer..." },
+  { "question": "Question text...", "answer": "Suggested answer..." }
+]
                     }`
                 }
             ],

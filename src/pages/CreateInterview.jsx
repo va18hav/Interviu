@@ -220,7 +220,7 @@ const CreateInterview = () => {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
 
               {/* Left Column - Feature Card (2 columns) */}
-              <div className="lg:col-span-2 bg-gradient-to-br from black/100 via black/60 to black/100 p-10 flex flex-col justify-center relative overflow-hidden border-r border-slate-800/50">
+              <div className="lg:col-span-2 bg-gradient-to-br from black/100 via black/60 to black/100 p-10 flex flex-col justify-start relative overflow-hidden border-r border-slate-800/50">
                 {/* Decorative gradient orbs */}
                 <div className="absolute top-0 left-0 w-70 h-70 bg-cyan-500/20 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-0 w-70 h-70 bg-blue-500/20 rounded-full blur-3xl" />
