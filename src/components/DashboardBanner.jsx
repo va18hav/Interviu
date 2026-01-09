@@ -14,7 +14,7 @@ const DashboardBanner = () => {
 
             {/* Content */}
             <div className="relative z-10 px-6 md:px-8 lg:px-16 py-6 md:py-6 lg:py-18 flex items-center justify-between">
-                <img src={bot} alt="" className="hidden lg:block absolute -bottom-27 -right-10 w-100 -rotate-[20deg] hover:scale-105 hover:-rotate-[18deg] transition-all duration-300" />
+                <img src={bot} alt="" className="hidden lg:block absolute -bottom-27 -right-10 w-100 -rotate-[20deg] hover:scale-105 transition-all duration-300" />
                 <img src={bot} alt="" className="md:hidden absolute -bottom-18 -right-6 w-38 " />
                 <div className="max-w-2xl space-y-6">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 backdrop-blur">

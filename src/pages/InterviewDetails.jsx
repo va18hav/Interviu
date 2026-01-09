@@ -374,7 +374,7 @@ const InterviewDetails = () => {
                                                     {round.duration}
                                                 </span>
                                             </div>
-                                            <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-cyan-400 transition-colors">{round.title}</h3>
+                                            <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-cyan-400 transition-colors">{round.title}</h3>
                                             <div className="flex flex-wrap gap-2 mb-3">
                                                 {round.type.split(',').map((t, i) => (
                                                     <span key={i} className="text-[10px] font-medium text-cyan-400 bg-cyan-950/30 border border-cyan-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -447,7 +447,7 @@ const InterviewDetails = () => {
                                                 score >= 5 ? 'text-cyan-400' :
                                                     'text-yellow-400'
                                                 }`}>
-                                                {score}/10
+                                                {score}/100
                                             </span>
                                             <p className="text-xs text-slate-500">Score</p>
                                         </div>

@@ -2,7 +2,6 @@ import React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Upload, Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Clock, FileText, Lasso } from 'lucide-react'
 import logo from "../assets/images/logo.png"
-import peek from "../assets/images/peek.png"
 import Navbar from "../components/Navbar"
 
 const TECH_ROLES = [
@@ -297,7 +296,7 @@ const CreateInterview = () => {
                   {/* Job Role Dropdown */}
                   <div className="space-y-2.5 relative" ref={dropdownRef}>
                     <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                      <Briefcase className="w-4 h-4 text-cyan-400" />
+                      <Briefcase className="w-4 h-4 text-slate-500" />
                       Job Role
                       <span className="text-red-400 text-xs">*</span>
                     </label>
@@ -353,7 +352,7 @@ const CreateInterview = () => {
                     {/* Experience Level */}
                     <div className="space-y-2.5">
                       <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                        <Target className="w-4 h-4 text-cyan-400" />
+                        <Target className="w-4 h-4 text-slate-500" />
                         Experience Level
                       </label>
                       <select
@@ -378,7 +377,7 @@ const CreateInterview = () => {
                     {/* Interview Length */}
                     <div className="space-y-2.5">
                       <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                        <Clock className="w-4 h-4 text-cyan-400" />
+                        <Clock className="w-4 h-4 text-slate-500" />
                         Interview Length
                       </label>
                       <select
@@ -404,7 +403,7 @@ const CreateInterview = () => {
                   {/* Focus Areas */}
                   <div className="space-y-2.5">
                     <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                      <Code className="w-4 h-4 text-cyan-400" />
+                      <Code className="w-4 h-4 text-slate-500" />
                       Focus Areas / Tech Stack
                     </label>
                     <textarea
@@ -420,7 +419,7 @@ const CreateInterview = () => {
                   {/* Target Job Description */}
                   <div className="space-y-2.5">
                     <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                      <FileText className="w-4 h-4 text-cyan-400" />
+                      <FileText className="w-4 h-4 text-slate-500" />
                       Target Job Description
                       <span className="text-slate-500 text-xs">(Optional)</span>
                     </label>

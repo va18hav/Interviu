@@ -13,15 +13,16 @@ import {
     Wand2,
     X,
     FileIcon,
+    Trash,
     Trash2,
     AlertCircle,
     Check,
-    Briefcase
+    Briefcase,
+    Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import ResumeHero from '../components/ResumeHero';
-import resumeats from '../assets/images/resumeats.png';
 import { supabase } from '../supabaseClient';
 
 const TECH_ROLES = [
@@ -160,6 +161,7 @@ const Resume = () => {
     const [analysisResult, setAnalysisResult] = useState(null);
     const [pastResumes, setPastResumes] = useState([]);
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         getProfileAndResumes();
@@ -167,6 +169,7 @@ const Resume = () => {
 
     async function getProfileAndResumes() {
         try {
+            setLoading(true);
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 setUser(user);
@@ -186,6 +189,8 @@ const Resume = () => {
             }
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -306,7 +311,37 @@ const Resume = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
     }
 
+    async function handleDelete(id) {
+        if (!confirm("Are you sure you want to delete this analysis?")) return;
 
+        try {
+            const { error } = await supabase
+                .from('resume_analyses')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error("Error deleting analysis:", error);
+                alert("Failed to delete analysis.");
+            } else {
+                setPastResumes(prev => prev.filter(item => item.id !== id));
+            }
+        } catch (err) {
+            console.error("Error deleting:", err);
+            alert("An error occurred.");
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
+                    <p className="text-slate-400 text-sm">Loading...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className='min-h-screen bg-black selection:bg-cyan-500/30'>
@@ -327,7 +362,7 @@ const Resume = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {pastResumes.length > 0 ? (
                             pastResumes.map((item, index) => (
-                                <div key={item.id || index} className="group relative rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-blue-500/30 transition-all duration-300">
+                                <div key={item.id || index} className="group relative rounded-2xl border border-slate-800 bg-white/10 backdrop-blur-xl overflow-hidden hover:border-blue-500/30 transition-all duration-300 shadow-lg">
                                     <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-blue-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
                                     <div className="p-6 space-y-4">
                                         <div className="flex justify-between items-start">
@@ -339,35 +374,38 @@ const Resume = () => {
                                                     <p className="text-sm text-slate-400">
                                                         {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </p>
-                                                    {item.ats_score && (
-                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${item.ats_score >= 80 ? 'bg-green-500/20 text-green-400' :
-                                                            item.ats_score >= 60 ? 'bg-cyan-500/20 text-cyan-400' :
-                                                                'bg-yellow-500/20 text-yellow-400'
-                                                            }`}>
-                                                            {item.ats_score}%
-                                                        </span>
-                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                    <FileIcon className="w-4 h-4" />
+                                                    <span className="truncate max-w-[120px]">{item.file_name}</span>
                                                 </div>
                                             </div>
-                                            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                                <FileText className="w-5 h-5 text-blue-400" />
+                                            <div className="flex items-center justify-center">
+                                                {item.ats_score && (
+                                                    <span className={`text-xs font-bold px-4 py-2 rounded-lg ${item.ats_score >= 80 ? 'bg-green-500/20 text-green-400' :
+                                                        item.ats_score >= 60 ? 'bg-cyan-500/20 text-cyan-400' :
+                                                            'bg-yellow-500/20 text-yellow-400'
+                                                        }`}>
+                                                        {item.ats_score}%
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
 
                                         <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                <FileIcon className="w-4 h-4" />
-                                                <span className="truncate max-w-[120px]">{item.file_name}</span>
-                                            </div>
                                             <button
                                                 onClick={() => {
                                                     setAnalysisResult(item.analysis_result);
                                                     setAtsPopupEnabled(true);
                                                 }}
-                                                className="text-sm font-medium text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors z-20"
+                                                className="text-sm font-medium text-slate-400 hover:text-blue-500 flex items-center gap-1 transition-colors z-20"
                                             >
                                                 View Details
                                                 <ArrowRight className="w-4 h-4" />
+                                            </button>
+
+                                            <button className='cursor-pointer text-sm font-medium text-white/50 hover:text-red-500 rounded-sm p-2' onClick={() => handleDelete(item.id)}>
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
@@ -387,10 +425,10 @@ const Resume = () => {
 
 
                 {atsPopupEnabled && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 animate-fade-in">
-                        <div className={`animate-scale-up w-full ${analysisResult ? 'max-w-4xl' : 'max-w-xl'} bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500`}>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+                        <div className={`animate-scale-up w-full ${analysisResult ? 'max-w-4xl' : 'max-w-xl'} bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500`}>
                             {/* Header */}
-                            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+                            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-gradient-to-br from-slate-900 to-slate-800">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                                         <BarChart3 className="w-4 h-4 text-blue-400" />
@@ -414,7 +452,7 @@ const Resume = () => {
                             {analysisResult ? (
                                 <div className="p-0 flex flex-col max-h-[80vh] overflow-y-auto custom-scrollbar">
                                     {/* Score Header */}
-                                    <div className="bg-slate-950/50 p-8 border-b border-slate-800">
+                                    <div className="bg-gradiendt-br-from-slate-900 via-slate-800 to-slate-900 p-8 border-b border-slate-800">
                                         <div className="flex flex-col md:flex-row items-center gap-8">
                                             <div className="relative group">
                                                 <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20 rounded-full group-hover:opacity-30 transition-opacity" />
@@ -437,7 +475,7 @@ const Resume = () => {
                                                             cy="50"
                                                             r="46"
                                                             fill="none"
-                                                            stroke="#3b82f6"
+                                                            stroke="#26C6DA"
                                                             strokeWidth="4"
                                                             strokeDasharray={`${2 * Math.PI * 46}`}
                                                             strokeDashoffset={`${2 * Math.PI * 46 * (1 - analysisResult.atsScore / 100)}`}
@@ -459,7 +497,7 @@ const Resume = () => {
                                                         <div className={`mb-2 mx-auto w-8 h-8 rounded-lg ${stat.bg} ${stat.color} flex items-center justify-center font-bold`}>
                                                             {stat.value}%
                                                         </div>
-                                                        <div className="text-xs text-slate-400 font-medium">{stat.label}</div>
+                                                        <div className="text-xs text-slate-400 font-medium ">{stat.label}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -468,7 +506,7 @@ const Resume = () => {
 
                                     <div className="p-8 grid gap-8">
                                         {/* Recommendations */}
-                                        <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
+                                        <div className="bg-white/10 border border-blue-500/20 rounded-2xl p-6">
                                             <h3 className="flex items-center gap-2 text-lg font-semibold text-white mb-3">
                                                 AI Recommendation
                                             </h3>
@@ -526,7 +564,7 @@ const Resume = () => {
                                                 </h3>
                                                 <div className="flex flex-wrap gap-2">
                                                     {(analysisResult.missingKeywords || []).map((keyword, i) => (
-                                                        <div key={i} className="px-3 py-1.5 rounded-full bg-red-500/5 border border-red-500/20 text-red-400 text-sm font-medium">
+                                                        <div key={i} className="px-3 py-1.5 rounded-full border border-red-500/40 text-red-500/70 text-sm font-medium">
                                                             {keyword}
                                                         </div>
                                                     ))}
@@ -535,7 +573,7 @@ const Resume = () => {
                                         )}
                                     </div>
 
-                                    <div className="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0">
+                                    <div className="p-6 border-t border-slate-800 bg-gradient-to-br from-slate-800 to-slate-900 flex justify-end gap-3 sticky bottom-0">
                                         <button
                                             onClick={() => setAnalysisResult(null)}
                                             className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
