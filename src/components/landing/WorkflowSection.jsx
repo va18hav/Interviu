@@ -5,7 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import configureImg from '../../assets/images/configure.png';
 import interviewImg from '../../assets/images/interview.png';
 import feedbackImg from '../../assets/images/feedback.png';
-import topTechImg from '../../assets/images/topTech.png';
+import topTechImg from '../../assets/images/toptech.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
