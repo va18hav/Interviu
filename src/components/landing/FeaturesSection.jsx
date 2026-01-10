@@ -26,7 +26,7 @@ const FeaturesSection = () => {
                         opacity: 1,
                         scale: 1,
                         filter: 'blur(0px)',
-                        color: '#ffffff', // white
+                        color: '#5ecef1ff', // white
                         ease: "power2.out",
                         scrollTrigger: {
                             trigger: icon,
@@ -75,7 +75,7 @@ const FeaturesSection = () => {
 
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-20">
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
                         The core of smarter preparation
                     </h2>
                     <p className="text-lg text-slate-400 leading-relaxed">

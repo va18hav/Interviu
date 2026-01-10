@@ -134,7 +134,7 @@ const ProfileSettings = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-6 lg:p-10">
+        <div className="min-h-screen bg-black p-4 sm:p-6 lg:p-10">
             <div className="max-w-4xl mx-auto space-y-8">
 
                 {/* Header */}

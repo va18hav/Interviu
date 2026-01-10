@@ -13,7 +13,7 @@ const Onboarding = () => {
         skills: ''
     });
 
-    const userCredentials = JSON.parse(localStorage.getItem("userCredentials"));
+
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,11 +22,14 @@ const Onboarding = () => {
     const handleSkip = async () => {
         setLoading(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("No user found");
+
             // Update onboarding_completed to true even if skipped
             const { error } = await supabase
                 .from('profiles')
                 .update({ onboarding_completed: true })
-                .eq('email', userCredentials.email);
+                .eq('id', user.id);
 
             if (error) {
                 console.warn("Could not update profile (skip):", error.message);
@@ -43,6 +46,9 @@ const Onboarding = () => {
     const handleSubmit = async () => {
         setLoading(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("No user found");
+
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -51,7 +57,7 @@ const Onboarding = () => {
                     skills: formData.skills, // Assuming text or array
                     onboarding_completed: true
                 })
-                .eq('email', userCredentials.email);
+                .eq('id', user.id);
 
             if (error) {
                 console.warn("Could not update profile:", error.message);
@@ -88,7 +94,7 @@ const Onboarding = () => {
                         {/* Role */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                                <Briefcase className="w-4 h-4 text-cyan-400" />
+                                <Briefcase className="w-4 h-4 text-slate-400" />
                                 Target Role <span className="text-slate-500 text-xs">(Optional)</span>
                             </label>
                             <input
@@ -104,7 +110,7 @@ const Onboarding = () => {
                         {/* Experience Level */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                                <GraduationCap className="w-4 h-4 text-purple-400" />
+                                <GraduationCap className="w-4 h-4 text-slate-400" />
                                 Experience Level <span className="text-slate-500 text-xs">(Optional)</span>
                             </label>
                             <select
@@ -117,14 +123,13 @@ const Onboarding = () => {
                                 <option value="Junior">Junior (0-2 years)</option>
                                 <option value="Mid">Mid-Level (3-5 years)</option>
                                 <option value="Senior">Senior (5-8 years)</option>
-                                <option value="Lead">Lead / Architect (8+ years)</option>
                             </select>
                         </div>
 
                         {/* Skills */}
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                                <Code className="w-4 h-4 text-green-400" />
+                                <Code className="w-4 h-4 text-slate-400" />
                                 Top Skills <span className="text-slate-500 text-xs">(Optional, comma separated)</span>
                             </label>
                             <input
@@ -139,7 +144,7 @@ const Onboarding = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col-reverse md:flex-row items-center gap-4 mt-10">
+                    <div className="flex flex-col-reverse md:flex-row md:gap-40 items-center gap-4 mt-10">
                         <button
                             onClick={handleSkip}
                             disabled={loading}

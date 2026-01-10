@@ -25,7 +25,7 @@ const HeroSection = () => {
                         {userCredentials ? (
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-black/70 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                className="px-5 py-2 rounded-full bg-gradient-to-r from-cyan-300/90 to-blue-500/90 text-slate-100 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                             >
                                 Dashboard
                                 <ArrowRight className="w-4 h-4" />
@@ -40,7 +40,7 @@ const HeroSection = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-black/70 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                    className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-slate-100 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                                 >
                                     Get Started
                                 </button>
@@ -53,36 +53,16 @@ const HeroSection = () => {
 
 
             {/* Subtle White Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-white opacity-[0.15] blur-[100px] rounded-full pointer-events-none z-0"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 bg-white opacity-[0.15] blur-[100px] rounded-full pointer-events-none z-0"></div>
 
             {/* Hero Content */}
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-52 md:pt-32 pb-16 flex flex-col items-center text-center">
-
-                {/* Announcement Pill */}
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-8 animate-fade-in-up">
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                    <span className="text-xs font-medium text-slate-300">
-                        New: <span className="text-white">AI Resume Analysis</span> is now live
-                    </span>
-                </div>
-
                 {/* Heading */}
-                <h1 className="text-center font-inter text-[clamp(3rem,6vw,5.5rem)] leading-[1.05] tracking-[-0.03em]
-               text-white
-               drop-shadow-[0_0_40px_rgba(255,255,255,0.05)]
-               drop-shadow-[0_0_80px_rgba(255,255,255,0.02)]">
-
-                    <span className="block font-extrabold">
-                        Practice smarter.
-                    </span>
-
-                    <span className="block font-extrabold 
-                   bg-gradient-to-b from-cyan-400 to-cyan-500
-                   bg-clip-text text-transparent tracking-tighter">
-                        Interview better.
-                    </span>
-
-                </h1>
+                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter mt-16">
+                    Ready to Ace Your
+                    <br />
+                    <span className="bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent">Next Interview?</span>
+                </h2>
 
 
                 {/* Subheading */}
@@ -94,7 +74,7 @@ const HeroSection = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up delay-300">
                     <button
                         onClick={() => navigate('/login')}
-                        className="h-12 px-8 rounded-full bg-gradient-to-b from-cyan-300/90 to-cyan-500/90 text-black/70 font-semibold text-base hover:bg-cyan-500 hover:scale-105 transition-all flex items-center gap-2"
+                        className="h-12 px-8 rounded-full bg-gradient-to-r from-blue-300/90 to-blue-500/90 text-white/80 font-semibold text-base hover:bg-blue-500 hover:scale-105 transition-all flex items-center gap-2"
                     >
                         Get Started
                         <ArrowRight className="w-4 h-4" />

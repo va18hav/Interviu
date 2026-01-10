@@ -71,7 +71,7 @@ const LandingLoader = ({ onComplete }) => {
                         ref={pathRef}
                         d="M0,50 L300,50 L320,20 L340,80 L360,50 L440,50 L460,10 L480,90 L500,50 L600,50 L620,30 L640,70 L660,50 L1000,50"
                         fill="none"
-                        stroke="#cbd5e1" // Slate-300 (Silver)
+                        stroke="#5ecef1ff" // Slate-300 (Silver)
                         strokeWidth="3"
                         strokeLinecap="round"
                         strokeLinejoin="round"

@@ -272,7 +272,7 @@ const InterviewFeedback = () => {
                                                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClasses[metric.color]}/20 border border-${metric.color}-500/20 flex items-center justify-center`}>
                                                     <Icon className={`w-5 h-5 text-${metric.color}-400`} />
                                                 </div>
-                                                <span className="text-slate-300 font-medium text-left">{metric.label}</span>
+                                                <span className="w-1/2 text-slate-300 font-medium text-left">{metric.label}</span>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <span className={`text-xl font-bold ${getScoreColor(metric.score)}`}>
