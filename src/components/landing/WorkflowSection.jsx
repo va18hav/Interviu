@@ -138,7 +138,7 @@ const WorkflowSection = () => {
                         {/* Text Content */}
                         <div className="step-text w-full md:w-5/12 flex flex-col gap-6 order-2 md:order-1">
                             {/* Step Indicator */}
-                            <div className={`inline-flex items-center self-start gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 bg-opacity-10 border border-white/10`}>
+                            <div className={`hidden md:inline-flex items-center self-start gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 bg-opacity-10 border border-white/10`}>
                                 <span className="text-xs md:text-sm font-bold text-white uppercase tracking-wider">
                                     {step.id === 'or' ? 'OR' : `Step 0${step.id}`}
                                 </span>
