@@ -67,7 +67,7 @@ const FeaturesSection = () => {
     ];
 
     return (
-        <section ref={sectionRef} id="features" className="relative py-24 bg-black overflow-hidden">
+        <section ref={sectionRef} id="features" className="relative py-12 bg-black overflow-hidden">
             {/* Background Decor */}
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
 

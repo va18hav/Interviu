@@ -27,7 +27,7 @@ const FAQItem = ({ question, answer, isOpen, toggle }) => {
 };
 
 const FAQSection = () => {
-    const [openIndex, setOpenIndex] = useState(0);
+    const [openIndex, setOpenIndex] = useState(-1);
 
     const toggleIndex = (index) => {
         setOpenIndex(openIndex === index ? -1 : index);

@@ -16,7 +16,7 @@ const ComparisonSection = () => {
             // --- Desktop Animation (Scrub based - High Fidelity) ---
             mm.add("(min-width: 768px)", () => {
                 // Reset to initial state
-                gsap.set(words, { color: "rgba(64,64,64,0.3)" });
+                gsap.set(words, { color: "rgba(64,64,64,0.3)", opacity: 1, y: 0 });
 
                 gsap.to(words, {
                     color: (i, target) => target.dataset.color || "#ffffff",
@@ -31,20 +31,21 @@ const ComparisonSection = () => {
                 });
             });
 
-            // --- Mobile Animation (Trigger based - High Performance) ---
+            // --- Mobile Animation (Trigger based - Staggered Appearance) ---
             mm.add("(max-width: 767px)", () => {
-                // Reset to initial state
-                gsap.set(words, { color: "rgba(64,64,64,0.3)" });
+                // Reset to initial state: Invisible and slightly shifted down
+                gsap.set(words, { opacity: 0, y: 15, color: (i, target) => target.dataset.color || "#ffffff" });
 
-                // Simple auto-play animation when in view
+                // Staggered enter animation
                 gsap.to(words, {
-                    color: (i, target) => target.dataset.color || "#ffffff",
-                    duration: 0.8,
-                    stagger: 0.03,
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.5,
+                    stagger: 0.08, // Distinct "one by one" timing
                     ease: "power2.out",
                     scrollTrigger: {
                         trigger: containerRef.current,
-                        start: "top 60%",
+                        start: "top 65%", // Trigger slightly later so user sees top words first
                         toggleActions: "play none none reverse"
                     }
                 });
@@ -56,7 +57,7 @@ const ComparisonSection = () => {
     }, []);
 
     return (
-        <section ref={containerRef} className="relative py-32 bg-black min-h-[60vh] md:min-h-[80vh] flex items-center justify-center overflow-hidden">
+        <section ref={containerRef} className="relative py-16 bg-black min-h-[50vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden">
             {/* Background Atmosphere */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-neutral-800/20 to-stone-800/20 rounded-full blur-[100px] pointer-events-none" />
 

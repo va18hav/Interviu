@@ -120,7 +120,7 @@ const WorkflowSection = () => {
     }, []);
 
     return (
-        <section ref={sectionRef} className="relative bg-black overflow-hidden min-h-screen md:h-screen py-20 md:py-0">
+        <section ref={sectionRef} className="relative bg-black overflow-hidden min-h-screen md:h-screen py-12 md:py-0">
             {/* Background Glows */}
             <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[120px] -translate-x-1/3 -translate-y-1/3 pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-900/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
