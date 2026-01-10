@@ -13,6 +13,12 @@ const WorkflowSection = () => {
     const sectionRef = useRef(null);
     const containerRef = useRef(null);
 
+    // Optimize for mobile: Ignore address bar resizes and normalize touch scrolling
+    useLayoutEffect(() => {
+        ScrollTrigger.config({ ignoreMobileResize: true });
+        ScrollTrigger.normalizeScroll(true);
+    }, []);
+
     const steps = [
         {
             id: 1,
@@ -53,6 +59,8 @@ const WorkflowSection = () => {
                     end: "+=3000",
                     pin: true,
                     scrub: 0.5,
+                    fastScrollEnd: true,
+                    preventOverlaps: true,
                 }
             });
 
