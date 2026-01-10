@@ -14,6 +14,8 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import InterviewSessionStatic from "./pages/InterviewSessionStatic"
 import './App.css'
 
+import DashboardBlack from "./pages/DashboardBlack"
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -25,6 +27,7 @@ const App = () => {
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/black" element={<DashboardBlack />} />
           <Route path="/dashboard/feedback" element={<Feedback />} />
           <Route path="/resume" element={<Resume />} />
           <Route path="/dashboard/all-previous-interviews" element={<PreviousInterviews />} />

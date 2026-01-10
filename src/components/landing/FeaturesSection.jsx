@@ -108,7 +108,7 @@ const FeaturesSection = () => {
 
                                 <button
                                     onClick={() => navigate(feature.link)}
-                                    className="flex items-center gap-2 border border-slate-700 px-4 py-2 rounded-2xl w-1/2 text-sm font-semibold text-white/80 group-hover:bg-slate-800/60 transition-colors"
+                                    className="flex items-center gap-2 border border-cyan-700 px-4 py-2 rounded-2xl w-1/2 text-sm font-semibold text-white/80 group-hover:bg-gradient-to-r from-cyan-300/80 to-cyan-600/80 transition-colors"
                                 >
                                     {feature.action}
                                     <ArrowRight className="hidden md:block w-4 h-4 transition-transform group-hover:translate-x-1" />
