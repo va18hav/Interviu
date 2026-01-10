@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { User, Mail, Save, ArrowLeft, Loader2, Shield, Lock } from "lucide-react";
+import { User, Mail, Save, ArrowLeft, Loader2, Shield, Lock, Briefcase, GraduationCap, Code } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const ProfileSettings = () => {
@@ -13,6 +13,9 @@ const ProfileSettings = () => {
         firstName: "",
         lastName: "",
         email: "",
+        role: "",
+        experience_level: "",
+        skills: ""
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -34,10 +37,20 @@ const ProfileSettings = () => {
                 return;
             }
 
+            // Fetch profile data from 'profiles' table
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role, experience_level, skills')
+                .eq('id', user.id)
+                .single();
+
             setFormData({
                 firstName: user.user_metadata.first_name || "",
                 lastName: user.user_metadata.last_name || "",
                 email: user.email,
+                role: profile?.role || "",
+                experience_level: profile?.experience_level || "",
+                skills: profile?.skills || ""
             });
         } catch (error) {
             console.error("Error loading user data:", error);
@@ -52,14 +65,28 @@ const ProfileSettings = () => {
         setMessage(null);
 
         try {
-            const { error } = await supabase.auth.updateUser({
+            // 1. Update Auth Metadata
+            const { error: authError } = await supabase.auth.updateUser({
                 data: {
                     first_name: formData.firstName,
                     last_name: formData.lastName,
                 },
             });
 
-            if (error) throw error;
+            if (authError) throw authError;
+
+            // 2. Update Profiles Table
+            const { data: { user } } = await supabase.auth.getUser();
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    role: formData.role,
+                    experience_level: formData.experience_level,
+                    skills: formData.skills
+                })
+                .eq('id', user.id);
+
+            if (profileError) throw profileError;
             setMessage({ type: "success", text: "Profile updated successfully!" });
         } catch (error) {
             setMessage({ type: "error", text: error.message });
@@ -178,6 +205,78 @@ const ProfileSettings = () => {
                                 <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
                                     <Shield className="w-3 h-3" /> Email cannot be changed
                                 </p>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="px-6 py-2.5 rounded-xl bg-cyan-500 text-slate-900 font-semibold text-sm hover:bg-cyan-400 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Professional Profile Card */}
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl p-6 space-y-6">
+                        <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+                            <div className="p-2.5 rounded-lg bg-cyan-500/10 text-cyan-400">
+                                <Briefcase className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white">Professional Profile</h3>
+                        </div>
+
+                        <form onSubmit={handleProfileUpdate} className="space-y-4">
+                            {/* Role */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400">Target Role</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                        placeholder="e.g. Senior Frontend Engineer"
+                                        className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all pl-10"
+                                    />
+                                    <Briefcase className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
+                                </div>
+                            </div>
+
+                            {/* Experience */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400">Experience Level</label>
+                                <div className="relative">
+                                    <select
+                                        value={formData.experience_level}
+                                        onChange={(e) => setFormData({ ...formData, experience_level: e.target.value })}
+                                        className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all pl-10 appearance-none cursor-pointer"
+                                    >
+                                        <option value="" disabled>Select Level</option>
+                                        <option value="Junior">Junior (0-2 years)</option>
+                                        <option value="Mid">Mid-Level (3-5 years)</option>
+                                        <option value="Senior">Senior (5-8 years)</option>
+                                        <option value="Lead">Lead / Architect (8+ years)</option>
+                                    </select>
+                                    <GraduationCap className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
+                                </div>
+                            </div>
+
+                            {/* Skills */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-400">Top Skills</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={formData.skills}
+                                        onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                                        placeholder="React, Node.js, Python..."
+                                        className="w-full rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all pl-10"
+                                    />
+                                    <Code className="absolute left-3 top-3.5 w-4 h-4 text-slate-500" />
+                                </div>
                             </div>
 
                             <div className="pt-2">

@@ -75,7 +75,7 @@ const InterviewSession = () => {
           focus: Array.isArray(focus) ? focus.join(", ") : (focus || ""),
           length: length || "30 min",
           description: description || "Technical Interview",
-          company: company || "Tech Company",
+          company: company || "",
           type: type || "technical",
           questionPool: Array.isArray(questionPool) ? questionPool.join("\n") : (questionPool || "")
         },
@@ -398,22 +398,7 @@ const InterviewSession = () => {
   );
 
   return (
-    <main className="h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-5 flex flex-col relative overflow-hidden">
-      {/* Animated background effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-blue-950/40 via-slate-900/20 to-transparent"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/5 rounded-full blur-3xl"></div>
-
-        {/* Animated dot grid pattern */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 1px, transparent 1px)',
-            backgroundSize: '50px 50px'
-          }}></div>
-        </div>
-      </div>
-
+    <main className="h-screen bg-black py-5 flex flex-col relative overflow-hidden">
       {/* Header */}
       <header className="max-w-7xl mx-auto mb-4 sm:mb-6 w-full flex-shrink-0 relative z-10">
         <div className="">
@@ -423,7 +408,7 @@ const InterviewSession = () => {
               <img src={(!customInterview ? icon : logo)} alt="Logo" className="w-10 h-10" />
 
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                {(!customInterview ? name : role)} <span className="text-blue-300">Interview</span>
+                {(!customInterview ? name : role)} <span className="text-cyan-300">Interview</span>
               </h2>
             </div>
 

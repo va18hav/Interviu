@@ -19,7 +19,7 @@ const InterviewDashboard = () => {
   const [userCredentials, setUserCredentials] = React.useState(null);
   const [showProfile, setShowProfile] = React.useState(false);
   const [pastInterviews, setPastInterviews] = React.useState([]);
-  const [credits, setCredits] = React.useState(null);
+
 
   React.useEffect(() => {
     getProfileAndInterviews();
@@ -44,7 +44,7 @@ const InterviewDashboard = () => {
         email: user.email
       });
 
-      // 2. Fetch Interviews and Profile (Credits) in parallel
+      // 2. Fetch Interviews and Profile (Onboarding Status) in parallel
       const [interviewsResponse, profileResponse] = await Promise.all([
         supabase
           .from('interviews')
@@ -53,7 +53,7 @@ const InterviewDashboard = () => {
 
         supabase
           .from('profiles')
-          .select('credits, onboarding_completed')
+          .select('onboarding_completed')
           .eq('id', user.id)
           .single()
       ]);
@@ -71,7 +71,6 @@ const InterviewDashboard = () => {
       }
 
       if (profileResponse.data) {
-        setCredits(profileResponse.data.credits);
         // Redirect to Onboarding if not completed
         if (!profileResponse.data.onboarding_completed) {
           navigate('/onboarding');
@@ -122,49 +121,6 @@ const InterviewDashboard = () => {
       alert("Failed to load interview details.");
     }
   }
-
-  async function startInterview(id) {
-    // --- CHECK CREDITS START ---
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile || profile.credits < 5) {
-        alert("You need at least 5 credits to start an interview!");
-        return;
-      }
-    }
-    // --- CHECK CREDITS END ---
-
-    sessionStorage.removeItem("interviewEnded");
-    const interview = TechInterviews.find(interview => interview.id === id);
-
-    // Flatten questions from rounds
-    const questionPool = [];
-    if (interview && interview.rounds) {
-      Object.values(interview.rounds).forEach(round => {
-        if (round.questions && Array.isArray(round.questions)) {
-          questionPool.push(...round.questions);
-        }
-      });
-    }
-
-    navigate("/dashboard/interview", {
-      state: {
-        role: interview.role,
-        name: `${interview.company} ${interview.role}`,
-        level: interview.level,
-        company: interview.company,
-        duration: interview.totalDuration,
-        questionPool: questionPool
-      }
-    })
-  }
-
   // Helper for company colors since they are not in the data
   const getCompanyColor = (company) => {
     const colors = {
@@ -189,22 +145,16 @@ const InterviewDashboard = () => {
     return "bg-yellow-500/10 border-yellow-500/20";
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-black">
 
       {/* Header */}
-      <Navbar credits={credits} />
+      <Navbar />
 
       {/* Main Content */}
-      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+      {loading ? <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
+      </div> : <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
 
         {/* Hero Banner */}
         <DashboardBanner />
@@ -235,7 +185,6 @@ const InterviewDashboard = () => {
                   className="relative group rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-cyan-500/30 transition-all duration-300 cursor-pointer"
                 >
                   <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-                  <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-blue-500/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
                   <div className="p-6 space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between">
@@ -294,14 +243,9 @@ const InterviewDashboard = () => {
         {/* Popular Interviews Section */}
         <section className="space-y-6">
           <PopularInterviewsBanner />
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-cyan-400" />
-                Popular Interviews
-              </h3>
-              <p className="text-slate-400 text-sm mt-1">Most practiced by the community</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <p className="text-slate-400 text-sm mt-1">In Demand</p>
+            <TrendingUp className="w-6 h-6 text-cyan-400" />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -324,7 +268,6 @@ const InterviewDashboard = () => {
                   className="relative group rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
                 >
                   <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-                  <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-purple-500/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
                   <div className="p-6 space-y-4">
                     {/* Icon */}
                     <div className={`w-14 h-14 rounded-xl border border-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
@@ -369,9 +312,7 @@ const InterviewDashboard = () => {
             })}
           </div>
         </section>
-        <ResumeHero onButtonClick={() => navigate('/resume')} />
-
-      </main>
+      </main>}
     </div>
   );
 };

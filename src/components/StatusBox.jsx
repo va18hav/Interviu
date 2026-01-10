@@ -3,7 +3,7 @@ import React from 'react'
 const StatusBox = ({ interviewState, currentQuestion, currentAnswer }) => {
     return (
         <div className="max-w-7xl mx-auto w-full flex-shrink-0 relative z-10">
-            <div className="border border-white/20 rounded-3xl shadow-2xl overflow-hidden bg-slate-950">
+            <div className="border border-white/20 rounded-3xl shadow-2xl overflow-hidden bg-slate-800/50">
                 <div className="px-2 py-2 lg:px-6 lg:py-6">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1 min-w-0">

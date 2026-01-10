@@ -16,15 +16,15 @@ const InterviewSessionStatic = () => {
     const { firstName } = userCredentials;
 
     // Static state for photoshoot visual
-    const [interviewState, setInterviewState] = React.useState('ai-speaking')
+    const [interviewState, setInterviewState] = React.useState('user-speaking')
     const [elapsedTime, setElapsedTime] = React.useState(142) // 02:22
 
     // Static content
     const currentQuestion = "Can you describe a challenging technical problem you solved recently using React's context API?"
-    const currentAnswer = null // User is listening
+    const currentAnswer = "Um, yeah—so one challenging problem I worked on recently was using React’s Context API to, kind of, clean up how we were handling global authentication state across the app...." // User is listening
 
     const role = "Senior React Developer"
-    const name = "Frontend Developer"
+    const name = "Full Stack Developer"
     const icon = logo // Or use a Google logo if available, falling back to app logo
     const customInterview = false // Pretend it's a popular interview
 
@@ -57,7 +57,7 @@ const InterviewSessionStatic = () => {
     }, []);
 
     return (
-        <main className="h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-5 flex flex-col relative overflow-hidden">
+        <main className="h-screen bg-black py-5 flex flex-col relative overflow-hidden">
             {/* Animated background effects */}
 
             {/* Header */}
@@ -69,7 +69,7 @@ const InterviewSessionStatic = () => {
                             <img src={icon} alt="Logo" className="w-10 h-10" />
 
                             <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                                {name} <span className="text-blue-300">Interview</span>
+                                {name} Interview
                             </h2>
                         </div>
 

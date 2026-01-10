@@ -118,29 +118,10 @@ const InterviewFeedback = () => {
                 {/* Header */}
                 <div className="text-center space-y-4">
                     <h1 className="text-5xl font-bold text-white mt-2">
-                        Interview <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Completed!</span>
+                        Interview Completed!
                     </h1>
                 </div>
-
-                {/* Interview Details Row */}
                 <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-slate-400 -mt-2 mb-6 animate-fade-in">
-                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-cyan-500/30 transition-colors">
-                        <User className="w-4 h-4 text-cyan-400 bg-cyan-500/10 rounded p-0.5" />
-                        <span className="text-sm font-medium">{feedbackData.role || "Software Engineer"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-purple-500/30 transition-colors">
-                        <TrendingUp className="w-4 h-4 text-purple-400 bg-purple-500/10 rounded p-0.5" />
-                        <span className="text-sm font-medium">{feedbackData.level || "Mid-Level"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-blue-500/30 transition-colors">
-                        <Clock className="w-4 h-4 text-blue-400 bg-blue-500/10 rounded p-0.5" />
-                        <span className="text-sm font-medium">{feedbackData.duration || "25m 12s"}</span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-green-500/30 transition-colors">
-                        <Calendar className="w-4 h-4 text-green-400 bg-green-500/10 rounded p-0.5" />
-                        <span className="text-sm font-medium">{feedbackData.date || "Oct 24, 2024"}</span>
-                    </div>
-
                     {!feedbackData.customInterview && feedbackData.company && (
                         <div className="flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800 hover:border-orange-500/30 transition-colors">
                             <Building2 className="w-4 h-4 text-orange-400 bg-orange-500/10 rounded p-0.5" />

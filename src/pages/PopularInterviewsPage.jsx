@@ -86,7 +86,6 @@ const PopularInterviewsPage = () => {
                                 className="relative group rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer flex flex-col"
                             >
                                 <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-                                <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-purple-500/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
                                 <div className="p-6 space-y-4 flex-1">
                                     {/* Icon */}
                                     <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>

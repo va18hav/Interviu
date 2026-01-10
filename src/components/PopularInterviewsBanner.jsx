@@ -13,13 +13,13 @@ const PopularInterviewsBanner = () => {
             <div className="flex items-center md:gap-10 lg:gap-8">
                 <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-15 lg:px-16 lg:py-20 max-w-4xl space-y-8">
 
-                    <h1 className='font-space text-4xl md:text-5xl lg:text-5xl font-extrabold text-slate-200 tracking-tight'>
+                    <h1 className='font-sans text-4xl md:text-5xl font-extrabold text-slate-200 tracking-tighter'>
                         Top Tech
                         <br />
                         Interview Simulations
                     </h1>
 
-                    <p className='font-space text-md lg:text-lg text-slate-400 max-w-sm lg:max-w-xl leading-relaxed'>
+                    <p className='font-space text-md lg:text-lg text-slate-400 max-w-sm lg:max-w-xl tracking-tight'>
                         Practice for top tech companies. Choose from our most popular and realistic interview simulations.
                     </p>
                     <button
