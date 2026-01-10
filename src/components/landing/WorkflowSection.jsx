@@ -157,7 +157,7 @@ const WorkflowSection = () => {
 
                         {/* Image Content */}
                         <div className="step-image w-full md:w-7/12 order-1 md:order-2">
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900/50 aspect-[16/10]">
+                            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-800 aspect-[16/10]">
                                 <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/20 to-transparent pointer-events-none z-10" />
                                 <img
                                     src={step.image}

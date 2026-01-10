@@ -78,7 +78,7 @@ const HeroSection = () => {
 
                     <span className="block font-extrabold 
                    bg-gradient-to-b from-cyan-400 to-cyan-500
-                   bg-clip-text text-transparent text-shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                   bg-clip-text text-transparent">
                         Interview better.
                     </span>
 
