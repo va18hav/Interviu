@@ -12,11 +12,13 @@ const ComparisonSection = () => {
         const ctx = gsap.context(() => {
             const mm = gsap.matchMedia();
             const words = textRef.current.querySelectorAll('.word');
+            const paragraphs = textRef.current.querySelectorAll('p');
 
             // --- Desktop Animation (Scrub based - High Fidelity) ---
             mm.add("(min-width: 768px)", () => {
-                // Reset to initial state
-                gsap.set(words, { color: "rgba(64,64,64,0.3)", opacity: 1, y: 0 });
+                // Reset to desktop initial state
+                gsap.set(paragraphs, { opacity: 1, y: 0 }); // Ensure paragraphs are visible
+                gsap.set(words, { color: "rgba(64,64,64,0.3)", opacity: 1, display: "inline-block" });
 
                 gsap.to(words, {
                     color: (i, target) => target.dataset.color || "#ffffff",
@@ -31,21 +33,22 @@ const ComparisonSection = () => {
                 });
             });
 
-            // --- Mobile Animation (Trigger based - Staggered Appearance) ---
+            // --- Mobile Animation (Line-by-line Fade In - No ScrollTrigger per word) ---
             mm.add("(max-width: 767px)", () => {
-                // Reset to initial state: Invisible and slightly shifted down
-                gsap.set(words, { opacity: 0, y: 15, color: (i, target) => target.dataset.color || "#ffffff" });
+                // Reset to mobile initial state
+                gsap.set(words, { color: (i, target) => target.dataset.color || "#ffffff", opacity: 1 }); // Words are fully colored already
+                gsap.set(paragraphs, { opacity: 0, y: 20 }); // Animate entire paragraphs instead
 
-                // Staggered enter animation
-                gsap.to(words, {
+                // Animate paragraphs one by one
+                gsap.to(paragraphs, {
                     opacity: 1,
                     y: 0,
-                    duration: 0.5,
-                    stagger: 0.08, // Distinct "one by one" timing
+                    duration: 1,
+                    stagger: 0.3,
                     ease: "power2.out",
                     scrollTrigger: {
                         trigger: containerRef.current,
-                        start: "top 65%", // Trigger slightly later so user sees top words first
+                        start: "top 70%",
                         toggleActions: "play none none reverse"
                     }
                 });
@@ -66,7 +69,7 @@ const ComparisonSection = () => {
                     {/* Paragraph 1 */}
                     <p className="mb-16">
                         {["Interviews", "are", "rarely", "about", "knowing", "everything.", "They’re", "about", "staying", "clear,", "calm,", "and", "confident", "when", "it", "matters."].map((word, i) => (
-                            <span key={`p1-${i}`} className="word text-neutral-700/30 inline-block mr-[0.25em]">
+                            <span key={`p1-${i}`} className="word inline-block mr-[0.25em]">
                                 {word}
                             </span>
                         ))}
@@ -74,10 +77,10 @@ const ComparisonSection = () => {
 
                     {/* Paragraph 2 - "Interviu" styled with Cyan */}
                     <p>
-                        <span className="word text-neutral-700/30 inline-block mr-0" data-color="#ffffff">Inter</span>
-                        <span className="word text-neutral-700/30 inline-block mr-[0.25em]" data-color="#22d3ee">viu</span>
+                        <span className="word inline-block mr-0" data-color="#ffffff">Inter</span>
+                        <span className="word inline-block mr-[0.25em]" data-color="#22d3ee">viu</span>
                         {["exists", "to", "help", "you", "practice", "that", "moment."].map((word, i) => (
-                            <span key={`p2-${i}`} className="word text-neutral-700/30 inline-block mr-[0.25em]">
+                            <span key={`p2-${i}`} className="word inline-block mr-[0.25em]">
                                 {word}
                             </span>
                         ))}
