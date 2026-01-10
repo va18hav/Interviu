@@ -17,15 +17,15 @@ const HeroSection = () => {
             <nav className="absolute top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-                        <img src={logo} alt="Intervyu" className="w-8 h-8 contrast-125 brightness-150" />
-                        <span className="text-2xl font-extrabold text-white tracking-tight">Inter<span className='text-cyan-400'>viu</span></span>
+                        <img src={logo} alt="Intervyu" className="w-15 h-15 contrast-125 brightness-150" />
+                        <span className="text-2xl font-extrabold text-white tracking-tighter">Inter<span className='text-cyan-400'>viu</span></span>
                     </div>
 
                     <div className="flex items-center gap-4">
                         {userCredentials ? (
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-white text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-black/70 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                             >
                                 Dashboard
                                 <ArrowRight className="w-4 h-4" />
@@ -40,7 +40,7 @@ const HeroSection = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-white text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                    className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-black/70 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                                 >
                                     Get Started
                                 </button>
@@ -78,7 +78,7 @@ const HeroSection = () => {
 
                     <span className="block font-extrabold 
                    bg-gradient-to-b from-cyan-400 to-cyan-500
-                   bg-clip-text text-transparent">
+                   bg-clip-text text-transparent tracking-tighter">
                         Interview better.
                     </span>
 
@@ -94,7 +94,7 @@ const HeroSection = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up delay-300">
                     <button
                         onClick={() => navigate('/login')}
-                        className="h-12 px-8 rounded-full bg-white text-black font-semibold text-base hover:bg-slate-200 transition-all flex items-center gap-2"
+                        className="h-12 px-8 rounded-full bg-gradient-to-b from-cyan-300/90 to-cyan-500/90 text-black/70 font-semibold text-base hover:bg-cyan-500 hover:scale-105 transition-all flex items-center gap-2"
                     >
                         Get Started
                         <ArrowRight className="w-4 h-4" />

@@ -30,7 +30,7 @@ const FeaturesSection = () => {
                         ease: "power2.out",
                         scrollTrigger: {
                             trigger: icon,
-                            start: "top 90%", // Start highlighting when icon enters bottom 15% of viewport
+                            start: "top 75%", // Start highlighting when icon enters bottom 15% of viewport
                             end: "center 55%",   // Finishes highlighting when it's near center
                             scrub: 1,         // Smooth scrubbing logic
                         }

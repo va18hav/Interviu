@@ -53,7 +53,7 @@ const InterviewDashboard = () => {
 
         supabase
           .from('profiles')
-          .select('credits')
+          .select('credits, onboarding_completed')
           .eq('id', user.id)
           .single()
       ]);
@@ -72,6 +72,11 @@ const InterviewDashboard = () => {
 
       if (profileResponse.data) {
         setCredits(profileResponse.data.credits);
+        // Redirect to Onboarding if not completed
+        if (!profileResponse.data.onboarding_completed) {
+          navigate('/onboarding');
+          return;
+        }
       }
 
     } catch (error) {

@@ -15,6 +15,7 @@ import InterviewSessionStatic from "./pages/InterviewSessionStatic"
 import './App.css'
 
 import DashboardBlack from "./pages/DashboardBlack"
+import Onboarding from "./pages/Onboarding"
 
 const App = () => {
   return (
@@ -41,6 +42,7 @@ const App = () => {
           <Route path="/create/interview/:id" element={<InterviewSession />} />
           <Route path="/create/interview/:id/feedback" element={<Feedback />} />
           <Route path="/profile" element={<ProfileSettings />} />
+          <Route path="/onboarding" element={<Onboarding />} />
         </Route>
       </Routes>
     </BrowserRouter>
