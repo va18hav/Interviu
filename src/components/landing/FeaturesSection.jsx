@@ -26,7 +26,7 @@ const FeaturesSection = () => {
                         opacity: 1,
                         scale: 1,
                         filter: 'blur(0px)',
-                        color: '#5ecef1ff', // white
+                        color: '#a6f6f6ff', // white
                         ease: "power2.out",
                         scrollTrigger: {
                             trigger: icon,
@@ -88,7 +88,7 @@ const FeaturesSection = () => {
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className="group relative p-8 border border-slate-800/60 hover:bg-slate-900/40 backdrop-blur-sm transition-all duration-300 hover:border-slate-700 hover:-translate-y-1"
+                            className="group relative p-8 border border-slate-800/90 hover:bg-slate-900/40 backdrop-blur-sm transition-all duration-300 hover:border-slate-700 hover:-translate-y-1"
                         >
                             {/* Hover Gradient */}
                             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -98,7 +98,7 @@ const FeaturesSection = () => {
                                 <div className="mb-10 flex justify-center feature-icon text-slate-700">
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-xl font-bold text-cyan-300 mb-4">
+                                <h3 className="text-xl font-bold text-white/80 mb-4">
                                     {feature.title}
                                 </h3>
 

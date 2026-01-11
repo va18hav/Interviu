@@ -1,8 +1,7 @@
-import React from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Sparkles, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
-import mic from '../../assets/images/mic.png';
 import InteractiveGridBackground from './InteractiveGridBackground';
 
 const HeroSection = () => {
@@ -16,7 +15,7 @@ const HeroSection = () => {
 
             {/* Navigation */}
             <nav className="absolute top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-md">
-                <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                     <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
                         <img src={logo} alt="Intervyu" className="w-15 h-15 contrast-125 brightness-150" />
                         <span className="text-2xl font-extrabold text-white tracking-tighter">Inter<span className='text-cyan-400'>viu</span></span>
@@ -50,9 +49,6 @@ const HeroSection = () => {
                     </div>
                 </div>
             </nav>
-
-
-
             {/* Subtle White Glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-50 h-50 md:w-100 md:h-100 bg-white opacity-[0.15] blur-[100px] rounded-full pointer-events-none z-0"></div>
 
@@ -64,9 +60,31 @@ const HeroSection = () => {
                     <br />
                     <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 mt-2 opacity-100">
                         <div className="hidden md:block flex-1 h-[2px] bg-gradient-to-l from-green-500/50 to-transparent"></div>
-                        <PulseWave className="hidden md:block w-20 md:w-72 text-green-300 shrink-0" />
+
+                        {/* AI Transcript (Green) */}
+                        <div className="relative shrink-0 hidden md:block">
+                            <PulseWave className="w-20 md:w-72 text-green-300" />
+                            <TranscriptBubble
+                                type="ai"
+                                text="Hello! I'm your AI Interviewer."
+                                className="absolute bottom-full right-10 -translate-x-1/2 mb-6"
+                                startDelay={4000}
+                            />
+                        </div>
+
                         <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent shrink-0">Next Interview?</span>
-                        <PulseWave className="hidden md:block w-20 md:w-72 text-cyan-400 shrink-0 scale-x-[-1]" />
+
+                        {/* User Transcript (Cyan) */}
+                        <div className="relative shrink-0 hidden md:block">
+                            <PulseWave className="w-20 md:w-72 text-cyan-400 scale-x-[-1]" />
+                            <TranscriptBubble
+                                type="user"
+                                text="Hi, I'm ready to begin."
+                                className="absolute top-full left-75 -translate-x-1/2 mt-6"
+                                startDelay={5500}
+                            />
+                        </div>
+
                         <div className="hidden md:block flex-1 h-[2px] bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
                     </div>
                 </h2>
@@ -88,7 +106,7 @@ const HeroSection = () => {
                     </button>
                     <button
                         onClick={() => navigate('/about')}
-                        className="hidden md:block h-12 px-8 rounded-full bg-white/10 border border-white/10 text-white font-medium text-base hover:bg-white/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
+                        className="hidden md:block h-12 px-8 rounded-full border border-white/10 text-white font-medium text-base hover:bg-white/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
                     >
                         Learn more
                     </button>
@@ -106,5 +124,46 @@ const PulseWave = ({ className }) => (
         <path d="M0 12 H20 L25 4 L30 20 L35 12 H50 L55 5 L60 19 L65 12 H100" />
     </svg>
 );
+
+const TranscriptBubble = ({ text, type, className, startDelay = 0, typingSpeed = 50 }) => {
+    const [displayedText, setDisplayedText] = useState('');
+    const [isVisible, setIsVisible] = useState(false);
+    const isAi = type === 'ai';
+
+    useEffect(() => {
+        let timeout;
+        let interval;
+        let charIndex = 0;
+
+        timeout = setTimeout(() => {
+            setIsVisible(true);
+            interval = setInterval(() => {
+                if (charIndex <= text.length) {
+                    setDisplayedText(text.slice(0, charIndex));
+                    charIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, typingSpeed);
+        }, startDelay);
+
+        return () => {
+            clearTimeout(timeout);
+            clearInterval(interval);
+        };
+    }, [text, startDelay, typingSpeed]);
+
+    return (
+        <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border backdrop-blur-sm transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'
+                } ${isAi
+                    ? 'border-green-500/30 bg-green-500/5 text-green-100'
+                    : 'border-cyan-500/30 bg-cyan-500/5 text-cyan-100'
+                } ${className}`}>
+            <Mic className={`w-3 h-3 ${isAi ? 'text-green-400' : 'text-cyan-400'}`} />
+            <span className="text-xs font-medium tracking-wide whitespace-nowrap opacity-80">{displayedText}</span>
+        </div>
+    );
+};
 
 export default HeroSection;

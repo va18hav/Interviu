@@ -28,23 +28,72 @@
     }
 }
 
-.animate-fade-in-up {
-    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.delay-100 {
+.animate-fade-in-up {
+    animation-name: fadeInUp;
+    animation-duration: 0.8s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+}
+
+.animate-slide-down {
+    animation-name: slideDownFade;
+    animation-duration: 0.8s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+}
+
+.animate-delay-100 {
     animation-delay: 100ms;
 }
 
-.delay-200 {
+.animate-delay-200 {
     animation-delay: 200ms;
 }
 
-.delay-300 {
+.animate-delay-300 {
     animation-delay: 300ms;
 }
 
-/* Ensure elements are hidden before animation */
-.animate-fade-in-up {
-    opacity: 0;
+.animate-delay-500 {
+    animation-delay: 500ms;
+}
+
+.animate-delay-1000 {
+    animation-delay: 1000ms;
+}
+
+.animate-delay-1500 {
+    animation-delay: 1500ms;
+}
+
+.animate-delay-2000 {
+    animation-delay: 2000ms;
+}
+
+
+/* Bubble Animations */
+.animate-bubble-up {
+    animation-name: fadeInUp;
+    animation-duration: 0.8s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+}
+
+.animate-bubble-down {
+    animation-name: slideDownFade;
+    animation-duration: 0.8s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
 }
