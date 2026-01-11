@@ -63,11 +63,11 @@ const HeroSection = () => {
                     <span className="relative z-10">Ready to Ace Your</span>
                     <br />
                     <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 mt-2 opacity-100">
-                        <div className="hidden sm:block flex-1 h-[2px] bg-gradient-to-l from-green-500/50 to-transparent"></div>
-                        <PulseWave className="w-20 md:w-72 text-green-300 shrink-0" />
+                        <div className="hidden md:block flex-1 h-[2px] bg-gradient-to-l from-green-500/50 to-transparent"></div>
+                        <PulseWave className="hidden md:block w-20 md:w-72 text-green-300 shrink-0" />
                         <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent shrink-0">Next Interview?</span>
-                        <PulseWave className="w-20 md:w-72 text-cyan-400 shrink-0 scale-x-[-1]" />
-                        <div className="hidden sm:block flex-1 h-[2px] bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
+                        <PulseWave className="hidden md:block w-20 md:w-72 text-cyan-400 shrink-0 scale-x-[-1]" />
+                        <div className="hidden md:block flex-1 h-[2px] bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
                     </div>
                 </h2>
 
