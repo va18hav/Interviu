@@ -19,12 +19,7 @@ const WorkflowSection = () => {
             description: "Select your target role, difficulty level, and specific skills you want to practice. From 'Junior React Developer' to 'Senior System Architect'—you define the challenge.",
             image: configureImg,
         },
-        {
-            id: 'or',
-            title: "Choose from our top tech interview simulations",
-            description: "Targeting FAANG? Skip the setup and dive straight into realistic interview loops modeled after top tech giants like Google, Amazon, and Meta.",
-            image: topTechImg,
-        },
+
         {
             id: 2,
             title: "AI-Driven Simulation",

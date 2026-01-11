@@ -25,7 +25,7 @@ const InteractiveGridBackground = () => {
     const cellY = Math.floor(mousePos.y / gridSize) * gridSize;
 
     return (
-        <div ref={containerRef} className="hidden md:block absolute inset-0 bg-black overflow-hidden pointer-events-none z-0">
+        <div ref={containerRef} className="absolute inset-0 bg-black overflow-hidden pointer-events-none z-0">
             {/* Base Grid (Faint) */}
             {/* Base Grid (Clearly Visible) */}
             <div

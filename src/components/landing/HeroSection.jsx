@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import mic from '../../assets/images/mic.png';
 import InteractiveGridBackground from './InteractiveGridBackground';
 
 const HeroSection = () => {
@@ -15,8 +16,8 @@ const HeroSection = () => {
 
             {/* Navigation */}
             <nav className="absolute top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+                <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                    <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
                         <img src={logo} alt="Intervyu" className="w-15 h-15 contrast-125 brightness-150" />
                         <span className="text-2xl font-extrabold text-white tracking-tighter">Inter<span className='text-cyan-400'>viu</span></span>
                     </div>
@@ -25,7 +26,7 @@ const HeroSection = () => {
                         {userCredentials ? (
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2 rounded-full bg-gradient-to-r from-cyan-300/90 to-blue-500/90 text-slate-100 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                className="px-5 py-2 rounded-full bg-white/80 text-slate-900 hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                             >
                                 Dashboard
                                 <ArrowRight className="w-4 h-4" />
@@ -40,7 +41,7 @@ const HeroSection = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="px-5 py-2 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-500 text-slate-100 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                    className="px-5 py-2 rounded-full bg-white/80 text-slate-900 hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                                 >
                                     Get Started
                                 </button>
@@ -53,21 +54,27 @@ const HeroSection = () => {
 
 
             {/* Subtle White Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 bg-white opacity-[0.15] blur-[100px] rounded-full pointer-events-none z-0"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-50 h-50 md:w-100 md:h-100 bg-white opacity-[0.15] blur-[100px] rounded-full pointer-events-none z-0"></div>
 
             {/* Hero Content */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-52 md:pt-32 pb-16 flex flex-col items-center text-center">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-45 md:pt-40 pb-16 flex flex-col items-center text-center">
                 {/* Heading */}
-                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter mt-16">
-                    Ready to Ace Your
+                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter mt-16 mb-5 relative max-w-none">
+                    <span className="relative z-10">Ready to Ace Your</span>
                     <br />
-                    <span className="bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent">Next Interview?</span>
+                    <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 mt-2 opacity-100">
+                        <div className="hidden sm:block flex-1 h-[2px] bg-gradient-to-l from-green-500/50 to-transparent"></div>
+                        <PulseWave className="w-20 md:w-72 text-green-300 shrink-0" />
+                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent shrink-0">Next Interview?</span>
+                        <PulseWave className="w-20 md:w-72 text-cyan-400 shrink-0 scale-x-[-1]" />
+                        <div className="hidden sm:block flex-1 h-[2px] bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
+                    </div>
                 </h2>
 
 
                 {/* Subheading */}
-                <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed animate-fade-in-up delay-200">
-                    Master your next technical interview with realistic, voice-based AI simulations for Google, Amazon, and Meta. Get real-time feedback and detailed performance metrics.
+                <p className="text-sm md:text-lg text-slate-400 max-w-2xl mt-5 mb-10 leading-tight text-center animate-fade-in-up delay-200">
+                    Practice with AI-generated interviews tailored to your specific role, level and skills. Or master your next technical interview with realistic, voice-based AI simulations for Google, Amazon, and Meta. Get real-time feedback and detailed performance metrics.
                 </p>
 
                 {/* Buttons */}
@@ -81,7 +88,7 @@ const HeroSection = () => {
                     </button>
                     <button
                         onClick={() => navigate('/about')}
-                        className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-medium text-base hover:bg-white/10 transition-all backdrop-blur-sm"
+                        className="hidden md:block h-12 px-8 rounded-full bg-white/10 border border-white/10 text-white font-medium text-base hover:bg-white/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
                     >
                         Learn more
                     </button>
@@ -93,5 +100,11 @@ const HeroSection = () => {
         </div>
     );
 };
+
+const PulseWave = ({ className }) => (
+    <svg viewBox="0 0 100 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M0 12 H20 L25 4 L30 20 L35 12 H50 L55 5 L60 19 L65 12 H100" />
+    </svg>
+);
 
 export default HeroSection;

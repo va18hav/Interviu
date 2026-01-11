@@ -60,7 +60,7 @@ const ComparisonSection = () => {
     }, []);
 
     return (
-        <section ref={containerRef} className="relative py-16 bg-black min-h-[50vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden">
+        <section ref={containerRef} className="hidden md:block relative py-16 bg-black min-h-[50vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden">
             {/* Background Atmosphere */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-neutral-800/20 to-stone-800/20 rounded-full blur-[100px] pointer-events-none" />
 
