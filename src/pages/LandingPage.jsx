@@ -5,6 +5,7 @@ import WorkflowSection from '../components/landing/WorkflowSection';
 import ComparisonSection from '../components/landing/ComparisonSection';
 import LandingLoader from '../components/landing/LandingLoader';
 import FAQSection from '../components/landing/FAQSection';
+import VideoSection from '../components/landing/VideoSection';
 
 const LandingPage = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +44,7 @@ const LandingPage = () => {
             {isLoading && <LandingLoader onComplete={() => setIsLoading(false)} />}
 
             <HeroSection />
+            <VideoSection />
             <FeaturesSection />
             <WorkflowSection />
             <ComparisonSection />

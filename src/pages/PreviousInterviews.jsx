@@ -166,7 +166,7 @@ const PreviousInterviews = () => {
                         <p className="text-slate-400 mb-6">You haven't completed any practice interviews yet.</p>
                         <button
                             onClick={() => navigate('/create')}
-                            className="px-6 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-semibold transition-colors"
+                            className="px-6 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-semibold transition-colors"
                         >
                             Start New Interview
                         </button>

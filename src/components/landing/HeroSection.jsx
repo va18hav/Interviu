@@ -54,9 +54,9 @@ const HeroSection = () => {
 
             {/* Hero Content */}
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-45 md:pt-35 pb-16 flex flex-col items-center text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 backdrop-blur">
-                    <span className="text text-cyan-400 font-medium">AI-Powered Practice</span>
-                </div>
+                {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-400/5 border border-cyan-500/20 backdrop-blur">
+                    <span className="text-sm text-cyan-400 font-medium">AI-Powered Practice</span>
+                </div> */}
                 {/* Heading */}
                 <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter mt-14 mb-5 relative max-w-none">
                     <span className="relative z-10">Ready to Ace Your</span>
@@ -75,7 +75,7 @@ const HeroSection = () => {
                             />
                         </div>
 
-                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent shrink-0">Next Interview?</span>
+                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-200 to-blue-500/80 bg-clip-text text-transparent shrink-0">Next Interview?</span>
 
                         {/* User Transcript (Cyan) */}
                         <div className="relative shrink-0 hidden md:block">
@@ -104,15 +104,15 @@ const HeroSection = () => {
                         onClick={() => navigate('/login')}
                         className="h-12 px-8 rounded-full bg-gradient-to-r from-blue-300/90 to-blue-500/90 text-white/80 font-semibold text-base hover:bg-blue-500 hover:scale-105 transition-all flex items-center gap-2"
                     >
-                        Start Interview
+                        Create free Interview
                         <ArrowRight className="w-4 h-4" />
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => navigate('/about')}
                         className="hidden md:block h-12 px-8 rounded-full border border-white/10 text-white font-medium text-base hover:bg-white/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
                     >
                         Learn more
-                    </button>
+                    </button> */}
                 </div>
             </div>
 

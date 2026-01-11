@@ -10,17 +10,17 @@ const DashboardBanner = ({ firstName }) => {
             {/* Background gradients */}
             <div className="absolute inset-0 bg-gradient-to-br from black/100 via black/60 to black/100" />
             <div className="absolute -top-0 -right-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-cyan-500/25 rounded-full blur-3xl" />
-            <div className="absolute -bottom-0 -left-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-white/15 rounded-full blur-3xl" />
+            <div className="absolute -bottom-0 -left-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-blue-500/25 rounded-full blur-3xl" />
 
             {/* Content */}
-            <div className="relative z-10 px-6 md:px-8 lg:px-16 py-16 md:py-6 lg:py-28 flex items-center justify-between">
+            <div className="relative z-10 px-6 md:px-8 lg:px-16 py-16 md:py-6 lg:pt-38 lg:pb-18 flex items-center justify-between">
                 <img src={bot} alt="" className="hidden lg:block absolute -bottom-27 -right-10 w-100 -rotate-[20deg] hover:scale-105 transition-all duration-300" />
                 <div className="max-w-2xl space-y-6">
-                    <h2 className="font-sans text-4xl md:text-7xl font-extrabold text-white tracking-tight">
-                        Hi <span className="bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent">{firstName}!</span>
+                    <h2 className="font-sans text-5xl md:text-7xl font-extrabold text-white tracking-tight">
+                        Hi <span className="bg-gradient-to-r from-white/90 via-cyan-200 to-blue-500/80 bg-clip-text text-transparent">{firstName}!</span>
                     </h2>
 
-                    <p className="font-space text-sm lg:text-lg text-slate-300 tracking-tight">
+                    <p className="font-space text-sm lg:text-xl text-slate-300 tracking-tight">
                         Practice with AI-generated interviews tailored to your specific role, level and skills. Get instant feedback to land your dream job.
                     </p>
 
