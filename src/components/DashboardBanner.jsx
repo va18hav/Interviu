@@ -3,7 +3,7 @@ import bot from "../assets/images/bot.png"
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight } from 'lucide-react'
 
-const DashboardBanner = () => {
+const DashboardBanner = ({ firstName }) => {
     const navigate = useNavigate()
     return (
         <div className="relative rounded-3xl overflow-hidden">
@@ -13,18 +13,11 @@ const DashboardBanner = () => {
             <div className="absolute -bottom-0 -left-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-white/15 rounded-full blur-3xl" />
 
             {/* Content */}
-            <div className="relative z-10 px-6 md:px-8 lg:px-16 py-6 md:py-6 lg:py-18 flex items-center justify-between">
+            <div className="relative z-10 px-6 md:px-8 lg:px-16 py-16 md:py-6 lg:py-28 flex items-center justify-between">
                 <img src={bot} alt="" className="hidden lg:block absolute -bottom-27 -right-10 w-100 -rotate-[20deg] hover:scale-105 transition-all duration-300" />
                 <div className="max-w-2xl space-y-6">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 backdrop-blur">
-
-                        <span className="text text-cyan-400 font-medium">AI-Powered Practice</span>
-                    </div>
-
-                    <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter">
-                        Ready to Ace Your
-                        <br />
-                        <span className="bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent">Next Interview?</span>
+                    <h2 className="font-sans text-4xl md:text-7xl font-extrabold text-white tracking-tight">
+                        Hi <span className="bg-gradient-to-r from-cyan-200 to-blue-500/80 bg-clip-text text-transparent">{firstName}!</span>
                     </h2>
 
                     <p className="font-space text-sm lg:text-lg text-slate-300 tracking-tight">
@@ -49,9 +42,9 @@ const DashboardBanner = () => {
 
 
                         <button
-                            onClick={() => navigate('/dashboard/all-popular-interviews')}
+                            onClick={() => navigate('/dashboard/all-previous-interviews')}
                             className="hidden md:block px-8 py-4 rounded-2xl font-semibold text-base border border-slate-700 bg-slate-900/60 text-white hover:bg-slate-800/60 transition-all backdrop-blur-sm">
-                            View All Interviews
+                            View Past Interviews
                         </button>
                     </div>
                 </div>

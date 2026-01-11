@@ -53,9 +53,12 @@ const HeroSection = () => {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-50 h-50 md:w-100 md:h-100 bg-white opacity-[0.15] blur-[100px] rounded-full pointer-events-none z-0"></div>
 
             {/* Hero Content */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-45 md:pt-40 pb-16 flex flex-col items-center text-center">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-45 md:pt-35 pb-16 flex flex-col items-center text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 backdrop-blur">
+                    <span className="text text-cyan-400 font-medium">AI-Powered Practice</span>
+                </div>
                 {/* Heading */}
-                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter mt-16 mb-5 relative max-w-none">
+                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-white tracking-tighter mt-14 mb-5 relative max-w-none">
                     <span className="relative z-10">Ready to Ace Your</span>
                     <br />
                     <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 mt-2 opacity-100">
@@ -101,7 +104,7 @@ const HeroSection = () => {
                         onClick={() => navigate('/login')}
                         className="h-12 px-8 rounded-full bg-gradient-to-r from-blue-300/90 to-blue-500/90 text-white/80 font-semibold text-base hover:bg-blue-500 hover:scale-105 transition-all flex items-center gap-2"
                     >
-                        Get Started
+                        Start Interview
                         <ArrowRight className="w-4 h-4" />
                     </button>
                     <button
