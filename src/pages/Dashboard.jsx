@@ -265,21 +265,21 @@ const InterviewDashboard = () => {
               return (
                 <div
                   key={interview.id}
-                  className="relative group rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
+                  className="relative group rounded-2xl border border-slate-500/20 bg-gradient-to-br from-slate-200/90 to-slate-200/80 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
                 >
-                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
                   <div className="p-6 space-y-4">
                     {/* Icon */}
-                    <div className={`w-14 h-14 rounded-xl border border-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-14 h-14 rounded-xl border border-slate-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                       <img src={interview.icon} alt="" className="w-10 h-10" />
                     </div>
 
                     {/* Header */}
                     <div>
-                      <h4 className="text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors mb-1">
+                      <h4 className="text-lg font-semibold text-black group-hover:text-cyan-400 transition-colors mb-1">
                         {interview.company} {interview.role}
                       </h4>
-                      <p className="text-sm text-white">{interview.level}</p>
+                      <p className="text-sm text-black">{interview.level}</p>
                     </div>
 
                     {/* Stats */}
@@ -301,7 +301,7 @@ const InterviewDashboard = () => {
                     {/* Action */}
                     <button
                       onClick={() => navigate(`/dashboard/interview-details/${interview.id}`)}
-                      className="w-full py-2.5 rounded-lg bg-slate-800/50 border border-slate-700 text-white hover:bg-slate-700/50 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-cyan-500/30">
+                      className="w-full py-2.5 rounded-lg bg-slate-200/50 border border-slate-500 text-black hover:bg-slate-300/50 hover:text-slate-800 transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-slate-500/30">
                       View Details
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>

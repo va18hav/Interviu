@@ -9,6 +9,38 @@ import UserCard from "../components/UserCard"
 import LoadingState from "../components/LoadingState"
 import StatusBox from "../components/StatusBox"
 
+// Helper for credit deduction - defined outside component to be accessible everywhere
+const deductCredits = async (durationSeconds) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const durationInMinutes = Math.ceil(durationSeconds / 60);
+      const creditCost = durationInMinutes > 0 ? durationInMinutes : 1; // Minimum 1 credit
+
+      // Fetch current credits
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        const newBalance = Math.max(0, profile.credits - creditCost);
+
+        // Update credits in database
+        await supabase
+          .from('profiles')
+          .update({ credits: newBalance })
+          .eq('id', user.id);
+
+        console.log(`Deducted ${creditCost} credits for ${durationInMinutes} min. New balance: ${newBalance}`);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to deduct credits:", err);
+  }
+}
+
 const InterviewSession = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -23,8 +55,15 @@ const InterviewSession = () => {
   const [feedbackData, setFeedbackData] = React.useState(null)
   const [elapsedTime, setElapsedTime] = React.useState(0)
   const [isTimerActive, setIsTimerActive] = React.useState(false)
+  const [wrapUpMessageSent, setWrapUpMessageSent] = React.useState(false)
   const interviewEnded = React.useRef(false)
+  const elapsedTimeRef = React.useRef(0) // Ref to access latest elapsed time in callbacks
   const vapi = React.useRef(null)
+
+  // FIXED DURATION: 20 minutes
+  const INTERVIEW_DURATION_MINUTES = 15;
+  const INTERVIEW_DURATION_SECONDS = INTERVIEW_DURATION_MINUTES * 60; // 1200 seconds
+  const WRAP_UP_TIME_SECONDS = 14 * 60; // 9 minutes = 540 seconds
 
   // Consolidated destructuring for both interview types
   const {
@@ -65,7 +104,7 @@ const InterviewSession = () => {
       vapi.current = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY)
       console.log("Vapi instance created")
 
-      // Define Overrides
+      // Define Overrides - NO LENGTH VARIABLE
       const assistantOverrides = {
         recordingEnabled: false,
         variableValues: {
@@ -76,7 +115,7 @@ const InterviewSession = () => {
           description: description || "Technical Interview",
           company: company || "",
           type: type || "technical",
-          questionPool: questionPool || ""
+          questionPool: Array.isArray(questionPool) ? questionPool.join("\n") : (questionPool || "")
         },
       }
 
@@ -88,6 +127,11 @@ const InterviewSession = () => {
 
 
       // Define Handlers
+      const callStartHandler = () => {
+        console.log("✅ Call started");
+        setInterviewState("ai-speaking");
+      };
+
       const speechStartHandler = () => {
         console.log("✅ Speech start event fired")
         setInterviewState("ai-speaking")
@@ -116,9 +160,23 @@ const InterviewSession = () => {
         }
       }
 
-      const callEndHandler = () => {
-        console.log("✅ Call ended")
-        setInterviewState("ending")
+      const callEndHandler = async () => {
+        console.log("✅ Call ended event received");
+
+        // If user manually ended it, we flagged it already - return to avoid double processing
+        if (interviewEnded.current) {
+          return;
+        }
+
+        // --- REMOTE END (Assistant hung up) ---
+        console.log("Remote call end detected at", Math.floor(elapsedTimeRef.current / 60), "minutes");
+        interviewEnded.current = true;
+        sessionStorage.setItem("interviewEnded", "true");
+
+        // Deduct credits based on current time from ref
+        await deductCredits(elapsedTimeRef.current);
+
+        setInterviewState("ended");
       }
 
       const errorHandler = (e) => {
@@ -128,6 +186,7 @@ const InterviewSession = () => {
       }
 
       // Attach Listeners BEFORE start
+      vapi.current.on("call-start", callStartHandler)
       vapi.current.on("speech-start", speechStartHandler)
       vapi.current.on("speech-end", speechEndHandler)
       vapi.current.on("message", messageHandler)
@@ -138,7 +197,9 @@ const InterviewSession = () => {
 
       // Start Call
       vapi.current.start(assistantId, assistantOverrides)
-        .then((res) => console.log("Crucial: Call started successfully", res))
+        .then((res) => {
+          console.log("Crucial: Call started successfully", res);
+        })
         .catch((err) => {
           console.error("Crucial: Failed to start call", err);
           errorHandler(err);
@@ -146,20 +207,27 @@ const InterviewSession = () => {
 
       return () => {
         console.log("🧹 Cleanup function running")
-        vapi.current?.off("speech-start", speechStartHandler)
-        vapi.current?.off("speech-end", speechEndHandler)
-        vapi.current?.off("message", messageHandler)
-        vapi.current?.off("call-end", callEndHandler)
-        vapi.current?.off("error", errorHandler)
-        vapi.current?.stop()
+
+        // Only cleanup if interview actually ended properly
+        if (interviewEnded.current || interviewState === 'ended') {
+          vapi.current?.off("call-start", callStartHandler)
+          vapi.current?.off("speech-start", speechStartHandler)
+          vapi.current?.off("speech-end", speechEndHandler)
+          vapi.current?.off("message", messageHandler)
+          vapi.current?.off("call-end", callEndHandler)
+          vapi.current?.off("error", errorHandler)
+          vapi.current?.stop()
+        }
       }
-
     }
-  }
+  }, [])
 
+  // Keep elapsedTimeRef in sync
+  React.useEffect(() => {
+    elapsedTimeRef.current = elapsedTime
+  }, [elapsedTime])
 
-    , [])
-
+  // Timer effect
   React.useEffect(() => {
     let interval
     if (isTimerActive) {
@@ -170,6 +238,7 @@ const InterviewSession = () => {
     return () => clearInterval(interval)
   }, [isTimerActive])
 
+  // Timer activation effect
   React.useEffect(() => {
     if (interviewState === 'ai-speaking' && !isTimerActive) {
       setIsTimerActive(true)
@@ -178,7 +247,62 @@ const InterviewSession = () => {
     }
   }, [interviewState, isTimerActive])
 
+  // Time remaining reminders - EVERY 30 SECONDS
+  React.useEffect(() => {
+    if (!vapi.current || (interviewState !== 'ai-speaking' && interviewState !== 'user-speaking')) {
+      return;
+    }
 
+    const reminderInterval = setInterval(() => {
+      const remainingSeconds = INTERVIEW_DURATION_SECONDS - elapsedTime;
+      const remainingMinutes = Math.floor(remainingSeconds / 60);
+      const remainingSecondsDisplay = remainingSeconds % 60;
+      const progressPercent = Math.floor((elapsedTime / INTERVIEW_DURATION_SECONDS) * 100);
+
+      // Only send reminders if we haven't reached target time and interview is active
+      if (elapsedTime < INTERVIEW_DURATION_SECONDS && vapi.current && !interviewEnded.current) {
+        vapi.current.send({
+          type: "add-message",
+          message: {
+            role: "system",
+            content: `⏰ TIME UPDATE: ${remainingMinutes}m ${remainingSecondsDisplay}s remaining (${progressPercent}% complete). Continue with technical questions.`
+          }
+        });
+
+        console.log(`📢 Time reminder: ${remainingMinutes}m ${remainingSecondsDisplay}s remaining (${progressPercent}% complete)`);
+      }
+    }, 15000); // Every 15 seconds
+
+    return () => clearInterval(reminderInterval);
+  }, [elapsedTime, interviewState]);
+
+  // Wrap-up message at 19 minutes (1140 seconds)
+  React.useEffect(() => {
+    if (elapsedTime >= WRAP_UP_TIME_SECONDS && !wrapUpMessageSent && vapi.current && !interviewEnded.current) {
+      setWrapUpMessageSent(true);
+
+      vapi.current.send({
+        type: "add-message",
+        message: {
+          role: "system",
+          content: `🎯 WRAP UP NOW: You have reached the 14-minute mark. You have 1 minute remaining. Begin wrapping up the interview now. Thank the candidate and ask if they have any final questions for you.`
+        }
+      });
+
+      console.log("🎯 WRAP UP MESSAGE SENT at 14 minutes");
+    }
+  }, [elapsedTime, wrapUpMessageSent]);
+
+  // Auto-end call at 20 minutes
+  React.useEffect(() => {
+    if (elapsedTime >= INTERVIEW_DURATION_SECONDS && vapi.current && !interviewEnded.current) {
+      console.log("⏰ 20 minutes reached - ending call");
+      interviewEnded.current = true;
+      sessionStorage.setItem("interviewEnded", "true");
+      vapi.current.stop();
+      setInterviewState("ending");
+    }
+  }, [elapsedTime]);
 
   async function generateFeedback(formattedTranscriptText) {
     try {
@@ -196,7 +320,20 @@ const InterviewSession = () => {
         })
       })
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server responded with error:', response.status, errorData);
+        throw new Error(`Server error: ${response.status}`);
+      }
+
       const feedback = await response.json()
+
+      // Basic validation of feedback structure
+      if (!feedback || typeof feedback !== 'object' || !feedback.overallScore) {
+        console.error("Invalid feedback format received:", feedback);
+        throw new Error("Invalid feedback format received");
+      }
+
       console.log("Feedback received from backend:", feedback)
       return feedback
     } catch (error) {
@@ -208,41 +345,15 @@ const InterviewSession = () => {
   async function handleLeave() {
     if (!vapi.current) return
 
-    // Stop the call
-    vapi.current.stop()
+    // Mark as ended BEFORE stopping to prevent race conditions with event listener
     interviewEnded.current = true
     sessionStorage.setItem("interviewEnded", "true")
 
-    // --- CREDIT DEDUCTION START ---
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const durationInMinutes = Math.ceil(elapsedTime / 60);
-        const creditCost = durationInMinutes > 0 ? durationInMinutes : 1; // Minimum 1 credit
+    // Stop the call
+    vapi.current.stop()
 
-        // Fetch current credits
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('credits')
-          .eq('id', user.id)
-          .single();
-
-        if (profile) {
-          const newBalance = Math.max(0, profile.credits - creditCost);
-
-          // Update credits in database
-          await supabase
-            .from('profiles')
-            .update({ credits: newBalance })
-            .eq('id', user.id);
-
-          console.log(`Deducted ${creditCost} credits. New balance: ${newBalance}`);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to deduct credits:", err);
-    }
-    // --- CREDIT DEDUCTION END ---
+    // Deduct credits using helper
+    await deductCredits(elapsedTime);
 
     setInterviewState("ended")
   }
@@ -255,6 +366,13 @@ const InterviewSession = () => {
       const formattedTranscriptText = transcriptArray
         .map(item => `${item.role.toUpperCase()}: ${item.transcript}`)
         .join("\n");
+
+      if (!formattedTranscriptText.trim()) {
+        console.warn("Transcript is empty, cannot generate feedback.");
+        setInterviewState("ended");
+        alert("Not enough conversation data to generate feedback.");
+        return;
+      }
 
       console.log("Formatted transcript:", formattedTranscriptText)
 
@@ -274,7 +392,7 @@ const InterviewSession = () => {
             user_id: user.id,
             role: role || "General",
             date: new Date().toLocaleDateString(),
-            duration: length || "15 min",
+            duration: `${INTERVIEW_DURATION_MINUTES} min`,
             score: feedback.overallScore,
             feedback_data: feedback,
             created_at: new Date().toISOString()
@@ -325,7 +443,6 @@ const InterviewSession = () => {
           console.log("Interview saved to Supabase!");
 
           // Navigate only after success
-          // Navigate only after success
           console.log("Navigating to feedback page with data:", feedback)
 
           // Add metadata for feedback page display
@@ -356,7 +473,6 @@ const InterviewSession = () => {
     }
   }
 
-
   const isListening = interviewState === "user-speaking"
 
   // Add keyframes to the document
@@ -376,8 +492,8 @@ const InterviewSession = () => {
     animation: "slideUp 0.8s ease-out forwards"
   };
 
-  const durationMinutes = parseInt(length) || 15;
-  const isEligibleForFeedback = elapsedTime > (durationMinutes * 60) / 2;
+  // Minimum 10 minutes for feedback (half of 20 minutes)
+  const isEligibleForFeedback = elapsedTime > 600;
 
   const FeedbackGeneratedCards = () => (
     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 h-full items-center justify-center p-12">
@@ -476,7 +592,6 @@ const InterviewSession = () => {
           )}
       </div>
 
-      {/* Status Textbox */}
       {/* Status Textbox */}
       {interviewState !== "ending" && (
         <StatusBox

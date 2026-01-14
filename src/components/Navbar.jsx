@@ -140,14 +140,14 @@ const Navbar = ({ credits: propCredits }) => {
                         </div>
 
                         {/* Desktop Nav-bar */}
-                        <nav className='hidden md:flex items-center gap-1 bg-slate-300/50 p-1.5 rounded-full border border-slate-500/50'>
+                        <nav className='hidden md:flex items-center gap-1 bg-slate-100/30 p-1.5 rounded-full border border-slate-300/50'>
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.path}
                                     to={link.path}
                                     className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${isActive(link.path)
-                                        ? 'text-white bg-slate-400 shadow-sm'
-                                        : 'text-slate-900 hover:text-white hover:bg-slate-800/50'
+                                        ? 'text-black bg-slate-100/50 shadow-sm'
+                                        : 'text-slate-900 hover:text-black hover:bg-slate-200/50'
                                         }`}
                                 >
                                     {link.name === 'My Interviews' ? 'Interviews' : link.name === 'Create Interview' ? 'Create' : link.name}
@@ -158,11 +158,11 @@ const Navbar = ({ credits: propCredits }) => {
                         {/* User Profile (Desktop) */}
                         <div className="hidden md:flex items-center gap-4 relative">
                             <div className="flex items-center gap-3 pl-4">
-                                <div className="flex items-center gap-2 mr-2 bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-800 shadow-sm hover:border-slate-700 transition-colors cursor-help group" title="Available Credits">
-                                    <div className="p-1 rounded-full bg-yellow-500/10 group-hover:bg-yellow-500/20 transition-colors">
+                                <div className="flex items-center gap-2 mr-2 bg-slate-300/80 px-3 py-1.5 rounded-full border border-slate-400/50 shadow-sm hover:border-slate-500 transition-colors cursor-pointer">
+                                    <div className="p-1 rounded-full bg-yellow-200/10 group-hover:bg-yellow-500/20 transition-colors">
                                         <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                                     </div>
-                                    <span className="text-sm font-bold text-white tabular-nums">{credits}</span>
+                                    <span className="text-sm font-bold text-black tabular-nums">{credits}</span>
                                 </div>
 
                                 <button

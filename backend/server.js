@@ -68,7 +68,12 @@ app.post('/api/generate-feedback', async (req, res) => {
                       "summary" : "string"
                       "qna": [
                                 { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." }
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." }  
+
+
                                 ]
                     }`
                 }
@@ -118,7 +123,7 @@ app.post('/api/analyze-resume', async (req, res) => {
         // Call Groq API for analysis
 
         const chatCompletion = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
+            model: 'groq/compound-mini',
             messages: [{
                 role: 'user',
                 content: `You are an ATS (Applicant Tracking System) parser, not a human recruiter. You must score based on how well a MACHINE can parse and match this resume, not how impressive it looks to humans.
@@ -229,7 +234,7 @@ Respond with ONLY valid JSON in this exact format:
 FINAL CHECK: If your atsScore is above 75, review the resume again and find at least 3 major issues that should lower the score. A score above 75 means this resume is better than 75% of all resumes - is that really true?
 All scores must be between 0-100. Provide exactly 3 strengths, 3 improvements, and up to 5 missing keywords.`
             }],
-            temperature: 0.5,
+            temperature: 0.3,
             response_format: { type: "json_object" }
         })
 

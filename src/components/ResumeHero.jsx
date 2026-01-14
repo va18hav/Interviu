@@ -4,27 +4,25 @@ import resumebanner from '../assets/images/resumebanner.png'
 
 const ResumeHero = (props) => {
     return (
-        <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-gradient-to-br from black/100 via black/60 to black/100 backdrop-blur-sm'>
+        <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-sm'>
             {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-yellow-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-50 right-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-50 left-0 w-[500px] h-[500px] bg-yellow-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
             <div className="flex items-center md:gap-10 lg:gap-8">
                 <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-20 lg:px-16 lg:py-28 max-w-4xl space-y-8">
 
-                    <h1 className='font-sans text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tighter'>
+                    <h1 className='font-sans text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tighter'>
                         Craft a Resume that <br />
-                        <span className=''>
-                            Gets You Hired
-                        </span>
+                        Gets You Hired
                     </h1>
 
-                    <p className='font-space text-md lg:text-lg text-slate-400 max-w-sm lg:max-w-xl leading-relaxed'>
+                    <p className='font-space text-md lg:text-lg text-slate-600 max-w-sm lg:max-w-xl leading-relaxed'>
                         Our AI doesn't just score you—it gives you a line-by-line roadmap to beat the ATS and impress recruiters.
                     </p>
 
                     <button
                         onClick={props.onButtonClick}
-                        className="group flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-black bg-gradient-to-r from-yellow-300/90 to-yellow-600/80 border border-yellow-500/30 hover:opacity-90 transition-all z-20 cursor-pointer"
+                        className="group flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-all z-20 cursor-pointer shadow-lg shadow-slate-900/20"
                     >
                         {props.buttonText || "Check Score"}
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

@@ -6,27 +6,31 @@ import techbanner from '../assets/images/techbanner.png'
 const PopularInterviewsBanner = () => {
     const navigate = useNavigate()
     return (
-        <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-gradient-to-br from black/100 via black/60 to black/100 backdrop-blur-sm'>
+        <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-gradient-to-br from black/100 via black/60 to black/100 backdrop-blur-sm border border-slate-300/50'>
             {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-30 right-0 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-30 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
             <div className="flex items-center md:gap-10 lg:gap-8">
                 <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-15 lg:px-16 lg:py-20 max-w-4xl space-y-8">
 
-                    <h1 className='font-sans text-4xl md:text-5xl font-extrabold text-slate-200 tracking-tighter'>
+                    <h1 className='font-sans text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter'>
                         Top Tech
                         <br />
                         Interview Simulations
                     </h1>
 
-                    <p className='font-space text-md lg:text-lg text-slate-400 max-w-sm lg:max-w-xl tracking-tight'>
+                    <p className='font-space text-md lg:text-lg text-slate-800 max-w-sm lg:max-w-xl tracking-tight'>
                         Practice for top tech companies. Choose from our most popular and realistic interview simulations.
                     </p>
                     <button
                         onClick={() => navigate('/dashboard/all-popular-interviews')}
-                        className="bg-gradient-to-r from-cyan-600/90 via-cyan-500/90 to-cyan-400/80 border border-cyan-500/30 px-8 py-4 rounded-lg text-white hover:bg-slate-500/30 hover:border-cyan-500/60 hover:text-slate-300 font-medium text-sm flex items-center gap-1 transition-colors">
-                        Explore All
-                        <ChevronRight className="w-4 h-4" />
+                        className="group relative px-5 md:px-8 py-4 rounded-2xl font-semibold text-base overflow-hidden transition-all duration-300 shadow-lg shadow-gray-500/30">
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900 transition-transform duration-300 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <span className="relative text-white flex items-center gap-2">
+                            Explore All
+                            <ChevronRight className="w-4 h-4" />
+                        </span>
                     </button>
                 </div>
                 <div
