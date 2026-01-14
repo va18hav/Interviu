@@ -40,7 +40,7 @@ const LandingPage = () => {
     }, [isLoading]);
 
     return (
-        <div className="bg-black min-h-screen">
+        <div className="bg-white min-h-screen">
             {isLoading && <LandingLoader onComplete={() => setIsLoading(false)} />}
 
             <HeroSection />

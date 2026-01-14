@@ -146,13 +146,13 @@ const InterviewDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
 
       {/* Header */}
       <Navbar />
 
       {/* Main Content */}
-      {loading ? <div className="min-h-screen bg-black flex items-center justify-center">
+      {loading ? <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
       </div> : <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
 
@@ -182,7 +182,7 @@ const InterviewDashboard = () => {
               {pastInterviews.slice(0, 3).map((interview) => (
                 <div
                   key={interview.id}
-                  className="relative group rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-cyan-500/30 transition-all duration-300 cursor-pointer"
+                  className="relative group rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 cursor-pointer"
                 >
                   <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
                   <div className="p-6 space-y-4">

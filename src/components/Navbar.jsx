@@ -123,7 +123,7 @@ const Navbar = ({ credits: propCredits }) => {
 
     return (
         <>
-            <header className="border-b border-slate-800/50 bg-black/50 backdrop-blur-xl sticky top-0 z-40 w-full ">
+            <header className="border-b border-slate-800/50 bg-white/50 backdrop-blur-xl sticky top-0 z-40 w-full ">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
@@ -134,20 +134,20 @@ const Navbar = ({ credits: propCredits }) => {
                                     <img src={logo} alt="Logo" className="w-10 h-10 relative z-10" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">Inter<span className="text-cyan-400">viu</span></h1>
+                                    <h1 className="text-xl font-extrabold text-black tracking-tight leading-none">Inter<span className="text-cyan-400">viu</span></h1>
                                 </div>
                             </Link>
                         </div>
 
                         {/* Desktop Nav-bar */}
-                        <nav className='hidden md:flex items-center gap-1 bg-slate-900/50 p-1.5 rounded-full border border-slate-800/50'>
+                        <nav className='hidden md:flex items-center gap-1 bg-slate-300/50 p-1.5 rounded-full border border-slate-500/50'>
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.path}
                                     to={link.path}
                                     className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${isActive(link.path)
-                                        ? 'text-white bg-slate-800 shadow-sm'
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                        ? 'text-white bg-slate-400 shadow-sm'
+                                        : 'text-slate-900 hover:text-white hover:bg-slate-800/50'
                                         }`}
                                 >
                                     {link.name === 'My Interviews' ? 'Interviews' : link.name === 'Create Interview' ? 'Create' : link.name}

@@ -23,7 +23,7 @@ const TechInterviews = [
                 "title": "Core DSA & Logic",
                 "id": "tech-1",
                 "type": "technical",
-                "duration": "30 min",
+                "duration": "5 min",
                 "focus": ["DSA", "Logic"],
                 "overview": "Focuses on core DSA fundamentals through verbal reasoning and algorithmic logic explanation. Candidates explain approaches, trade-offs, and complexity without writing code, testing clarity of thought and structured problem-solving.",
 
@@ -43,20 +43,6 @@ const TechInterviews = [
                     "You are given a string s; describe how you would compress it by replacing consecutive repeated characters with the character followed by the count (for example, aaabb → a3b2) and when in-place modification is practical.",
 
                     "Explain how you would detect whether a singly linked list has a cycle and, if so, how you would logically find the node where the cycle starts, comparing different strategies and their space trade-offs.",
-
-                    "Describe how you would approach reversing the nodes of a singly linked list in groups of k, focusing on the sequence of pointer changes rather than exact code.",
-
-                    "Explain the steps you would follow to merge two sorted singly linked lists into one sorted list and how your reasoning changes if the lists are extremely long streams.",
-
-                    "Given the head of a singly linked list, explain the conceptual steps to reorder it from L0→L1→…→Ln to L0→Ln→L1→Ln-1→… without using extra arrays, emphasizing how you find the middle, reverse, and weave.",
-
-                    "Walk through how you would write a recursive function to generate all subsets (the power set) of a given set of integers, clearly describing the recursion tree, the base case, and the choice at each level.",
-
-                    "Given a positive integer n, explain how you would first compute the nth Fibonacci number using naive recursion, then how you would optimize it to a more efficient solution and why the naive recursion is inefficient.",
-
-                    "Describe how you would use recursion or backtracking to generate all permutations of a given string, and how you would reason about time complexity and duplicate handling without writing code.",
-
-                    "Explain how you would determine whether a binary tree is height-balanced, focusing on the recursive logic to compute heights and detect imbalance early rather than on implementation details."
 
                 ]
             },
@@ -164,7 +150,7 @@ const TechInterviews = [
                 "title": "Coding & DSA Round 1",
                 "id": "tech-1",
                 "type": "technical",
-                "duration": "30 min",
+                "duration": "20 min",
                 "focus": ["Arrays", "Strings", "Logic"],
                 "overview": "Tests core DSA through verbal explanation of medium LeetCode problems, focusing on arrays/strings, optimization, and edge cases. Expect 1-2 problems with follow-ups; emphasize time/space complexity and customer impact verbally.",
 
@@ -205,7 +191,7 @@ const TechInterviews = [
                 "title": "Coding & LLD Round 2",
                 "id": "tech-2",
                 "type": "technical",
-                "duration": "30 min",
+                "duration": "20 min",
                 "focus": ["Graphs", "Trees", "LLD"],
                 "overview": "Covers graph/tree algorithms and low-level design, with verbal walkthroughs of OOP design for extensible systems. Focus on clean interfaces, error handling, and Amazon-scale extensibility.",
 

@@ -49,7 +49,8 @@ app.post('/api/generate-feedback', async (req, res) => {
                     3. Return the summary as a string. The summary must have the entire summary of the conversation in the form of a paragraph, should precisely point where the candidate is technically sound, confident, and where the candidate is not. 
                     Respond in this exact JSON format:
                     4. Return the qna as an object with questions from the ${formattedTranscript} and answers from your own perspective. Think of it like, what would be the best answer for the particular question, of course in questions where there are multiple possiblities such as explaining a project, or a follow-up question regarding that,
-                       or if the interview is a behavioural interview, what would you do if you were in the candidate's shoes, with the same project explanations, this should focus on the framing and explaining technical depth of the same project
+                       or if the interview is a behavioural interview, what would you do if you were in the candidate's shoes, with the same project explanations, this should focus on the framing and explaining technical depth of the same project.
+                    5. jobReadyScore is the combination of all performance metrics to indicate your overall preparedness for real interviews.
                     {
                       "overallScore": 0-100,
                       "technicalKnowledge": 0-100,
@@ -66,14 +67,14 @@ app.post('/api/generate-feedback', async (req, res) => {
                       "areasToImprove": ["string", "string", "string"]
                       "summary" : "string"
                       "qna": [
-  { "question": "Question text...", "answer": "Suggested answer..." },
-  { "question": "Question text...", "answer": "Suggested answer..." }
-]
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." }
+                                ]
                     }`
                 }
             ],
             model: "llama-3.3-70b-versatile", // Powerful free-tier model
-            temperature: 0.5,
+            temperature: 0.8,
             response_format: { type: "json_object" } // Forces the model to return valid JSON
         })
 
@@ -228,7 +229,7 @@ Respond with ONLY valid JSON in this exact format:
 FINAL CHECK: If your atsScore is above 75, review the resume again and find at least 3 major issues that should lower the score. A score above 75 means this resume is better than 75% of all resumes - is that really true?
 All scores must be between 0-100. Provide exactly 3 strengths, 3 improvements, and up to 5 missing keywords.`
             }],
-            temperature: 0.1,
+            temperature: 0.5,
             response_format: { type: "json_object" }
         })
 

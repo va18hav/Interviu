@@ -21,7 +21,7 @@ const ComparisonSection = () => {
                 gsap.set(words, { color: "rgba(64,64,64,0.3)", opacity: 1, display: "inline-block" });
 
                 gsap.to(words, {
-                    color: (i, target) => target.dataset.color || "#ffffff",
+                    color: (i, target) => target.dataset.color || "#09090b", // slate-950/black
                     stagger: 0.1,
                     ease: "none",
                     scrollTrigger: {
@@ -60,9 +60,9 @@ const ComparisonSection = () => {
     }, []);
 
     return (
-        <section ref={containerRef} className="hidden md:block relative py-16 bg-black min-h-[50vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden">
+        <section ref={containerRef} className="hidden md:block relative py-16 bg-white min-h-[50vh] md:min-h-[70vh] flex items-center justify-center overflow-hidden">
             {/* Background Atmosphere */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-neutral-800/20 to-stone-800/20 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-slate-200/50 to-gray-200/50 rounded-full blur-[100px] pointer-events-none" />
 
             <div className="max-w-4xl mx-auto px-6 md:px-12 relative z-10">
                 <div ref={textRef} className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
@@ -77,7 +77,7 @@ const ComparisonSection = () => {
 
                     {/* Paragraph 2 - "Interviu" styled with Cyan */}
                     <p>
-                        <span className="word inline-block mr-0" data-color="#ffffff">Inter</span>
+                        <span className="word inline-block mr-0" data-color="#09090b">Inter</span>
                         <span className="word inline-block mr-[0.25em]" data-color="#22d3ee">viu</span>
                         {["exists", "to", "help", "you", "practice", "that", "moment."].map((word, i) => (
                             <span key={`p2-${i}`} className="word inline-block mr-[0.25em]">

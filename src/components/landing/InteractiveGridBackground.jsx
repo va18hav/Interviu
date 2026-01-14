@@ -25,12 +25,12 @@ const InteractiveGridBackground = () => {
     const cellY = Math.floor(mousePos.y / gridSize) * gridSize;
 
     return (
-        <div ref={containerRef} className="absolute inset-0 bg-black overflow-hidden pointer-events-none z-0">
+        <div ref={containerRef} className="absolute inset-0 bg-white overflow-hidden pointer-events-none z-0">
             {/* Base Grid (Faint) */}
             {/* Base Grid (Clearly Visible) */}
             <div
-                className="absolute inset-0 bg-[linear-gradient(to_right,#334155_1px,transparent_1px),linear-gradient(to_bottom,#334155_1px,transparent_1px)]"
-                style={{ backgroundSize: `${gridSize}px ${gridSize}px`, opacity: 0.2 }}
+                className="absolute inset-0 bg-[linear-gradient(to_right,#cbd5e1_1px,transparent_1px),linear-gradient(to_bottom,#cbd5e1_1px,transparent_1px)]"
+                style={{ backgroundSize: `${gridSize}px ${gridSize}px`, opacity: 0.3 }}
             ></div>
 
             {/* Highlighted Cell */}
@@ -42,12 +42,12 @@ const InteractiveGridBackground = () => {
                     transform: `translate(${cellX}px, ${cellY}px)`,
                     width: gridSize - 1,
                     height: gridSize - 1,
-                    boxShadow: '0 0 15px rgba(255, 255, 255, 0.05)',
+                    boxShadow: '0 0 15px rgba(0, 0, 0, 0.05)',
                 }}
             />
 
             {/* Soft Glow Center (Optional, for general ambient light) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
         </div>
     );
 };

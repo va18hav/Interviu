@@ -115,10 +115,10 @@ const WorkflowSection = () => {
     }, []);
 
     return (
-        <section ref={sectionRef} className="relative bg-black overflow-hidden min-h-screen md:h-screen py-12 md:py-0">
+        <section ref={sectionRef} className="relative bg-white overflow-hidden min-h-screen md:h-screen py-12 md:py-0">
             {/* Background Glows */}
-            <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[120px] -translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-900/10 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
+            <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] -translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/20 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
             {/* Container */}
             <div ref={containerRef} className="w-full max-w-7xl mx-auto px-6 h-full relative z-10 flex flex-col justify-center">
@@ -133,19 +133,19 @@ const WorkflowSection = () => {
                         {/* Text Content */}
                         <div className="step-text w-full md:w-5/12 flex flex-col gap-6 order-2 md:order-1">
                             {/* Step Indicator */}
-                            <div className={`hidden md:inline-flex items-center self-start gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10`}>
-                                <span className="text-xs md:text-sm font-bold text-white uppercase tracking-wider">
+                            <div className={`hidden md:inline-flex items-center self-start gap-2 px-4 py-1.5 rounded-full bg-slate-900/5 border border-slate-200`}>
+                                <span className="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wider">
                                     {step.id === 'or' ? 'OR' : `Step 0${step.id}`}
                                 </span>
                             </div>
 
                             {/* Title */}
-                            <h3 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                            <h3 className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
                                 {step.title}
                             </h3>
 
                             {/* Description */}
-                            <p className="text-base md:text-xl text-slate-400 leading-relaxed">
+                            <p className="text-base md:text-xl text-slate-600 leading-relaxed">
                                 {step.description}
                             </p>
                         </div>

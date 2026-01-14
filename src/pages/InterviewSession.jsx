@@ -73,19 +73,18 @@ const InterviewSession = () => {
           role: role || "Candidate",
           level: level || "Intermediate",
           focus: Array.isArray(focus) ? focus.join(", ") : (focus || ""),
-          length: length || "30 min",
           description: description || "Technical Interview",
           company: company || "",
           type: type || "technical",
-          questionPool: Array.isArray(questionPool) ? questionPool.join("\n") : (questionPool || "")
+          questionPool: questionPool || ""
         },
       }
 
       console.log("Starting Vapi with overrides:", assistantOverrides)
 
       const assistantId = customInterview
-        ? "992cb9aa-adbd-47e2-b3aa-f881c7142262"
-        : "b8483ed5-2f95-4f92-b5ea-69051eee5acf";
+        ? "c0b4cee2-90d4-41cd-a866-9b25d923a490"
+        : "092f0d67-01d2-41c3-b272-97e74a5dcf14";
 
 
       // Define Handlers

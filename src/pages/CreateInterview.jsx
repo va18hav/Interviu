@@ -210,28 +210,28 @@ const CreateInterview = () => {
 
   return (
     <>
-      <main className="min-h-screen bg-black flex items-center justify-center px-5">
+      <main className="min-h-screen bg-white flex items-center justify-center px-5">
         <div className="w-full max-w-7xl">
           {/* Header */}
           <Navbar />
           {/* Main Card - Two Column Layout */}
-          <div className="rounded-3xl border border-slate-800 bg-black/50 backdrop-blur-xl shadow-2xl overflow-hidden mt-5">
+          <div className="rounded-3xl border border-slate-800 bg-white/50 backdrop-blur-xl shadow-2xl overflow-hidden mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
 
               {/* Left Column - Feature Card (2 columns) */}
-              <div className="lg:col-span-2 bg-gradient-to-br from black/100 via black/60 to black/100 p-10 flex flex-col justify-start relative overflow-hidden border-r border-slate-800/50">
+              <div className="lg:col-span-2 bg-gradient-to-br from white/100 via white/60 to white/100 p-10 flex flex-col justify-start relative overflow-hidden border-r border-slate-800/50">
                 {/* Decorative gradient orbs */}
                 <div className="absolute top-0 left-0 w-70 h-70 bg-cyan-500/20 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-0 w-70 h-70 bg-blue-500/20 rounded-full blur-3xl" />
 
                 <div className="relative z-10 space-y-8">
                   <div>
-                    <h2 className="text-3xl font-bold text-white mb-3">
+                    <h2 className="text-3xl font-bold text-black mb-3">
                       Practice Like
                       <br />
                       <span className="text-cyan-400">A Pro</span>
                     </h2>
-                    <p className="text-white text-sm leading-relaxed">
+                    <p className="text-black text-sm leading-relaxed">
                       Get personalized AI interviews that adapt to your experience level and focus areas
                     </p>
                   </div>
@@ -243,7 +243,7 @@ const CreateInterview = () => {
                         <Brain className="w-6 h-6 text-cyan-400" />
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold mb-1">AI-Powered Questions</h3>
+                        <h3 className="text-black font-semibold mb-1">AI-Powered Questions</h3>
                         <p className="text-slate-500 text-sm">Dynamic questions based on your profile</p>
                       </div>
                     </div>
@@ -254,7 +254,7 @@ const CreateInterview = () => {
                         <Zap className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold mb-1">Real-time Feedback</h3>
+                        <h3 className="text-black font-semibold mb-1">Real-time Feedback</h3>
                         <p className="text-slate-500 text-sm">Instant analysis of your responses</p>
                       </div>
                     </div>
@@ -265,7 +265,7 @@ const CreateInterview = () => {
                         <TrendingUp className="w-6 h-6 text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold mb-1">Track Progress</h3>
+                        <h3 className="text-black font-semibold mb-1">Track Progress</h3>
                         <p className="text-slate-500 text-sm">Monitor improvement over time</p>
                       </div>
                     </div>
@@ -289,13 +289,13 @@ const CreateInterview = () => {
               <div className="lg:col-span-3 p-10">
                 <div className="space-y-5">
                   <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-white mb-2">Interview Configuration</h2>
-                    <p className="text-slate-400 text-sm">Customize your practice session</p>
+                    <h2 className="text-2xl font-bold text-black mb-2">Interview Configuration</h2>
+                    <p className="text-slate-900 text-sm">Customize your practice session</p>
                   </div>
 
                   {/* Job Role Dropdown */}
                   <div className="space-y-2.5 relative" ref={dropdownRef}>
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                    <label className="flex items-center gap-2 text-sm font-medium text-slate-900">
                       <Briefcase className="w-4 h-4 text-slate-500" />
                       Job Role
                       <span className="text-red-400 text-xs">*</span>
@@ -303,9 +303,9 @@ const CreateInterview = () => {
 
                     <div
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white focus:outline-none cursor-pointer hover:border-slate-600 flex items-center justify-between"
+                      className="w-full rounded-lg border border-slate-700/50 bg-slate-300/60 px-4 py-3.5 text-sm text-white focus:outline-none cursor-pointer hover:border-slate-600 flex items-center justify-between"
                     >
-                      <span className={formData.role ? "text-white" : "text-slate-500"}>
+                      <span className={formData.role ? "text-black" : "text-slate-900"}>
                         {formData.role || "Select a role..."}
                       </span>
                       <svg className={`w-4 h-4 text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -314,15 +314,15 @@ const CreateInterview = () => {
                     </div>
 
                     {isDropdownOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 shadow-xl overflow-hidden max-h-80 flex flex-col">
-                        <div className="p-2 border-b border-slate-700 sticky top-0 bg-slate-900">
+                      <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-700 bg-slate-300 shadow-xl overflow-hidden max-h-80 flex flex-col">
+                        <div className="p-2 border-b border-slate-700 sticky top-0 bg-slate-300">
                           <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search roles..."
                             autoFocus
-                            className="w-full rounded-lg bg-slate-800 border-none px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                            className="w-full rounded-lg bg-slate-300 border-none px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
@@ -332,7 +332,7 @@ const CreateInterview = () => {
                               <button
                                 key={role}
                                 onClick={() => handleRoleSelect(role)}
-                                className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+                                className="w-full text-left px-4 py-2.5 text-sm text-black hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
                               >
                                 {role}
                               </button>
@@ -351,7 +351,7 @@ const CreateInterview = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Experience Level */}
                     <div className="space-y-2.5">
-                      <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                      <label className="flex items-center gap-2 text-sm font-medium text-black">
                         <Target className="w-4 h-4 text-slate-500" />
                         Experience Level
                       </label>
@@ -376,7 +376,7 @@ const CreateInterview = () => {
 
                     {/* Interview Length */}
                     <div className="space-y-2.5">
-                      <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                      <label className="flex items-center gap-2 text-sm font-medium text-black">
                         <Clock className="w-4 h-4 text-slate-500" />
                         Interview Length
                       </label>
@@ -402,7 +402,7 @@ const CreateInterview = () => {
 
                   {/* Focus Areas */}
                   <div className="space-y-2.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                    <label className="flex items-center gap-2 text-sm font-medium text-black">
                       <Code className="w-4 h-4 text-slate-500" />
                       Focus Areas / Tech Stack
                     </label>
@@ -418,7 +418,7 @@ const CreateInterview = () => {
 
                   {/* Target Job Description */}
                   <div className="space-y-2.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                    <label className="flex items-center gap-2 text-sm font-medium text-black">
                       <FileText className="w-4 h-4 text-slate-500" />
                       Target Job Description
                       <span className="text-slate-500 text-xs">(Optional)</span>

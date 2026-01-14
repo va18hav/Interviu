@@ -20,13 +20,13 @@ const FeaturesSection = () => {
                         opacity: 0.1,
                         scale: 0.2,
                         filter: 'blur(10px)',
-                        color: '#334155' // slate-700
+                        color: '#94a3b8' // slate-400
                     },
                     {
                         opacity: 1,
                         scale: 1,
                         filter: 'blur(0px)',
-                        color: '#a6f6f6ff', // white
+                        color: '#0f172a', // slate-900
                         ease: "power2.out",
                         scrollTrigger: {
                             trigger: icon,
@@ -67,18 +67,18 @@ const FeaturesSection = () => {
     ];
 
     return (
-        <section ref={sectionRef} id="features" className="relative py-12 bg-black overflow-hidden">
+        <section ref={sectionRef} id="features" className="relative py-12 bg-white overflow-hidden">
             {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-10">
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+                    <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
                         The core of smarter preparation
                     </h2>
-                    <p className="text-lg text-slate-400 leading-relaxed">
+                    <p className="text-lg text-slate-600 leading-relaxed">
                         Complete your interview toolkit with features designed to accelerate your career growth.
                     </p>
                 </div>
@@ -88,27 +88,27 @@ const FeaturesSection = () => {
                     {features.map((feature, index) => (
                         <div
                             key={index}
-                            className="group relative p-8 border border-slate-800/90 hover:bg-slate-900/40 backdrop-blur-sm transition-all duration-300 hover:border-slate-700 hover:-translate-y-1"
+                            className="group relative p-8 border border-slate-200 hover:bg-slate-50 backdrop-blur-sm transition-all duration-300 hover:border-slate-300 hover:-translate-y-1"
                         >
                             {/* Hover Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                             <div className="relative z-10 flex flex-col h-full">
                                 {/* Icon Container */}
-                                <div className="mb-10 flex justify-center feature-icon text-slate-700">
+                                <div className="mb-10 flex justify-center feature-icon text-slate-400">
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-xl font-bold text-white/80 mb-4">
+                                <h3 className="text-xl font-bold text-slate-900 mb-4">
                                     {feature.title}
                                 </h3>
 
-                                <p className="text-slate-400 leading-relaxed mb-8 flex-grow">
+                                <p className="text-slate-600 leading-relaxed mb-8 flex-grow">
                                     {feature.description}
                                 </p>
 
                                 <button
                                     onClick={() => navigate(feature.link)}
-                                    className="flex items-center gap-2 border border-cyan-700 px-4 py-2 rounded-2xl w-1/2 text-sm font-semibold text-white/80 group-hover:bg-gradient-to-r from-cyan-300/80 to-cyan-600/80 transition-colors"
+                                    className="flex items-center gap-2 border border-cyan-600/30 px-4 py-2 rounded-2xl w-1/2 text-sm font-semibold text-slate-700 group-hover:bg-cyan-50 transition-colors"
                                 >
                                     {feature.action}
                                     <ArrowRight className="hidden md:block w-4 h-4 transition-transform group-hover:translate-x-1" />

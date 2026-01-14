@@ -3,22 +3,22 @@ import { Plus, Minus, ChevronDown } from 'lucide-react';
 
 const FAQItem = ({ question, answer, isOpen, toggle }) => {
     return (
-        <div className="border-b border-white/10 last:border-0">
+        <div className="border-b border-slate-200 last:border-0">
             <button
                 onClick={toggle}
                 className="w-full py-6 flex items-center justify-between text-left focus:outline-none group"
             >
-                <span className={`text-lg font-medium transition-colors duration-300 ${isOpen ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                <span className={`text-lg font-medium transition-colors duration-300 ${isOpen ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-900'}`}>
                     {question}
                 </span>
-                <span className={`ml-6 flex-shrink-0 transition-all duration-300 ${isOpen ? 'rotate-180 text-white' : 'text-slate-500 group-hover:text-white'}`}>
+                <span className={`ml-6 flex-shrink-0 transition-all duration-300 ${isOpen ? 'rotate-180 text-slate-900' : 'text-slate-400 group-hover:text-slate-900'}`}>
                     <ChevronDown className="w-5 h-5" />
                 </span>
             </button>
             <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100 mb-6' : 'max-h-0 opacity-0'}`}
             >
-                <p className="text-slate-400 leading-relaxed pr-12">
+                <p className="text-slate-600 leading-relaxed pr-12">
                     {answer}
                 </p>
             </div>
@@ -57,13 +57,13 @@ const FAQSection = () => {
     ];
 
     return (
-        <section className="py-24 bg-black relative overflow-hidden">
+        <section className="py-24 bg-white relative overflow-hidden">
             {/* Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-slate-800/20 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-slate-200/50 blur-[120px] rounded-full pointer-events-none" />
 
             <div className="max-w-2xl mx-auto px-6 relative z-10">
                 <div className="text-center mb-5">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
                         FAQ's
                     </h2>
                 </div>

@@ -80,7 +80,7 @@ const VideoSection = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-20">
             <div
                 ref={containerRef}
-                className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-500/10 group bg-black"
+                className="relative rounded-3xl overflow-hidden border border-black/10 shadow-2xl shadow-cyan-500/10 group bg-white"
             >
                 {/* Glow Effect behind video */}
                 {!isFullscreen && (
