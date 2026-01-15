@@ -58,7 +58,7 @@ const HeroSection = () => {
                     <span className="text-sm text-cyan-400 font-medium">AI-Powered Practice</span>
                 </div> */}
                 {/* Mobile Transcripts (Absolute Positioned) */}
-                <div className="absolute bottom-0 -left-4 md:hidden z-20">
+                <div className="absolute top-42 -left-4 md:hidden z-20">
                     <TranscriptBubble
                         type="ai"
                         text="Hello! I'm your AI Interviewer."
@@ -67,7 +67,7 @@ const HeroSection = () => {
                     />
                 </div>
 
-                <div className="absolute -bottom-12 -right-4 md:hidden z-20">
+                <div className="absolute -bottom-6 -right-4 md:hidden z-20">
                     <TranscriptBubble
                         type="user"
                         text="Hi, I'm ready to begin."
