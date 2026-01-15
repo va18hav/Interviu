@@ -63,7 +63,7 @@ const HeroSection = () => {
                         type="ai"
                         text="Hello! I'm your AI Interviewer."
                         className="shadow-sm"
-                        startDelay={1000}
+                        startDelay={4000}
                     />
                 </div>
 
@@ -72,7 +72,7 @@ const HeroSection = () => {
                         type="user"
                         text="Hi, I'm ready to begin."
                         className="shadow-sm"
-                        startDelay={2500}
+                        startDelay={5500}
                     />
                 </div>
 
