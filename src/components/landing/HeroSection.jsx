@@ -57,8 +57,27 @@ const HeroSection = () => {
                 {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-400/5 border border-cyan-500/20 backdrop-blur">
                     <span className="text-sm text-cyan-400 font-medium">AI-Powered Practice</span>
                 </div> */}
+                {/* Mobile Transcripts (Absolute Positioned) */}
+                <div className="absolute top-46 left-4 md:hidden z-20">
+                    <TranscriptBubble
+                        type="ai"
+                        text="Hello! I'm your AI Interviewer."
+                        className="shadow-sm"
+                        startDelay={1000}
+                    />
+                </div>
+
+                <div className="absolute bottom-0 right-4 md:hidden z-20">
+                    <TranscriptBubble
+                        type="user"
+                        text="Hi, I'm ready to begin."
+                        className="shadow-sm"
+                        startDelay={2500}
+                    />
+                </div>
+
                 {/* Heading */}
-                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-black tracking-tighter mt-14 mb-5 relative max-w-none">
+                <h2 className="font-sans text-4xl md:text-6xl font-extrabold text-gray-700 tracking-tighter mt-14 mb-5 relative max-w-none">
                     <span className="relative z-10">Ready to Ace Your</span>
                     <br />
                     <div className="w-screen relative left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 mt-2 opacity-100">

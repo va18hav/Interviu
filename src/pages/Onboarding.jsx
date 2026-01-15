@@ -13,8 +13,6 @@ const Onboarding = () => {
         skills: ''
     });
 
-
-
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -71,20 +69,20 @@ const Onboarding = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Glows */}
-            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Glows (Subtle for white theme) */}
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="w-full max-w-2xl relative z-10">
-                <div className="bg-neutral-900/50 border border-white/10 rounded-3xl p-8 md:p-12 backdrop-blur-xl shadow-2xl">
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-xl">
 
                     {/* Header */}
                     <div className="text-center mb-10 space-y-4">
-                        <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                            Welcome to Inter<span className="text-cyan-400">vyu</span>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                            Welcome to Inter<span className="text-cyan-500">viu</span>
                         </h1>
-                        <p className="text-slate-400 text-lg">
+                        <p className="text-slate-500 text-lg">
                             Let's personalize your interview experience.
                         </p>
                     </div>
@@ -93,9 +91,9 @@ const Onboarding = () => {
                     <div className="space-y-6">
                         {/* Role */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
                                 <Briefcase className="w-4 h-4 text-slate-400" />
-                                Target Role <span className="text-slate-500 text-xs">(Optional)</span>
+                                Target Role <span className="text-slate-400 text-xs">(Optional)</span>
                             </label>
                             <input
                                 type="text"
@@ -103,21 +101,21 @@ const Onboarding = () => {
                                 value={formData.role}
                                 onChange={handleChange}
                                 placeholder="e.g. Senior React Developer"
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                             />
                         </div>
 
                         {/* Experience Level */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
                                 <GraduationCap className="w-4 h-4 text-slate-400" />
-                                Experience Level <span className="text-slate-500 text-xs">(Optional)</span>
+                                Experience Level <span className="text-slate-400 text-xs">(Optional)</span>
                             </label>
                             <select
                                 name="experience_level"
                                 value={formData.experience_level}
                                 onChange={handleChange}
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none cursor-pointer"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all appearance-none cursor-pointer"
                             >
                                 <option value="" disabled>Select your experience</option>
                                 <option value="Junior">Junior (0-2 years)</option>
@@ -128,9 +126,9 @@ const Onboarding = () => {
 
                         {/* Skills */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                            <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
                                 <Code className="w-4 h-4 text-slate-400" />
-                                Top Skills <span className="text-slate-500 text-xs">(Optional, comma separated)</span>
+                                Top Skills <span className="text-slate-400 text-xs">(Optional, comma separated)</span>
                             </label>
                             <input
                                 type="text"
@@ -138,7 +136,7 @@ const Onboarding = () => {
                                 value={formData.skills}
                                 onChange={handleChange}
                                 placeholder="e.g. React, Node.js, System Design"
-                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                             />
                         </div>
                     </div>
@@ -148,7 +146,7 @@ const Onboarding = () => {
                         <button
                             onClick={handleSkip}
                             disabled={loading}
-                            className="w-full md:w-auto px-8 py-3 rounded-xl font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm"
+                            className="w-full md:w-auto px-8 py-3 rounded-xl font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all text-sm"
                         >
                             Skip for now
                         </button>
@@ -156,7 +154,7 @@ const Onboarding = () => {
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
-                            className="w-full md:flex-1 py-3.5 rounded-xl font-semibold text-black bg-white hover:bg-slate-200 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)] group"
+                            className="w-full md:flex-1 py-3.5 rounded-xl font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 group"
                         >
                             {loading ? (
                                 <span>Saving...</span>

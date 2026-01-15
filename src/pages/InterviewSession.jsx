@@ -294,17 +294,6 @@ const InterviewSession = () => {
     }
   }, [elapsedTime, wrapUpMessageSent]);
 
-  // Auto-end call at 20 minutes
-  React.useEffect(() => {
-    if (elapsedTime >= INTERVIEW_DURATION_SECONDS && vapi.current && !interviewEnded.current) {
-      console.log("⏰ 15 minutes reached - ending call");
-      interviewEnded.current = true;
-      sessionStorage.setItem("interviewEnded", "true");
-      vapi.current.stop();
-      setInterviewState("ending");
-    }
-  }, [elapsedTime]);
-
   async function generateFeedback(formattedTranscriptText) {
     try {
       console.log("Sending transcript to backend...")

@@ -61,7 +61,7 @@ const LandingLoader = ({ onComplete }) => {
     }, [onComplete]);
 
     return (
-        <div ref={containerRef} className="fixed inset-0 z-[100] bg-black flex items-center justify-center overflow-hidden">
+        <div ref={containerRef} className="fixed inset-0 z-[100] bg-white flex items-center justify-center overflow-hidden">
             <div className="w-full relative h-32 flex items-center justify-center">
 
                 {/* Pulse Line SVG */}
@@ -69,7 +69,7 @@ const LandingLoader = ({ onComplete }) => {
                     {/* Animated Pulse Path (Silver) */}
                     <path
                         ref={pathRef}
-                        d="M0,50 L300,50 L320,20 L340,80 L360,50 L440,50 L460,50 L480,50 L500,50 L600,50 L620,50 L640,20 L660,80 L680,50 L700,50 L1000,50"
+                        d="M0,50 L300,50 L320,50 L340,50 L360,50 L440,50 L460,50 L480,50 L500,5, L520,95 L540,50 L560,50 L580,50 L600,50 L620,50 L640,50 L660,50 L680,50 L700,50 L1000,50"
                         fill="none"
                         stroke="#5ecef1ff" // Slate-300 (Silver)
                         strokeWidth="3"
@@ -82,7 +82,7 @@ const LandingLoader = ({ onComplete }) => {
                 {/* Interviu Text */}
                 <h1
                     ref={textRef}
-                    className="relative z-10 text-5xl md:text-7xl lg:text-9xl font-extrabold text-white tracking-tighter opacity-0"
+                    className="relative z-10 text-5xl md:text-7xl lg:text-9xl font-extrabold text-black tracking-tighter opacity-0"
                     style={{ textShadow: "0 0 30px rgba(255,255,255,0.2)" }}
                 >
                     Inter<span className='text-cyan-400'>viu</span>
