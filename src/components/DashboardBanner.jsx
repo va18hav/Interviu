@@ -20,8 +20,9 @@ const DashboardBanner = ({ firstName }) => {
                         <span className="bg-gradient-to-r from-gray-800/90 to-black bg-clip-text text-transparent">Hi {firstName}!</span>
                     </h2>
 
-                    <p className="font-space text-sm lg:text-xl text-slate-900 tracking-tight">
-                        Practice with AI-generated interviews tailored to your specific role, level and skills. Get instant feedback to land your dream job.
+                    <p className="font-space text-sm lg:text-2xl font-semibold text-slate-900 tracking-tight">
+                        Ready for your next mock interview?<br />
+                        Go ahead and create your first interview!
                     </p>
 
                     <div className="flex items-center gap-4 pt-4">

@@ -71,15 +71,17 @@ app.post('/api/generate-feedback', async (req, res) => {
                                 { "question": "Question text...", "answer": "Suggested answer..." },
                                 { "question": "Question text...", "answer": "Suggested answer..." },
                                 { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." }  
-
-
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." },
+                                { "question": "Question text...", "answer": "Suggested answer..." },   
                                 ]
                     }`
                 }
             ],
-            model: "llama-3.3-70b-versatile", // Powerful free-tier model
-            temperature: 0.8,
+            model: "groq/compound-mini", // Powerful free-tier model
+            temperature: 0.5,
             response_format: { type: "json_object" } // Forces the model to return valid JSON
         })
 

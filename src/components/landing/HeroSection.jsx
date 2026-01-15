@@ -25,7 +25,7 @@ const HeroSection = () => {
                         {userCredentials ? (
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2 rounded-full bg-white/80 text-slate-900 hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                className="px-5 py-2 rounded-full bg-gradient-to-r from-cyan-400/70 to-cyan-500 text-white hover:scale-105 text-sm font-semibold hover:bg-slate-300 transition-all flex items-center gap-2"
                             >
                                 Dashboard
                                 <ArrowRight className="w-4 h-4" />
@@ -40,7 +40,7 @@ const HeroSection = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="px-5 py-2 rounded-full bg-white/80 text-slate-900 hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                    className="px-5 py-2 rounded-full bg-white/40 text-slate-900 hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                                 >
                                     Get Started
                                 </button>
@@ -75,7 +75,7 @@ const HeroSection = () => {
                             />
                         </div>
 
-                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-400/90 to-blue-600/80 bg-clip-text text-transparent shrink-0">Next Interview?</span>
+                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-300/90 to-blue-600/90 bg-clip-text text-transparent shrink-0">Next Interview?</span>
 
                         {/* User Transcript (Cyan) */}
                         <div className="relative shrink-0 hidden md:block">
@@ -102,7 +102,7 @@ const HeroSection = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up delay-300">
                     <button
                         onClick={() => navigate('/login')}
-                        className="h-12 px-8 rounded-full bg-gradient-to-r from-blue-300/90 to-blue-500/90 text-black font-semibold text-base hover:bg-blue-500 hover:scale-105 transition-all flex items-center gap-2"
+                        className="h-12 px-8 rounded-full bg-gradient-to-r from-gray-200/70 to-gray-300 text-black font-semibold text-base hover:bg-gray-500 hover:scale-105 transition-all flex items-center gap-2"
                     >
                         Create Interview
                         <ArrowRight className="w-4 h-4" />

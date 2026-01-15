@@ -4,6 +4,8 @@ import logo from "../assets/images/logo.png"
 import InterviewerCard from "../components/InterviewerCard"
 import UserCard from "../components/UserCard"
 import StatusBox from "../components/StatusBox"
+import LoadingState from "../components/LoadingState"
+import { Mic, Video, PhoneOff, Settings } from "lucide-react"
 
 const InterviewSessionStatic = () => {
     const navigate = useNavigate()
@@ -16,22 +18,19 @@ const InterviewSessionStatic = () => {
     const { firstName } = userCredentials;
 
     // Static state for photoshoot visual
-    const [interviewState, setInterviewState] = React.useState('user-speaking')
+    const [interviewState, setInterviewState] = React.useState('ai-speaking')
     const [elapsedTime, setElapsedTime] = React.useState(142) // 02:22
 
     // Static content
     const currentQuestion = "Can you describe a challenging technical problem you solved recently using React's context API?"
-    const currentAnswer = "Um, yeah—so one challenging problem I worked on recently was using React’s Context API to, kind of, clean up how we were handling global authentication state across the app...." // User is listening
+    const currentAnswer = "Um, yeah—so one challenging problem I worked on recently was using React’s Context API to, kind of, clean up how we were handling global authentication state across the app...."
 
     const role = "Senior React Developer"
     const name = "Full Stack Developer"
-    const icon = logo // Or use a Google logo if available, falling back to app logo
-    const customInterview = false // Pretend it's a popular interview
+    const icon = logo
+    const customInterview = false
 
-    // Static timer effect for realism (optional, but requested "static replica" might imply frozen state, 
-    // but "experiment with visual changes" might benefit from a running timer. 
-    // The user asked for "static replica... without functionalities... for a photoshoot". 
-    // Frozen or running timer works. I'll make it run to feel alive but won't trigger anything.
+    // Static timer effect for realism
     React.useEffect(() => {
         const interval = setInterval(() => {
             setElapsedTime((prev) => prev + 1)
@@ -43,7 +42,6 @@ const InterviewSessionStatic = () => {
         animation: "slideUp 0.8s ease-out forwards"
     };
 
-    // Add styles for animation
     React.useEffect(() => {
         const styleSheet = document.createElement("style");
         styleSheet.innerText = `
@@ -56,61 +54,119 @@ const InterviewSessionStatic = () => {
         return () => document.head.removeChild(styleSheet);
     }, []);
 
+    const isListening = interviewState === "user-speaking"
+
     return (
-        <main className="h-screen bg-black py-5 flex flex-col relative overflow-hidden">
-            {/* Animated background effects */}
+        <main className="h-screen bg-gray-50 flex flex-col relative overflow-hidden">
+            {/* Background - Optional Subtle Grain or mesh */}
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-40" style={{
+                backgroundImage: 'radial-gradient(circle at center, #bfdbfe 0%, transparent 70%)'
+            }}></div>
 
             {/* Header */}
-            <header className="max-w-7xl mx-auto mb-4 sm:mb-6 w-full flex-shrink-0 relative z-10">
-                <div className="">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-center gap-3">
-
-                            <img src={icon} alt="Logo" className="w-10 h-10" />
-
-                            <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                                {name} Interview
-                            </h2>
+            <header className="absolute top-0 left-0 right-0 z-50 px-6 py-4 pointer-events-none">
+                <div className="flex items-center justify-between max-w-8xl mx-auto">
+                    {/* Logo Badge */}
+                    <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm pointer-events-auto">
+                        <img src={icon} alt="Logo" className="w-5 h-5 object-contain" />
+                        <div className="flex flex-col leading-none">
+                            <span className="text-sm font-bold text-slate-900">
+                                {name}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium">Interview Session</span>
                         </div>
+                    </div>
 
-                        <div className="flex flex-row items-center gap-4 justify-between px-2">
-                            <div className="font-mono text-xl font-semibold text-white/90 tabular-nums bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50 shadow-sm backdrop-blur-sm">
-                                {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                            </div>
-                            <button
-                                className="group relative inline-flex items-center justify-center px-3 py-2 lg:px-6 lg:py-3 text-sm font-semibold text-white bg-gradient-to-r from-red-500 to-pink-600 rounded-xl hover:from-red-600 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-105"
-                                onClick={() => navigate('/dashboard')}
-                            >
-                                <svg className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                Leave Interview
-                            </button>
+                    {/* Timer Badge */}
+                    <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200 shadow-sm pointer-events-auto flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                        <div className="font-mono text-sm font-semibold text-slate-900 tabular-nums">
+                            {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                         </div>
                     </div>
                 </div>
             </header>
 
-            {/* Cards - Horizontal Layout */}
-            <div className="max-w-7xl mx-auto mb-4 sm:mb-6 w-full flex-1 min-h-0 relative z-10">
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 h-full" style={slideUpStyle}>
-                    {/* AI Interviewer Card */}
-                    <InterviewerCard interviewState={interviewState} />
+            {/* Main Content Areas */}
+            <div className="flex-1 flex flex-col relative z-0 justify-center p-4 pb-24 md:px-8">
+                <div className="w-full max-w-8xl mx-auto h-full flex flex-col justify-center">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full max-h-[80vh] w-full" style={slideUpStyle}>
+                        {/* AI Interviewer Card */}
+                        <div className="relative h-full w-full min-h-[300px] md:min-h-0">
+                            <InterviewerCard interviewState={interviewState} />
+                            {/* Name Tag Overlay */}
+                            <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 z-20">
+                                <p className="text-white text-xs font-medium">AI Interviewer</p>
+                            </div>
+                        </div>
 
-                    {/* User Card */}
-                    <UserCard
-                        interviewState={interviewState}
-                        firstName={firstName}
-                    />
+                        {/* User Card */}
+                        <div className="relative h-full w-full min-h-[300px] md:min-h-0">
+                            <UserCard
+                                interviewState={interviewState}
+                                firstName={firstName}
+                            />
+                            {/* Name Tag Overlay */}
+                            <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 z-20">
+                                <p className="text-white text-xs font-medium">{firstName || "You"}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Status Caption Box - Floating */}
+                    <div className="absolute bottom-24 left-0 right-0 px-4 pointer-events-none flex justify-center z-10">
+                        <div className="w-full max-w-6xl pointer-events-auto">
+                            <StatusBox
+                                interviewState={interviewState}
+                                currentQuestion={currentQuestion}
+                                currentAnswer={currentAnswer}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Status Textbox */}
-            <StatusBox
-                interviewState={interviewState}
-                currentQuestion={currentQuestion}
-                currentAnswer={currentAnswer}
-            />
+            {/* Bottom Control Bar */}
+            <div className="bg-white border-t border-gray-200 h-20 w-full absolute bottom-0 z-50 flex items-center justify-between px-4 md:px-8 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+
+                {/* Left: Info Placeholder */}
+                <div className="hidden md:flex items-center gap-4 w-1/3">
+                    <div className="text-sm text-slate-500 font-medium">
+                        Listening...
+                    </div>
+                </div>
+
+                {/* Center: Controls */}
+                <div className="flex items-center justify-center gap-4 w-full md:w-1/3">
+                    {/* Fake Mute Button */}
+                    <button className="p-3.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all border border-transparent hover:border-slate-300" title="Mute">
+                        <Mic className="w-5 h-5" />
+                    </button>
+
+                    {/* Fake Video Button */}
+                    <button className="p-3.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all border border-transparent hover:border-slate-300" title="Video Off">
+                        <Video className="w-5 h-5" />
+                    </button>
+
+                    {/* End Call Button */}
+                    <button
+                        className="px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-2 shadow-lg shadow-red-500/20 transition-all hover:scale-105"
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        <PhoneOff className="w-5 h-5" />
+                        <span className="hidden sm:inline">End Call</span>
+                    </button>
+
+                    {/* Settings - Fake */}
+                    <button className="hidden sm:block p-3.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all border border-transparent hover:border-slate-300" title="Settings">
+                        <Settings className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Right: Empty for balance */}
+                <div className="hidden md:flex items-center justify-end w-1/3">
+                </div>
+            </div>
         </main>
     )
 }

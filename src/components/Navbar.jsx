@@ -158,12 +158,12 @@ const Navbar = ({ credits: propCredits }) => {
                         {/* User Profile (Desktop) */}
                         <div className="hidden md:flex items-center gap-4 relative">
                             <div className="flex items-center gap-3 pl-4">
-                                <div className="flex items-center gap-2 mr-2 bg-slate-300/80 px-3 py-1.5 rounded-full border border-slate-400/50 shadow-sm hover:border-slate-500 transition-colors cursor-pointer">
+                                {/* <div className="flex items-center gap-2 mr-2 bg-slate-300/80 px-3 py-1.5 rounded-full border border-slate-400/50 shadow-sm hover:border-slate-500 transition-colors cursor-pointer">
                                     <div className="p-1 rounded-full bg-yellow-200/10 group-hover:bg-yellow-500/20 transition-colors">
                                         <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                                     </div>
                                     <span className="text-sm font-bold text-black tabular-nums">{credits}</span>
-                                </div>
+                                </div> */}
 
                                 <button
                                     onClick={() => setShowProfile(prev => !prev)}

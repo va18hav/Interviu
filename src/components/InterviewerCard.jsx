@@ -3,43 +3,58 @@ import React from 'react'
 const InterviewerCard = ({ interviewState }) => {
     return (
         <div
-            className={`group flex-1 bg-gradient-to-br from-slate-900/80 via-slate-800/50 to-slate-600/10 backdrop-blur-2xl rounded-3xl shadow-2xl transition-all duration-500 h-full relative overflow-hidden ${interviewState === "ai-speaking"
-                ? "border-2 border-cyan-400/60 ring-4 ring-cyan-400/30 shadow-cyan-500/50"
-                : "border border-white/20 hover:border-white/40"
+            className={`group w-full h-full bg-white rounded-2xl shadow-sm transition-all duration-500 relative overflow-hidden flex items-center justify-center ${interviewState === "ai-speaking"
+                ? "border-2 border-cyan-500 shadow-xl shadow-cyan-500/10"
+                : "border border-gray-200"
                 }`}
         >
-            {/* Glow effect */}
-            <div className={`absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${interviewState === "ai-speaking" ? "opacity-100 animate-pulse" : ""
-                }`}></div>
+            {/* Subtle Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white" />
 
-            <div className="flex flex-col items-center justify-center gap-6 p-6 sm:p-8 h-full relative z-10">
+            {/* Active Speaker Indicator Border Effect */}
+            {interviewState === "ai-speaking" && (
+                <div className="absolute inset-0 border-4 border-cyan-100/50 rounded-2xl z-10 pointer-events-none animate-pulse"></div>
+            )}
+
+            <div className="flex flex-col items-center justify-center gap-6 p-6 relative z-10 w-full">
                 <div className="relative">
-                    {/* Animated rings */}
-                    <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 opacity-20 blur-xl ${interviewState === "ai-speaking" ? "animate-ping" : ""
-                        }`}></div>
-                    <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 opacity-10 ${interviewState === "ai-speaking" ? "animate-pulse" : ""
-                        }`} style={{ transform: "scale(1.2)" }}></div>
+                    {/* Animated Ripples */}
+                    {interviewState === "ai-speaking" && (
+                        <>
+                            <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-ping opacity-20"></div>
+                            <div className="absolute -inset-4 rounded-full bg-cyan-500/10 animate-pulse opacity-40"></div>
+                        </>
+                    )}
 
-                    <div className="relative bg-gradient-to-br from-cyan-500 via-blue-500 to-blue-600 h-32 w-32 sm:h-40 sm:w-40 lg:h-48 lg:w-48 rounded-full shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                        {/* Inner glow */}
-                        <div className="absolute inset-2 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                        <svg className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 text-white relative z-10 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    {/* Avatar Container */}
+                    <div className="relative bg-gradient-to-br from-cyan-500 to-blue-600 h-32 w-32 sm:h-40 sm:w-40 rounded-full shadow-xl flex items-center justify-center z-10 overflow-hidden transform transition-transform duration-500 group-hover:scale-105">
+                        {/* Abstract Avatar Pattern caused by CSS */}
+                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+
+                        <svg className="w-16 h-16 sm:w-20 sm:h-20 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                     </div>
+
+                    {/* Active Mic Indicator */}
                     {interviewState === "ai-speaking" && (
-                        <div className="absolute bottom-2 right-2 bg-green-400 h-7 w-7 rounded-full border-4 border-slate-900 shadow-lg shadow-green-500/50 animate-pulse">
-                            <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                        <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-md z-20">
+                            <div className="bg-green-500 w-5 h-5 rounded-full flex items-center justify-center">
+                                <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            </div>
                         </div>
                     )}
                 </div>
-                <div className="text-center">
-                    <p className="text-xl sm:text-2xl font-bold text-white mb-1 tracking-tight">AI Interviewer</p>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 rounded-full border border-cyan-400/30">
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                        <p className="text-xs sm:text-sm text-cyan-200 font-medium">Virtual Assistant</p>
+
+                {/* Visualizer Waves (Fake) */}
+                {interviewState === "ai-speaking" && (
+                    <div className="flex items-end gap-1 h-8">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="w-1.5 bg-cyan-500 rounded-full animate-pulse" style={{ height: `${Math.random() * 100}%`, animationDuration: '0.4s', animationDelay: `${i * 0.1}s` }}></div>
+                        ))}
                     </div>
-                </div>
+                )}
             </div>
         </div>
     )

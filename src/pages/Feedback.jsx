@@ -125,7 +125,7 @@ const InterviewFeedback = () => {
                             <span>Interview Assessment Report</span>
                         </div>
                         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                            {feedbackData.company || "Mock Interview"} Session
+                            {feedbackData.company || feedbackData.role} Session
                         </h1>
                         <div className="flex flex-wrap gap-3 pt-1">
                             {!feedbackData.customInterview && feedbackData.company && (
@@ -142,7 +142,7 @@ const InterviewFeedback = () => {
                             )}
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border border-gray-200 text-sm font-medium text-slate-700">
                                 <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                {feedbackData.duration || "25m 12s"}
+                                {feedbackData.duration || "15 min"}
                             </span>
                         </div>
                     </div>
@@ -384,13 +384,6 @@ const InterviewFeedback = () => {
                                             <div className="bg-green-50 rounded-lg p-5 border border-green-100">
                                                 <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2">Ideal Answer</div>
                                                 <p className="text-slate-700 text-sm leading-relaxed">{item.answer}</p>
-                                            </div>
-
-                                            <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-                                                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Your Feedback</div>
-                                                <p className="text-slate-600 text-sm leading-relaxed italic">
-                                                    {item.feedback || "Detailed feedback on your specific answer would appear here in a real session."}
-                                                </p>
                                             </div>
                                         </div>
                                     </div>

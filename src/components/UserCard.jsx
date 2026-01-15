@@ -3,43 +3,40 @@ import React from 'react'
 const UserCard = ({ interviewState, firstName }) => {
     return (
         <div
-            className={`group flex-1 bg-gradient-to-br from-slate-900/80 via-slate-800/50 to-slate-600/10 backdrop-blur-2xl rounded-3xl shadow-2xl transition-all duration-500 h-full relative overflow-hidden ${interviewState === "user-speaking"
-                ? "border-2 border-green-400/60 ring-4 ring-green-400/30 shadow-green-500/50"
-                : "border border-white/20 hover:border-white/40"
+            className={`group w-full h-full bg-slate-900 rounded-2xl shadow-sm transition-all duration-500 relative overflow-hidden flex items-center justify-center ${interviewState === "user-speaking"
+                ? "border-2 border-green-500 shadow-xl shadow-green-500/10"
+                : "border border-gray-200"
                 }`}
         >
-            {/* Glow effect */}
-            <div className={`absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${interviewState === "user-speaking" ? "opacity-100 animate-pulse" : ""
-                }`}></div>
+            {/* Dark background for user camera usually looks better or more realistic as a placeholder for a cam feed */}
+            <div className="absolute inset-0 bg-slate-800" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
 
-            <div className="flex flex-col items-center justify-center gap-6 p-6 sm:p-8 h-full relative z-10">
+            {/* Active Speaker Indicator Border */}
+            {interviewState === "user-speaking" && (
+                <div className="absolute inset-0 border-4 border-green-500/30 rounded-2xl z-10 pointer-events-none"></div>
+            )}
+
+            <div className="flex flex-col items-center justify-center gap-6 p-6 relative z-10 w-full">
                 <div className="relative">
-                    {/* Animated rings */}
-                    <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 opacity-20 blur-xl ${interviewState === "user-speaking" ? "animate-ping" : ""
-                        }`}></div>
-                    <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 opacity-10 ${interviewState === "user-speaking" ? "animate-pulse" : ""
-                        }`} style={{ transform: "scale(1.2)" }}></div>
-
-                    <div className="relative bg-gradient-to-br from-slate-400 via-slate-600 to-slate-800 h-32 w-32 sm:h-40 sm:w-40 lg:h-48 lg:w-48 rounded-full shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                        {/* Inner glow */}
-                        <div className="absolute inset-2 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                        <svg className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 text-white relative z-10 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    {/* Placeholder for Camera Feed */}
+                    <div className="relative bg-slate-700 h-32 w-32 sm:h-40 sm:w-40 rounded-full shadow-inner flex items-center justify-center overflow-hidden border-4 border-slate-600">
+                        <svg className="w-16 h-16 sm:w-20 sm:h-20 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
+
+                    {/* Active Mic Indicator */}
                     {interviewState === "user-speaking" && (
-                        <div className="absolute bottom-2 right-2 bg-green-400 h-7 w-7 rounded-full border-4 border-slate-900 shadow-lg shadow-green-500/50 animate-pulse">
-                            <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                        <div className="absolute -bottom-1 -right-1 bg-slate-800 p-1 rounded-full shadow-md z-20 border border-slate-700">
+                            <div className="bg-green-500 w-5 h-5 rounded-full flex items-center justify-center">
+                                <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            </div>
                         </div>
                     )}
                 </div>
-                <div className="text-center">
-                    <p className="text-xl sm:text-2xl font-bold text-white mb-1 tracking-tight">You</p>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-500/20 rounded-full border border-slate-400/30">
-                        <div className="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
-                        <p className="text-xs sm:text-sm text-slate-200 font-medium">{firstName}</p>
-                    </div>
-                </div>
+                <p className="text-slate-400 text-sm font-medium mt-2">Camera Off</p>
             </div>
         </div>
     )

@@ -9,7 +9,7 @@ const TechInterviews = [
         "role": "L4",
         "icon": google,
         "level": "Intermediate",
-        "totalDuration": "80 min",
+        "totalDuration": "60 min",
         "skills": ["Advanced DSA Reasoning", "Algorithmic Trade-offs", "Verbal Complexity Analysis", "Googliness", "Leadership without Authority"],
         "overview": "For this role Google emphasizes strong data structures and algorithms skills, the ability to reason clearly about problem-solving strategies, and to communicate trade-offs and complexity verbally during interviews. Behavioral signals around General Cognitive Ability and 'Googliness' are also critical, with focus on ownership, collaboration, and navigating ambiguity in addition to technical depth.",
 
@@ -23,7 +23,7 @@ const TechInterviews = [
                 "title": "Core DSA & Logic",
                 "id": "tech-1",
                 "type": "technical",
-                "duration": "5 min",
+                "duration": "20 min",
                 "focus": ["DSA", "Logic"],
                 "overview": "Focuses on core DSA fundamentals through verbal reasoning and algorithmic logic explanation. Candidates explain approaches, trade-offs, and complexity without writing code, testing clarity of thought and structured problem-solving.",
 
@@ -50,7 +50,7 @@ const TechInterviews = [
                 "title": "Advanced Algorithms & Optimization",
                 "id": "tech-2",
                 "type": "technical",
-                "duration": "30 min",
+                "duration": "20 min",
                 "focus": ["Advanced DSA", "Optimization"],
                 "overview": "Tests deeper algorithmic understanding through advanced topics and optimization strategies. Emphasis on explaining complex data structures, algorithm trade-offs, and scalability considerations verbally.",
 
@@ -136,7 +136,7 @@ const TechInterviews = [
         "role": "SDE II",
         "icon": amazon,
         "level": "Intermediate",
-        "totalDuration": "120 min",
+        "totalDuration": "80 min",
         "skills": ["DSA Problem Solving", "LLD Design", "System Scalability", "Leadership Principles", "Customer Obsession"],
         "overview": "Amazon SDE II interviews typically feature an Online Assessment followed by a 4-round onsite loop with 3-4 coding/LLD sessions, one system design, and behavioral questions tied to Leadership Principles (LPs) in every round. Emphasis is on medium-hard LeetCode-style problems, object-oriented design, scalable systems, and demonstrating LPs like Ownership, Customer Obsession, Dive Deep, and Bias for Action through STAR responses.",
 
@@ -232,7 +232,7 @@ const TechInterviews = [
                 "title": "System Design & Coding",
                 "id": "tech-3",
                 "type": "technical",
-                "duration": "30 min",
+                "duration": "20 min",
                 "focus": ["System Design", "Scalability"],
                 "overview": "High-level system design for Amazon-scale services with deep dives into bottlenecks, trade-offs, and data models. Often includes a coding follow-up; emphasize customer obsession and frugality.",
 
@@ -273,7 +273,7 @@ const TechInterviews = [
                 "title": "Leadership Principles Deep Dive",
                 "id": "behavioral-1",
                 "type": "behavioral",
-                "duration": "10 min",
+                "duration": "20 min",
                 "overview": "Dedicated Bar Raiser-style round probing Amazon's 16 Leadership Principles via STAR stories. Every technical round also includes 2-3 LP questions; demonstrate Customer Obsession, Ownership, Dive Deep.",
 
                 "questions": [
@@ -318,7 +318,7 @@ const TechInterviews = [
         "role": "E4",
         "icon": meta,
         "level": "Intermediate",
-        "totalDuration": "180 min",
+        "totalDuration": "80 min",
         "skills": ["LeetCode Medium-Hard Coding", "System/Product Design", "Behavioral Authenticity", "Complexity Analysis", "Scalability Reasoning"],
         "overview": "Meta E4 interviews follow a recruiter screen, technical phone screen (1-2 coding problems), and 4-5 onsite rounds: 2-3 coding, 1 system/product design, and 1 behavioral. Emphasis is on solving 2 medium-hard LeetCode problems per coding round in ~20-25 min each, with clear verbal communication, optimal solutions, and authenticity in behavioral discussions.",
 
@@ -332,7 +332,7 @@ const TechInterviews = [
                 "title": "Coding Round 1",
                 "id": "tech-1",
                 "type": "technical",
-                "duration": "45 min",
+                "duration": "20 min",
                 "focus": ["Arrays", "Strings", "Hashing"],
                 "overview": "Solve and verbally explain 2 medium LeetCode problems (Meta-tagged preferred) with optimal time/space. Interviewer probes follow-ups; focus on edge cases, testing, and clean logic walkthrough.",
 
@@ -373,7 +373,7 @@ const TechInterviews = [
                 "title": "Coding Round 2",
                 "id": "tech-2",
                 "type": "technical",
-                "duration": "45 min",
+                "duration": "20 min",
                 "focus": ["Graphs", "Trees", "DP"],
                 "overview": "2 more medium-hard problems, often graph/tree/DP Meta-tagged. Expect optimal solutions quickly; verbalize thought process, alternatives, and test cases before detailing logic.",
 
@@ -414,7 +414,7 @@ const TechInterviews = [
                 "title": "System/Product Design",
                 "id": "tech-3",
                 "type": "technical",
-                "duration": "45 min",
+                "duration": "20 min",
                 "focus": ["Architecture", "Scalability"],
                 "overview": "Design Meta-scale service like News Feed or Messenger; cover functional/non-functional reqs, APIs, DB schema, scaling bottlenecks, caching/sharding. Verbal high-level diagrams and trade-offs.",
 
@@ -455,7 +455,7 @@ const TechInterviews = [
                 "title": "Behavioral & Retrospective",
                 "id": "behavioral-1",
                 "type": "behavioral",
-                "duration": "45 min",
+                "duration": "20 min",
                 "overview": "Discuss career trajectory, challenges overcome, teamwork, failures/learnings, and Meta fit. Be authentic; use STAR but focus on impact, growth mindset, and collaboration. Review past projects deeply.",
 
                 "questions": [

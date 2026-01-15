@@ -35,7 +35,7 @@ const InteractiveGridBackground = () => {
 
             {/* Highlighted Cell */}
             <div
-                className="absolute bg-slate-500/35 transition-transform duration-75"
+                className="absolute bg-slate-200/35 transition-transform duration-75"
                 style={{
                     left: 0,
                     top: 0,

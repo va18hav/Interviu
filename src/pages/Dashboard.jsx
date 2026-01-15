@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate, } from "react-router-dom"
-import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2 } from 'lucide-react';
+import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import bot from "../assets/images/bot.png"
 import google from "../assets/images/google.png"
@@ -165,10 +165,10 @@ const InterviewDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Clock className="w-6 h-6 text-cyan-400" />
+                  <Clock className="w-6 h-6 text-slate-900" />
                   Recent Interviews
                 </h3>
-                <p className="text-slate-400 text-sm mt-1">Your practice history and performance</p>
+                <p className="text-slate-900 text-sm mt-1">Your practice history and performance</p>
               </div>
               <button
                 onClick={() => navigate('/dashboard/all-previous-interviews')}
@@ -182,17 +182,17 @@ const InterviewDashboard = () => {
               {pastInterviews.slice(0, 3).map((interview) => (
                 <div
                   key={interview.id}
-                  className="relative group rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 cursor-pointer"
+                  className="relative group rounded-2xl border border-slate-200 bg-slate-200/20 backdrop-blur-xl overflow-hidden hover:border-slate-500/50 transition-all duration-300 cursor-pointer"
                 >
-                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-yellow-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
                   <div className="p-6 space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                        <h4 className="text-lg font-semibold text-black group-hover:text-cyan-400 transition-colors">
                           {interview.role}
                         </h4>
-                        <p className="text-sm text-slate-400 flex items-center gap-1 mt-1">
+                        <p className="text-sm text-slate-800 flex items-center gap-1 mt-1">
                           <Calendar className="w-3 h-3" />
                           {interview.date}
                         </p>
@@ -207,8 +207,8 @@ const InterviewDashboard = () => {
                     {/* Stats */}
                     <div className="flex items-center gap-4 pt-2 border-t border-slate-800/50">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-400">{interview.duration}</span>
+                        <Clock className="w-4 h-4 text-slate-900" />
+                        <span className="text-sm text-slate-900">{interview.duration}</span>
                       </div>
                     </div>
 
@@ -218,13 +218,14 @@ const InterviewDashboard = () => {
                         onClick={() => {
                           viewinterview(interview)
                         }}
-                        className="cursor-pointer py-2.5 px-6 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-cyan-500/30">
+                        className="cursor-pointer py-2.5 px-6 rounded-lg bg-slate-300/50 border border-slate-400/50 text-slate-900 hover:bg-slate-500/50 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-cyan-500/30">
                         View Details
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </button>
                       <button
                         onClick={() => deleteinterview(interview.id)}
-                        className="cursor-pointer py-2.5 px-6 rounded-lg border border-slate-700 text-slate-500 hover:bg-red-500/90 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-red-500/30">
+                        className="cursor-pointer py-2.5 px-6 rounded-lg border border-slate-700 text-slate-500 hover:bg-red-300 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-red-500/30">
+                        <Trash className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         Delete
                       </button>
                     </div>
@@ -235,8 +236,8 @@ const InterviewDashboard = () => {
           </section>
         ) : (
           <div className="text-center py-10 rounded-2xl border border-white/10">
-            <p className="text-slate-400 mb-2">No interviews yet.</p>
-            <p className="text-sm text-slate-500">Create your first interview to get started!</p>
+            <p className="text-slate-900 mb-2">No interviews yet.</p>
+            <p className="text-sm text-slate-900">Create your first interview to get started!</p>
           </div>
         )}
 
@@ -244,7 +245,7 @@ const InterviewDashboard = () => {
         <section className="space-y-6">
           <PopularInterviewsBanner />
           <div className="flex items-center gap-2">
-            <p className="text-slate-400 text-sm mt-1">In Demand</p>
+            <p className="text-slate-900 text-sm mt-1">In Demand</p>
             <TrendingUp className="w-6 h-6 text-cyan-400" />
           </div>
 

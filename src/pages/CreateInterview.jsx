@@ -198,7 +198,7 @@ const CreateInterview = () => {
         role: formData.role,
         level: formData.level,
         focus: formData.focus,
-        length: formData.length,
+        length: "15 min",
         description: formData.description,
         customInterview: true
       },
@@ -206,7 +206,7 @@ const CreateInterview = () => {
   }
 
   // Simple derived state
-  const canGenerate = formData.role.trim() !== ""
+  const canGenerate = formData.role.trim() !== "" && formData.level.trim() !== "" && formData.focus.trim() !== ""
 
   return (
     <>
@@ -215,14 +215,14 @@ const CreateInterview = () => {
           {/* Header */}
           <Navbar />
           {/* Main Card - Two Column Layout */}
-          <div className="rounded-3xl border border-slate-800 bg-white/50 backdrop-blur-xl shadow-2xl overflow-hidden mt-5">
+          <div className="rounded-3xl border border-gray-100 bg-white shadow-xl overflow-hidden mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
 
               {/* Left Column - Feature Card (2 columns) */}
-              <div className="lg:col-span-2 bg-gradient-to-br from white/100 via white/60 to white/100 p-10 flex flex-col justify-start relative overflow-hidden border-r border-slate-800/50">
+              <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-10 flex flex-col justify-start relative overflow-hidden border-r border-slate-100">
                 {/* Decorative gradient orbs */}
-                <div className="absolute top-0 left-0 w-70 h-70 bg-cyan-500/20 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-0 w-70 h-70 bg-blue-500/20 rounded-full blur-3xl" />
+                <div className="absolute top-0 left-0 w-70 h-70 bg-cyan-500/5 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-70 h-70 bg-blue-500/5 rounded-full blur-3xl" />
 
                 <div className="relative z-10 space-y-8">
                   <div>
@@ -239,7 +239,7 @@ const CreateInterview = () => {
                   <div className="space-y-4">
                     {/* Feature 1 */}
                     <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/15 to-blue-500/15 border border-cyan-500/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                         <Brain className="w-6 h-6 text-cyan-400" />
                       </div>
                       <div>
@@ -250,7 +250,7 @@ const CreateInterview = () => {
 
                     {/* Feature 2 */}
                     <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/15 border border-blue-500/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                         <Zap className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
@@ -261,7 +261,7 @@ const CreateInterview = () => {
 
                     {/* Feature 3 */}
                     <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/15 to-pink-500/15 border border-purple-500/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                         <TrendingUp className="w-6 h-6 text-purple-400" />
                       </div>
                       <div>
@@ -303,7 +303,7 @@ const CreateInterview = () => {
 
                     <div
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="w-full rounded-lg border border-slate-700/50 bg-slate-300/60 px-4 py-3.5 text-sm text-white focus:outline-none cursor-pointer hover:border-slate-600 flex items-center justify-between"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:outline-none cursor-pointer hover:border-slate-300 flex items-center justify-between"
                     >
                       <span className={formData.role ? "text-black" : "text-slate-900"}>
                         {formData.role || "Select a role..."}
@@ -314,15 +314,15 @@ const CreateInterview = () => {
                     </div>
 
                     {isDropdownOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-700 bg-slate-300 shadow-xl overflow-hidden max-h-80 flex flex-col">
-                        <div className="p-2 border-b border-slate-700 sticky top-0 bg-slate-300">
+                      <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden max-h-80 flex flex-col">
+                        <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
                           <input
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search roles..."
                             autoFocus
-                            className="w-full rounded-lg bg-slate-300 border-none px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                            className="w-full rounded-lg bg-slate-50 border-none px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
                             onClick={(e) => e.stopPropagation()}
                           />
                         </div>
@@ -347,57 +347,30 @@ const CreateInterview = () => {
                     )}
                   </div>
 
-                  {/* Experience Level and Interview Length - Side by side */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Experience Level */}
-                    <div className="space-y-2.5">
-                      <label className="flex items-center gap-2 text-sm font-medium text-black">
-                        <Target className="w-4 h-4 text-slate-500" />
-                        Experience Level
-                      </label>
-                      <select
-                        name="level"
-                        value={formData.level}
-                        onChange={handleChange}
-                        className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all appearance-none cursor-pointer hover:border-slate-600"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '1.25rem'
-                        }}
-                      >
-                        <option value="" className="bg-slate-900">Select level</option>
-                        <option value="junior" className="bg-slate-900">Junior</option>
-                        <option value="mid" className="bg-slate-900">Mid-Level</option>
-                        <option value="senior" className="bg-slate-900">Senior</option>
-                      </select>
-                    </div>
-
-                    {/* Interview Length */}
-                    <div className="space-y-2.5">
-                      <label className="flex items-center gap-2 text-sm font-medium text-black">
-                        <Clock className="w-4 h-4 text-slate-500" />
-                        Interview Length
-                      </label>
-                      <select
-                        name="length"
-                        value={formData.length}
-                        onChange={handleChange}
-                        className="w-full rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all appearance-none cursor-pointer hover:border-slate-600"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '1.25rem'
-                        }}
-                      >
-                        <option value="" className="bg-slate-900">Select length</option>
-                        <option value="5 min" className="bg-slate-900">Short (5 min)</option>
-                        <option value="10 min" className="bg-slate-900">Medium (10 min)</option>
-                        <option value="15 min" className="bg-slate-900">Long (15 min)</option>
-                      </select>
-                    </div>
+                  {/* Experience Level */}
+                  <div className="space-y-2.5">
+                    <label className="flex items-center gap-2 text-sm font-medium text-black">
+                      <Target className="w-4 h-4 text-slate-500" />
+                      Experience Level
+                      <span className="text-red-400 text-xs">*</span>
+                    </label>
+                    <select
+                      name="level"
+                      value={formData.level}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all appearance-none cursor-pointer hover:border-slate-300"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.75rem center',
+                        backgroundSize: '1.25rem'
+                      }}
+                    >
+                      <option value="" className="bg-white">Select level</option>
+                      <option value="junior" className="bg-white">Junior</option>
+                      <option value="mid" className="bg-white">Mid-Level</option>
+                      <option value="senior" className="bg-white">Senior</option>
+                    </select>
                   </div>
 
                   {/* Focus Areas */}
@@ -405,6 +378,7 @@ const CreateInterview = () => {
                     <label className="flex items-center gap-2 text-sm font-medium text-black">
                       <Code className="w-4 h-4 text-slate-500" />
                       Focus Areas / Tech Stack
+                      <span className="text-red-400 text-xs">*</span>
                     </label>
                     <textarea
                       name="focus"
@@ -412,7 +386,7 @@ const CreateInterview = () => {
                       onChange={handleChange}
                       rows={3}
                       placeholder="React, TypeScript, System Design, Node.js, AWS..."
-                      className="w-full resize-none rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-600"
+                      className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-300"
                     />
                   </div>
 
@@ -429,7 +403,7 @@ const CreateInterview = () => {
                       onChange={handleChange}
                       rows={4}
                       placeholder="Paste the job description you're preparing for to get more tailored questions..."
-                      className="w-full resize-none rounded-lg border border-slate-700/50 bg-slate-900/60 px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-600"
+                      className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-300"
                     />
                   </div>
 
@@ -440,8 +414,8 @@ const CreateInterview = () => {
                       disabled={!canGenerate}
                       className="w-full group relative px-8 py-4 rounded-xl font-semibold text-base overflow-hidden transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 disabled:shadow-none"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 transition-all duration-300 group-hover:scale-105 group-disabled:group-hover:scale-100" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-500 via-gray-500 to-gray-500 transition-all duration-300 group-hover:scale-105 group-disabled:group-hover:scale-100" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-400 via-gray-400 to-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <span className="relative text-white flex items-center justify-center gap-3">
 
                         Start Interview

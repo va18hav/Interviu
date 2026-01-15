@@ -18,7 +18,7 @@ const ComparisonSection = () => {
             mm.add("(min-width: 768px)", () => {
                 // Reset to desktop initial state
                 gsap.set(paragraphs, { opacity: 1, y: 0 }); // Ensure paragraphs are visible
-                gsap.set(words, { color: "rgba(64,64,64,0.3)", opacity: 1, display: "inline-block" });
+                gsap.set(words, { color: "rgba(220, 220, 220, 0.3)", opacity: 1, display: "inline-block" });
 
                 gsap.to(words, {
                     color: (i, target) => target.dataset.color || "#09090b", // slate-950/black
