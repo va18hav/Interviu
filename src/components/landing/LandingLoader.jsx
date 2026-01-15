@@ -69,7 +69,7 @@ const LandingLoader = ({ onComplete }) => {
                     {/* Animated Pulse Path (Silver) */}
                     <path
                         ref={pathRef}
-                        d="M0,50 L300,50 L320,50 L340,50 L360,50 L440,50 L460,50 L480,50 L500,5, L520,95 L540,50 L560,50 L580,50 L600,50 L620,50 L640,50 L660,50 L680,50 L700,50 L1000,50"
+                        d="M0,50 L300,50 L320,50 L340,50 L360,50 L440,50 L470,50 L500,5, L550,95 L580,50 L600,50 L620,50 L640,50 L660,50 L680,50 L700,50 L1000,50"
                         fill="none"
                         stroke="#5ecef1ff" // Slate-300 (Silver)
                         strokeWidth="3"

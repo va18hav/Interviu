@@ -1,6 +1,6 @@
-import google from "../assets/images/google.png"
-import amazon from "../assets/images/amazon.png"
-import meta from "../assets/images/meta.png"
+const google = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
+const amazon = "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg";
+const meta = "https://upload.wikimedia.org/wikipedia/commons/a/ab/Meta-Logo.png";
 
 const TechInterviews = [
     {

@@ -4,6 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import InteractiveGridBackground from './InteractiveGridBackground';
 
+import googleLogo from '../../assets/images/google.png';
+import metaLogo from '../../assets/images/meta.png';
+import amazonLogo from '../../assets/images/amazon.png';
+import microsoftLogo from '../../assets/images/microsoft.png';
+import netflixLogo from '../../assets/images/netflix.png';
+import appleLogo from '../../assets/images/apple.png';
+
 const HeroSection = () => {
     const navigate = useNavigate();
     const userCredentials = JSON.parse(localStorage.getItem("userCredentials"));
@@ -85,7 +92,7 @@ const HeroSection = () => {
 
                         {/* AI Transcript (Green) */}
                         <div className="relative shrink-0 hidden md:block">
-                            <PulseWave className="w-20 md:w-72 text-green-300" />
+                            <PulseWave className="w-20 md:w-72 text-green-500" />
                             <TranscriptBubble
                                 type="ai"
                                 text="Hello! I'm your AI Interviewer."
@@ -94,11 +101,11 @@ const HeroSection = () => {
                             />
                         </div>
 
-                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-300/90 to-blue-600/90 bg-clip-text text-transparent shrink-0">Next Interview?</span>
+                        <span className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-400/90 to-blue-600/90 bg-clip-text text-transparent shrink-0">Next Interview?</span>
 
                         {/* User Transcript (Cyan) */}
                         <div className="relative shrink-0 hidden md:block">
-                            <PulseWave className="w-20 md:w-72 text-cyan-400 scale-x-[-1]" />
+                            <PulseWave className="w-20 md:w-72 text-blue-500 scale-x-[-1]" />
                             <TranscriptBubble
                                 type="user"
                                 text="Hi, I'm ready to begin."
@@ -114,7 +121,7 @@ const HeroSection = () => {
 
                 {/* Subheading */}
                 <p className="text-sm md:text-2xl text-slate-800 max-w-2xl mt-5 mb-10 leading-tight text-center animate-fade-in-up delay-200">
-                    Practice with AI-generated interviews tailored to your specific role, level and skills.
+                    Practice realistic, voice-based interviews simulations modeled after real interviews at MAANG companies.
                 </p>
 
                 {/* Buttons */}
@@ -123,15 +130,30 @@ const HeroSection = () => {
                         onClick={() => navigate('/login')}
                         className="h-12 px-8 rounded-full bg-gradient-to-r from-gray-200/70 to-gray-300 text-black font-semibold text-base hover:bg-gray-500 hover:scale-105 transition-all flex items-center gap-2"
                     >
-                        Create Interview
+                        Practice Interview
                         <ArrowRight className="w-4 h-4" />
                     </button>
-                    {/* <button
+                    <button
                         onClick={() => navigate('/about')}
-                        className="hidden md:block h-12 px-8 rounded-full border border-white/10 text-white font-medium text-base hover:bg-white/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
+                        className="hidden md:block h-12 px-8 rounded-full border border-black/10 text-black font-medium text-base hover:bg-gray-500/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
                     >
-                        Learn more
-                    </button> */}
+                        Custom Interview
+                    </button>
+                </div>
+
+                {/* Company Simulation Banner */}
+                <div className="mt-10 flex items-center gap-4 animate-fade-in-up delay-500">
+                    <div className="flex -space-x-3">
+                        {[googleLogo, metaLogo, amazonLogo, microsoftLogo, netflixLogo, appleLogo].map((logo, index) => (
+                            <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-white flex items-center justify-center p-1 overflow-hidden shadow-sm z-10 hover:scale-110 transition-transform duration-200">
+                                <img src={logo} alt="Company Logo" className="w-full h-full object-contain" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="text-left">
+                        <p className="text-sm font-bold text-slate-800 leading-tight">Interview simulations</p>
+                        <p className="text-xs font-medium text-slate-500">of top tech companies</p>
+                    </div>
                 </div>
             </div>
 

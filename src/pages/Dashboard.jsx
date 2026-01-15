@@ -272,7 +272,7 @@ const InterviewDashboard = () => {
                   <div className="p-6 space-y-4">
                     {/* Icon */}
                     <div className={`w-14 h-14 rounded-xl border border-slate-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <img src={interview.icon} alt="" className="w-10 h-10" />
+                      <img src={interview.icon} alt="" className="w-10" />
                     </div>
 
                     {/* Header */}
