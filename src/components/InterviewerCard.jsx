@@ -21,8 +21,8 @@ const InterviewerCard = ({ interviewState }) => {
                     {/* Animated Ripples */}
                     {interviewState === "ai-speaking" && (
                         <>
-                            <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-ping opacity-20"></div>
-                            <div className="absolute -inset-4 rounded-full bg-cyan-500/10 animate-pulse opacity-40"></div>
+                            <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-ping opacity-45"></div>
+                            <div className="absolute -inset-4 rounded-full bg-cyan-500/20 animate-pulse opacity-45"></div>
                         </>
                     )}
 

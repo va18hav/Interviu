@@ -11,7 +11,6 @@ import Resume from "./pages/Resume"
 import InterviewDetails from "./pages/InterviewDetails"
 import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
-import InterviewSessionStatic from "./pages/InterviewSessionStatic"
 import './App.css'
 
 import DashboardBlack from "./pages/DashboardBlack"
@@ -36,7 +35,6 @@ const App = () => {
           <Route path="/dashboard/interview-details/:id" element={<InterviewDetails />} />
           <Route path="/dashboard/interview-details/:id/:roundId" element={<InterviewSession />} />
           <Route path="/dashboard/interview" element={<InterviewSession />} />
-          <Route path="/dashboard/static-interview" element={<InterviewSessionStatic />} />
           <Route path="/dashboard/interview/feedback" element={<Feedback />} />
           <Route path="/create" element={<CreateInterview />} />
           <Route path="/create/interview/:id" element={<InterviewSession />} />

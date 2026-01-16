@@ -80,7 +80,7 @@ app.post('/api/generate-feedback', async (req, res) => {
                     }`
                 }
             ],
-            model: "groq/compound-mini", // Powerful free-tier model
+            model: "llama-3.3-70b-versatile", // Powerful free-tier model
             temperature: 0.5,
             response_format: { type: "json_object" } // Forces the model to return valid JSON
         })

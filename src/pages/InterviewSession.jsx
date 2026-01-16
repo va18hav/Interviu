@@ -62,9 +62,9 @@ const InterviewSession = () => {
   const vapi = React.useRef(null)
 
   // FIXED DURATION: 20 minutes
-  const INTERVIEW_DURATION_MINUTES = 15;
+  const INTERVIEW_DURATION_MINUTES = 20;
   const INTERVIEW_DURATION_SECONDS = INTERVIEW_DURATION_MINUTES * 60; // 1200 seconds
-  const WRAP_UP_TIME_SECONDS = 14 * 60; // 9 minutes = 540 seconds
+  const WRAP_UP_TIME_SECONDS = 19 * 60; // 19 minutes = 1140 seconds
 
   // Consolidated destructuring for both interview types
   const {
@@ -79,7 +79,17 @@ const InterviewSession = () => {
     type,
     questionPool,
     roundKey,
-    roundId
+    roundId,
+    roundIntent,
+    skillsEvaluated,
+    difficultyBand,
+    acceptableProblemTypes,
+    interviewerFocus,
+    antiPatternsToWatch,
+    followUpGuidelines,
+    evaluationSignals,
+    interviewerPersonality,
+    commonFailureReasons
   } = location.state || {}
 
   console.log(location.state)
@@ -105,7 +115,7 @@ const InterviewSession = () => {
       vapi.current = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY)
       console.log("Vapi instance created")
 
-      // Define Overrides - NO LENGTH VARIABLE
+      // Define Overrides
       const assistantOverrides = {
         recordingEnabled: false,
         variableValues: {
@@ -116,7 +126,18 @@ const InterviewSession = () => {
           description: description || "",
           company: company || "",
           type: type || "",
-          questionPool: Array.isArray(questionPool) ? questionPool.join("\n") : (questionPool || "")
+          // New structured data fields
+          roundTitle: name || "",
+          roundIntent: roundIntent || "",
+          skillsEvaluated: Array.isArray(skillsEvaluated) ? skillsEvaluated.join(", ") : (skillsEvaluated || ""),
+          difficultyBand: typeof difficultyBand === 'object' ? JSON.stringify(difficultyBand) : (difficultyBand || ""),
+          acceptableProblemTypes: Array.isArray(acceptableProblemTypes) ? acceptableProblemTypes.join(", ") : (acceptableProblemTypes || ""),
+          interviewerFocus: Array.isArray(interviewerFocus) ? interviewerFocus.join(", ") : (interviewerFocus || ""),
+          antiPatternsToWatch: Array.isArray(antiPatternsToWatch) ? antiPatternsToWatch.join(", ") : (antiPatternsToWatch || ""),
+          followUpGuidelines: typeof followUpGuidelines === 'object' ? JSON.stringify(followUpGuidelines) : (followUpGuidelines || ""),
+          evaluationSignals: typeof evaluationSignals === 'object' ? JSON.stringify(evaluationSignals) : (evaluationSignals || ""),
+          interviewerPersonality: interviewerPersonality || "professional, technical",
+          commonFailureReasons: Array.isArray(commonFailureReasons) ? commonFailureReasons.join(", ") : (commonFailureReasons || "")
         },
       }
 
@@ -254,14 +275,17 @@ const InterviewSession = () => {
       return;
     }
 
-    const reminderInterval = setInterval(() => {
+    // Time remaining reminders - EVERY 30 SECONDS
+    // We check for 30s intervals to avoid spamming.
+    if (elapsedTime > 0 && elapsedTime % 30 === 0) {
       const remainingSeconds = INTERVIEW_DURATION_SECONDS - elapsedTime;
       const remainingMinutes = Math.floor(remainingSeconds / 60);
       const remainingSecondsDisplay = remainingSeconds % 60;
       const progressPercent = Math.floor((elapsedTime / INTERVIEW_DURATION_SECONDS) * 100);
 
-      // Only send reminders if we haven't reached target time and interview is active
-      if (elapsedTime < INTERVIEW_DURATION_SECONDS && vapi.current && !interviewEnded.current) {
+      // Only send reminders if we haven't reached wrap-up time
+      // CRITICAL: Only send while USER is speaking to avoid interrupting the AI's speech
+      if (elapsedTime < WRAP_UP_TIME_SECONDS && vapi.current && !interviewEnded.current && interviewState === 'user-speaking') {
         vapi.current.send({
           type: "add-message",
           message: {
@@ -270,11 +294,11 @@ const InterviewSession = () => {
           }
         });
 
-        console.log(`📢 Time reminder: ${remainingMinutes}m ${remainingSecondsDisplay}s remaining (${progressPercent}% complete)`);
+        console.log(`📢 Time reminder sent to Vapi: ${remainingMinutes}m ${remainingSecondsDisplay}s remaining`);
+      } else {
+        console.log(`📢 Time reminder skipped (AI speaking or ended): ${remainingMinutes}m ${remainingSecondsDisplay}s remaining`);
       }
-    }, 15000); // Every 15 seconds
-
-    return () => clearInterval(reminderInterval);
+    }
   }, [elapsedTime, interviewState]);
 
   // Wrap-up message at 19 minutes (1140 seconds)
@@ -286,11 +310,11 @@ const InterviewSession = () => {
         type: "add-message",
         message: {
           role: "system",
-          content: `🎯 WRAP UP NOW: You have reached the 14-minute mark. You have 1 minute remaining. Begin wrapping up the interview now. Thank the candidate and ask if they have any final questions for you.`
+          content: `🎯 WRAP UP NOW: You have reached the 19-minute mark. You have 1 minute remaining. Begin wrapping up the interview now. Thank the candidate and ask if they have any final questions for you.`
         }
       });
 
-      console.log("🎯 WRAP UP MESSAGE SENT at 14 minutes");
+      console.log("🎯 WRAP UP MESSAGE SENT at 19 minutes");
     }
   }, [elapsedTime, wrapUpMessageSent]);
 
@@ -517,7 +541,7 @@ const InterviewSession = () => {
             <img src={(!customInterview ? icon : logo)} alt="Logo" className="w-5 h-5 object-contain" />
             <div className="flex flex-col leading-none">
               <span className="text-sm font-bold text-slate-900">
-                {(!customInterview ? name : role)}
+                {role}
               </span>
               <span className="text-[10px] text-slate-500 font-medium">Interview Session</span>
             </div>

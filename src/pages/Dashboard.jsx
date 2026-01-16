@@ -3,10 +3,6 @@ import { Link, useLocation, useNavigate, } from "react-router-dom"
 import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import bot from "../assets/images/bot.png"
-import google from "../assets/images/google.png"
-import amazon from "../assets/images/amazon.png"
-import meta from "../assets/images/meta.png"
-import TechInterviews from "./TechInterviews"
 import { supabase } from "../supabaseClient"
 import Navbar from "../components/Navbar"
 import DashboardBanner from "../components/DashboardBanner"
@@ -17,9 +13,8 @@ const InterviewDashboard = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = React.useState(true)
   const [userCredentials, setUserCredentials] = React.useState(null);
-  const [showProfile, setShowProfile] = React.useState(false);
   const [pastInterviews, setPastInterviews] = React.useState([]);
-
+  const [popularInterviews, setPopularInterviews] = React.useState([]);
 
   React.useEffect(() => {
     getProfileAndInterviews();
@@ -29,7 +24,7 @@ const InterviewDashboard = () => {
     try {
       setLoading(true);
 
-      // 1. Get Current User first (needed for RLS/Profile)
+      // 1. Get Current User first
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
@@ -44,38 +39,67 @@ const InterviewDashboard = () => {
         email: user.email
       });
 
-      // 2. Fetch Interviews and Profile (Onboarding Status) in parallel
-      const [interviewsResponse, profileResponse] = await Promise.all([
+      // 2. Fetch Profile (to get Role) & Past Interviews & All Popular Interviews
+      const [profileResponse, interviewsResponse, popularInterviewsResponse] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('onboarding_completed, role')
+          .eq('id', user.id)
+          .single(),
+
         supabase
           .from('interviews')
-          .select('id, created_at, role, date, duration, score, feedback_data') // Fetch feedback_data to check for roundKey
+          .select('id, created_at, role, date, duration, score, feedback_data')
           .order('created_at', { ascending: false }),
 
         supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', user.id)
-          .single()
+          .from('popular_interviews')
+          .select('*')
+          .order('created_at', { ascending: false }) // Get latest first
+          .limit(50) // Fetch enough to filter client-side
       ]);
 
       if (interviewsResponse.error) throw interviewsResponse.error;
+      if (popularInterviewsResponse.error) throw popularInterviewsResponse.error;
 
-      console.log('Interviews data:', interviewsResponse.data);
+      // Handle Profile / Onboarding
+      if (profileResponse.data) {
+        if (!profileResponse.data.onboarding_completed) {
+          navigate('/onboarding');
+          return;
+        }
+      }
 
+      // Process Past Interviews
       if (interviewsResponse.data) {
-        // Filter out popular interviews (those with roundKey) from the recent interviews list
         const customInterviews = interviewsResponse.data.filter(interview =>
           !interview.feedback_data?.roundKey && !interview.feedback_data?.roundId
         );
         setPastInterviews(customInterviews);
       }
 
-      if (profileResponse.data) {
-        // Redirect to Onboarding if not completed
-        if (!profileResponse.data.onboarding_completed) {
-          navigate('/onboarding');
-          return;
+      // Process Popular Interviews
+      if (popularInterviewsResponse.data) {
+        let finalInterviews = popularInterviewsResponse.data;
+        const userRole = profileResponse.data?.role;
+
+        if (userRole) {
+          const normalizedUserRole = userRole.toLowerCase();
+          const keywords = normalizedUserRole.split(/[\s/-]+/).filter(w => w.length > 2); // Split by space, slash, dash
+
+          // Filter interviews that match any keyword from the user's role
+          const matches = finalInterviews.filter(interview => {
+            const r = interview.role.toLowerCase();
+            return keywords.some(word => r.includes(word));
+          });
+
+          if (matches.length > 0) {
+            finalInterviews = matches;
+          }
         }
+
+        // Take top 3 latest
+        setPopularInterviews(finalInterviews.slice(0, 3));
       }
 
     } catch (error) {
@@ -128,7 +152,9 @@ const InterviewDashboard = () => {
       'Amazon': 'blue',
       'Meta': 'purple',
       'Netflix': 'red',
-      'Microsoft': 'green'
+      'Microsoft': 'green',
+      'Apple': 'cyan',
+      'Nvidia': 'green'
     };
     return colors[company] || 'cyan';
   };
@@ -157,7 +183,7 @@ const InterviewDashboard = () => {
       </div> : <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
 
         {/* Hero Banner */}
-        <DashboardBanner firstName={userCredentials.firstName} />
+        <DashboardBanner firstName={userCredentials?.firstName || "User"} />
 
         {/* Past Interviews Section */}
         {pastInterviews.length > 0 ? (
@@ -236,7 +262,7 @@ const InterviewDashboard = () => {
           </section>
         ) : (
           <div className="text-center py-10 rounded-2xl border border-white/10">
-            <p className="text-slate-900 mb-2">No interviews yet.</p>
+            <p className="text-slate-900 mb-2">No past interviews yet.</p>
             <p className="text-sm text-slate-900">Create your first interview to get started!</p>
           </div>
         )}
@@ -250,7 +276,7 @@ const InterviewDashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TechInterviews.map((interview) => {
+            {popularInterviews.map((interview) => {
               const colorKey = getCompanyColor(interview.company);
 
               const colorClasses = {
@@ -261,7 +287,7 @@ const InterviewDashboard = () => {
                 green: { bg: "from-green-500/20 to-green-600/20", border: "border-green-500/20", text: "text-green-400", accent: "from-green-500 to-green-600" },
                 orange: { bg: "from-orange-500/20 to-orange-600/20", border: "border-orange-500/20", text: "text-orange-400", accent: "from-orange-500 to-orange-600" }
               };
-              const colors = colorClasses[colorKey];
+              const colors = colorClasses[colorKey] || colorClasses.cyan;
 
               return (
                 <div
@@ -272,7 +298,7 @@ const InterviewDashboard = () => {
                   <div className="p-6 space-y-4">
                     {/* Icon */}
                     <div className={`w-14 h-14 rounded-xl border border-slate-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <img src={interview.icon} alt="" className="w-10" />
+                      <img src={interview.icon_url} alt="" className="w-10" />
                     </div>
 
                     {/* Header */}
@@ -295,7 +321,7 @@ const InterviewDashboard = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-400">{interview.totalDuration}</span>
+                        <span className="text-sm text-slate-400">{interview.total_duration}</span>
                       </div>
                     </div>
 

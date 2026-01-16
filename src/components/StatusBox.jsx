@@ -5,7 +5,7 @@ const StatusBox = ({ interviewState, currentQuestion, currentAnswer }) => {
     return (
         <div className="w-full">
             {/* Live Caption Style Box */}
-            <div className="bg-gray-600/70 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-white/10 transition-all duration-300">
+            <div className="bg-gray-600/50 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden border border-white/10 transition-all duration-300">
                 <div className="px-6 py-4">
                     <div className="flex items-start gap-4">
                         {/* Avatar / Icon based on state */}

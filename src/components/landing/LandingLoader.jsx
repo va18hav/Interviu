@@ -3,18 +3,10 @@ import gsap from 'gsap';
 
 const LandingLoader = ({ onComplete }) => {
     const containerRef = useRef(null);
-    const pathRef = useRef(null);
     const textRef = useRef(null);
 
     useLayoutEffect(() => {
-        const path = pathRef.current;
-        const length = path.getTotalLength();
-
         // Initial setup
-        gsap.set(path, {
-            strokeDasharray: length,
-            strokeDashoffset: length
-        });
         gsap.set(textRef.current, {
             opacity: 0,
             y: 20,
@@ -26,23 +18,13 @@ const LandingLoader = ({ onComplete }) => {
         });
 
         // Animation Sequence
-        tl.to(path, {
-            strokeDashoffset: 0,
-            duration: 1.5,
-            ease: "power2.inOut" // Non-linear flow
+        tl.to(textRef.current, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: "back.out(1.7)"
         })
-            .to(path, {
-                opacity: 0,
-                duration: 0.3,
-                ease: "power3.out"
-            })
-            .to(textRef.current, {
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                duration: 0.8,
-                ease: "back.out(1.7)"
-            }, "-=0.2") // Overlap slightly
             .to({}, { duration: 0.5 }) // Short hold
             .to(textRef.current, {
                 scale: 250, // Massive zoom "unmask"
@@ -63,22 +45,6 @@ const LandingLoader = ({ onComplete }) => {
     return (
         <div ref={containerRef} className="fixed inset-0 z-[100] bg-white flex items-center justify-center overflow-hidden">
             <div className="w-full relative h-32 flex items-center justify-center">
-
-                {/* Pulse Line SVG */}
-                <svg className="w-full h-full absolute inset-0" viewBox="0 0 1000 100" preserveAspectRatio="none">
-                    {/* Animated Pulse Path (Silver) */}
-                    <path
-                        ref={pathRef}
-                        d="M0,50 L300,50 L320,50 L340,50 L360,50 L440,50 L470,50 L500,5, L550,95 L580,50 L600,50 L620,50 L640,50 L660,50 L680,50 L700,50 L1000,50"
-                        fill="none"
-                        stroke="#5ecef1ff" // Slate-300 (Silver)
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ filter: 'drop-shadow(0 0 10px rgba(226, 232, 240, 0.4))' }}
-                    />
-                </svg>
-
                 {/* Interviu Text */}
                 <h1
                     ref={textRef}

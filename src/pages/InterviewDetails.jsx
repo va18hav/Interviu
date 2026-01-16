@@ -1,25 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import TechInterviews from './TechInterviews';
 import { supabase } from '../supabaseClient';
 
 const InterviewDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const interview = TechInterviews.find(i => i.id === parseInt(id));
+    const [interview, setInterview] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    if (!interview) {
-        return <div className="text-slate-900">Interview not found</div>;
-    }
+    const [completedRounds, setCompletedRounds] = useState({});
+    const [progress, setProgress] = useState(0);
+    const [currentScore, setCurrentScore] = useState(0);
+    const [showDetailsPopup, setShowDetailsPopup] = useState(false);
 
-    const [completedRounds, setCompletedRounds] = React.useState({});
-    const [progress, setProgress] = React.useState(0);
-    const [currentScore, setCurrentScore] = React.useState(0);
-    const [showDetailsPopup, setShowDetailsPopup] = React.useState(false);
+    useEffect(() => {
+        const fetchInterviewDetails = async () => {
+            try {
+                if (!id) return;
 
-    React.useEffect(() => {
+                // Fetch interview data
+                const { data, error } = await supabase
+                    .from('popular_interviews')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+                setInterview(data);
+            } catch (err) {
+                console.error("Error fetching interview details:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInterviewDetails();
+    }, [id]);
+
+    useEffect(() => {
         const fetchCompletedRounds = async () => {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
@@ -48,7 +68,7 @@ const InterviewDetails = () => {
                             map[feedback.roundKey] = { ...feedback, dbScore: parseFloat(entry.score) || 0 };
                             completedCount++;
                             // Safely handle score addition
-                            const score = parseFloat(entry.score) || 0; // Use entry.score directly from DB column if available, or parse it
+                            const score = parseFloat(entry.score) || 0;
                             totalScore += score;
                         }
                     });
@@ -58,7 +78,6 @@ const InterviewDetails = () => {
                 // Calculate Progress and Score
                 let roundsCount = 0;
                 if (interview.rounds) {
-                    if (interview.rounds.aptitude) roundsCount++;
                     if (interview.rounds.techRoundOne) roundsCount++;
                     if (interview.rounds.techRoundTwo) roundsCount++;
                     if (interview.rounds.techRoundThree) roundsCount++;
@@ -71,31 +90,44 @@ const InterviewDetails = () => {
                 setProgress(newProgress);
 
                 // Calculate Average Score (out of 10)
-                // Assuming entry.score is out of 100 or 10. Let's assume 100 for now and normalize to 10 if needed, or if it's already 10.
-                // If your backend returns score out of 100:
                 const avgScore = completedCount > 0 ? (totalScore / completedCount) : 0;
-                // Adjust based on your score scale. If score is 0-100, divide by 10 to show X/10.
-                // Assuming score is 0-100
                 setCurrentScore((avgScore / 10).toFixed(1));
 
             } catch (err) {
                 console.error("Error fetching completed rounds:", err);
             }
         };
-        fetchCompletedRounds();
+
+        if (interview) {
+            fetchCompletedRounds();
+        }
     }, [id, interview]);
 
-    // Helper for company colors - Adjusted for Light Mode
+    // Helper for company colors
     const getCompanyColor = (company) => {
         const colors = {
             'Google': 'cyan',
             'Amazon': 'blue',
             'Meta': 'purple',
             'Netflix': 'red',
-            'Microsoft': 'green'
+            'Microsoft': 'green',
+            'Apple': 'cyan',
+            'Nvidia': 'green'
         };
         return colors[company] || 'cyan';
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-slate-800 animate-spin" />
+            </div>
+        );
+    }
+
+    if (!interview) {
+        return <div className="text-slate-900 min-h-screen flex items-center justify-center">Interview not found</div>;
+    }
 
     const colorKey = getCompanyColor(interview.company);
     const colorClasses = {
@@ -109,19 +141,14 @@ const InterviewDetails = () => {
     };
     const colors = colorClasses[colorKey] || colorClasses.cyan;
 
-    // Use data from TechInterviews for rounds if available, else hardcode fallback (or map it)
-    // The previous file hardcoded rounds. TechInterviews has explicit rounds.
-    // Let's map TechInterviews rounds to the UI structure if possible, 
-    // but the UI expects specific Icons.
-
-    // Mapping TechInterviews.rounds to UI structure
+    // Mapping rounds to UI structure
     const roundsList = [];
     if (interview.rounds) {
         if (interview.rounds.techRoundOne) roundsList.push({
             id: 1,
             key: 'techRoundOne',
             title: interview.rounds.techRoundOne.title,
-            type: interview.rounds.techRoundOne.focus.join(','),
+            type: Array.isArray(interview.rounds.techRoundOne.focus) ? interview.rounds.techRoundOne.focus.join(',') : interview.rounds.techRoundOne.focus,
             duration: `${interview.rounds.techRoundOne.duration}`,
             icon: Code,
             desc: interview.rounds.techRoundOne.overview
@@ -130,7 +157,7 @@ const InterviewDetails = () => {
             id: 2,
             key: 'techRoundTwo',
             title: interview.rounds.techRoundTwo.title,
-            type: interview.rounds.techRoundTwo.focus.join(','),
+            type: Array.isArray(interview.rounds.techRoundTwo.focus) ? interview.rounds.techRoundTwo.focus.join(',') : interview.rounds.techRoundTwo.focus,
             duration: `${interview.rounds.techRoundTwo.duration}`,
             icon: Code,
             desc: interview.rounds.techRoundTwo.overview
@@ -139,7 +166,7 @@ const InterviewDetails = () => {
             id: 3,
             key: 'techRoundThree',
             title: interview.rounds.techRoundThree.title,
-            type: interview.rounds.techRoundThree.focus.join(','),
+            type: Array.isArray(interview.rounds.techRoundThree.focus) ? interview.rounds.techRoundThree.focus.join(',') : interview.rounds.techRoundThree.focus,
             duration: `${interview.rounds.techRoundThree.duration}`,
             icon: Code,
             desc: interview.rounds.techRoundThree.overview
@@ -148,19 +175,16 @@ const InterviewDetails = () => {
             id: 4,
             key: 'behavioral',
             title: interview.rounds.behavioral.title,
-            type: interview.companyTraits.behavioralFocus,
+            type: interview.company_traits?.behavioralFocus || "Behavioral",
             duration: `${interview.rounds.behavioral.duration}`,
             icon: MessageSquare,
             desc: interview.rounds.behavioral.overview
         });
     }
 
-    // Fallback if no rounds in data
     const rounds = roundsList.length > 0 ? roundsList : [];
 
-
     async function startRound(roundKey) {
-        // --- CHECK CREDITS START ---
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
@@ -177,9 +201,7 @@ const InterviewDetails = () => {
             }
         } catch (error) {
             console.error("Error checking credits:", error);
-            // Optionally handle error, maybe proceed or block
         }
-        // --- CHECK CREDITS END ---
 
         sessionStorage.removeItem("interviewEnded");
 
@@ -188,18 +210,24 @@ const InterviewDetails = () => {
         navigate("/dashboard/interview", {
             state: {
                 role: interview.role,
-                icon: interview.icon,
+                icon: interview.icon_url,
                 name: `${interview.company} ${interview.role}`,
                 level: interview.level,
                 company: interview.company,
-                length: selectedRound ? selectedRound.duration : interview.totalDuration,
                 customInterview: false,
                 roundKey: roundKey,
-                questionPool: selectedRound ? selectedRound.questions : [],
-                focus: selectedRound ? selectedRound.focus : [],
-                type: selectedRound ? selectedRound.type : 'technical',
+                type: selectedRound ? selectedRound.type : '',
+                roundIntent: selectedRound ? selectedRound.roundIntent : '',
+                skillsEvaluated: selectedRound ? selectedRound.skillsEvaluated : [],
+                difficultyBand: selectedRound ? selectedRound.difficultyBand : {},
+                acceptableProblemTypes: selectedRound ? selectedRound.acceptableProblemTypes : [],
+                interviewerFocus: selectedRound ? selectedRound.interviewerFocus : [],
+                antiPatternsToWatch: selectedRound ? selectedRound.antiPatternsToWatch : [],
+                followUpGuidelines: selectedRound ? selectedRound.followUpGuidelines : {},
+                evaluationSignals: selectedRound ? selectedRound.evaluationSignals : {},
+                interviewerPersonality: interview.interviewer_personality,
+                commonFailureReasons: interview.common_failure_reasons,
                 description: selectedRound ? selectedRound.overview : interview.overview
-
             }
         });
     }
@@ -211,9 +239,6 @@ const InterviewDetails = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            // We need to find the IDs to delete. 
-            // We can re-use the fetch logic's existing state or fetch again.
-            // Let's fetch IDs to be safe.
             const { data: existingInterviews } = await supabase
                 .from('interviews')
                 .select('id, feedback_data')
@@ -236,8 +261,6 @@ const InterviewDetails = () => {
                         .in('id', idsToDelete);
 
                     if (error) throw error;
-
-                    // Reset local state
                     setCompletedRounds({});
                     setProgress(0);
                     setCurrentScore(0);
@@ -257,7 +280,7 @@ const InterviewDetails = () => {
                 {/* Header & Buttons */}
                 <div className="flex items-center justify-between mb-4">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/dashboard/all-popular-interviews')}
                         className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors group"
                     >
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -292,12 +315,12 @@ const InterviewDetails = () => {
                     <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
                         <div className="flex items-start gap-6">
                             <div className={`w-24 h-24 rounded-2xl flex items-center justify-center p-2 bg-white shadow-lg border border-slate-100`}>
-                                <img src={interview.icon} alt={interview.company} className="w-full h-full object-contain" />
+                                <img src={interview.icon_url} alt={interview.company} className="w-full h-full object-contain" />
                             </div>
                             <div className="space-y-2">
                                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">{interview.company} {interview.role}</h1>
                                 <div className="flex items-center gap-4 text-slate-500">
-                                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{interview.totalDuration}</span>
+                                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{interview.total_duration}</span>
                                     <span className="w-1 h-1 rounded-full bg-slate-400" />
                                     <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700">{interview.level}</span>
                                 </div>
@@ -382,7 +405,7 @@ const InterviewDetails = () => {
                                             </div>
                                             <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">{round.title}</h3>
                                             <div className="flex flex-wrap gap-2 mb-3">
-                                                {round.type.split(',').map((t, i) => (
+                                                {typeof round.type === 'string' && round.type.split(',').map((t, i) => (
                                                     <span key={i} className={`text-[10px] font-semibold ${colors.text} ${colors.bg} border ${colors.border} px-2.5 py-1 rounded-full uppercase tracking-wider`}>
                                                         {t.trim()}
                                                     </span>

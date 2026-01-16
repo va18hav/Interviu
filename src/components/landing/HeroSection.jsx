@@ -70,7 +70,7 @@ const HeroSection = () => {
                         type="ai"
                         text="Hello! I'm your AI Interviewer."
                         className="shadow-sm"
-                        startDelay={4000}
+                        startDelay={2500}
                     />
                 </div>
 
@@ -79,7 +79,7 @@ const HeroSection = () => {
                         type="user"
                         text="Hi, I'm ready to begin."
                         className="shadow-sm"
-                        startDelay={5500}
+                        startDelay={4200}
                     />
                 </div>
 
@@ -97,7 +97,7 @@ const HeroSection = () => {
                                 type="ai"
                                 text="Hello! I'm your AI Interviewer."
                                 className="absolute bottom-full right-10 -translate-x-1/2 mb-6"
-                                startDelay={4000}
+                                startDelay={2500}
                             />
                         </div>
 
@@ -110,7 +110,7 @@ const HeroSection = () => {
                                 type="user"
                                 text="Hi, I'm ready to begin."
                                 className="absolute top-full left-75 -translate-x-1/2 mt-6"
-                                startDelay={5500}
+                                startDelay={4200}
                             />
                         </div>
 
