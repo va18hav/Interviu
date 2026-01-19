@@ -62,10 +62,10 @@ const InterviewSession = () => {
   const elapsedTimeRef = React.useRef(0) // Ref to access latest elapsed time in callbacks
   const vapi = React.useRef(null)
 
-  // FIXED DURATION: 20 minutes
-  const INTERVIEW_DURATION_MINUTES = 20;
-  const INTERVIEW_DURATION_SECONDS = INTERVIEW_DURATION_MINUTES * 60; // 1200 seconds
-  const WRAP_UP_TIME_SECONDS = 19 * 60; // 19 minutes = 1140 seconds
+  // FIXED DURATION: 25 minutes
+  const INTERVIEW_DURATION_MINUTES = 25;
+  const INTERVIEW_DURATION_SECONDS = INTERVIEW_DURATION_MINUTES * 60; // 1500 seconds
+  const WRAP_UP_TIME_SECONDS = 24 * 60; // 24 minutes = 1440 seconds
 
   // Consolidated destructuring for both interview types
   const {
@@ -179,6 +179,36 @@ const InterviewSession = () => {
         }
       }
 
+      // Tool Call Interception Handler
+      const toolCallHandler = (message) => {
+        if (message.type === 'tool-calls') {
+          const toolCalls = message.toolCallList;
+          if (toolCalls && toolCalls.length > 0) {
+            const firstTool = toolCalls[0];
+            if (firstTool.function && firstTool.function.name === 'wrap_up_interview') {
+              const currentElapsedSeconds = elapsedTimeRef.current;
+              const elapsedMinutes = currentElapsedSeconds / 60;
+
+              console.log(`Tool 'wrap_up_interview' intercepted. Elapsed: ${elapsedMinutes.toFixed(2)} mins`);
+
+              if (elapsedMinutes < 24) {
+                console.log("Interception: AI attempted early wrap-up. Nudge injected.");
+                vapi.current.send({
+                  type: 'add-message',
+                  message: {
+                    role: 'system',
+                    content: "PROMPT INJECTION: The interview is too short. Ignore your previous closing intent. You MUST continue the interview for at least 5 more minutes. Immediately introduce a new, difficult technical complication based on the candidate's previous response. Do not say goodbye yet."
+                  }
+                });
+              } else {
+                console.log("Duration >= 24 mins. Allowing termination.");
+                vapi.current.stop();
+              }
+            }
+          }
+        }
+      }
+
       const callEndHandler = async () => {
         console.log("✅ Call ended event received");
 
@@ -209,6 +239,7 @@ const InterviewSession = () => {
       vapi.current.on("speech-start", speechStartHandler)
       vapi.current.on("speech-end", speechEndHandler)
       vapi.current.on("message", messageHandler)
+      vapi.current.on("message", toolCallHandler)
       vapi.current.on("call-end", callEndHandler)
       vapi.current.on("error", errorHandler)
 
@@ -230,7 +261,20 @@ const InterviewSession = () => {
             }
           ],
           provider: "openai",
-          temperature: 0.2
+          temperature: 0.2,
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "wrap_up_interview",
+                description: "Use this tool ONLY when you are completely finished with the interview and ready to say goodbye.",
+                parameters: {
+                  type: "object",
+                  properties: {}
+                }
+              }
+            }
+          ]
         },
         firstMessage: `Hi, this is Jonathan from ${company}. Can you hear me clearly?`,
         transcriber: {
@@ -238,7 +282,7 @@ const InterviewSession = () => {
           language: "en",
           provider: "deepgram"
         },
-        maxDurationSeconds: 1240,
+        maxDurationSeconds: 1540,
         analysisPlan: {
           summaryPlan: {
             enabled: false
@@ -277,6 +321,7 @@ const InterviewSession = () => {
           vapi.current?.off("speech-start", speechStartHandler)
           vapi.current?.off("speech-end", speechEndHandler)
           vapi.current?.off("message", messageHandler)
+          vapi.current?.off("message", toolCallHandler)
           vapi.current?.off("call-end", callEndHandler)
           vapi.current?.off("error", errorHandler)
           vapi.current?.stop()
@@ -310,7 +355,7 @@ const InterviewSession = () => {
     }
   }, [interviewState, isTimerActive])
 
-  // Wrap-up message at 19 minutes (1140 seconds)
+  // Wrap-up message at 24 minutes (1440 seconds)
   React.useEffect(() => {
     if (elapsedTime >= WRAP_UP_TIME_SECONDS && !wrapUpMessageSent && vapi.current && !interviewEnded.current) {
       setWrapUpMessageSent(true);
@@ -319,11 +364,11 @@ const InterviewSession = () => {
         type: "add-message",
         message: {
           role: "system",
-          content: `🎯 WRAP UP NOW: You have reached the 19-minute mark. You have 1 minute remaining. Begin wrapping up the interview now. Thank the candidate and ask if they have any final questions for you.`
+          content: `🎯 WRAP UP NOW: You have reached the 24-minute mark. You have 1 minute remaining. Begin wrapping up the interview now. Thank the candidate and ask if they have any final questions for you.`
         }
       });
 
-      console.log("🎯 WRAP UP MESSAGE SENT at 19 minutes");
+      console.log("🎯 WRAP UP MESSAGE SENT at 24 minutes");
     }
   }, [elapsedTime, wrapUpMessageSent]);
 
