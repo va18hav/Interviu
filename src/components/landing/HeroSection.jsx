@@ -144,8 +144,8 @@ const HeroSection = () => {
                 {/* Company Simulation Banner */}
                 <div className="mt-10 flex items-center gap-4 animate-fade-in-up delay-500">
                     <div className="flex -space-x-3">
-                        {[googleLogo, metaLogo, amazonLogo, microsoftLogo, netflixLogo, appleLogo].map((logo, index) => (
-                            <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-white flex items-center justify-center p-1 overflow-hidden shadow-sm z-10 hover:scale-110 transition-transform duration-200">
+                        {[microsoftLogo, metaLogo, appleLogo, amazonLogo, netflixLogo, googleLogo].map((logo, index) => (
+                            <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-white flex items-center justify-center p-1 overflow-hidden shadow-sm z-10 hover:scale-120 hover:z-20 hover:shadow-lg transition-transform duration-200">
                                 <img src={logo} alt="Company Logo" className="w-full h-full object-contain" />
                             </div>
                         ))}

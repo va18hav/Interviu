@@ -13,16 +13,16 @@ const DashboardBanner = ({ firstName }) => {
             <div className="absolute bottom-10 -left-0 w-50 md:w-64 lg:w-80 h-50 md:h-64 lg:h-80 bg-purple-500/10 rounded-full blur-3xl" />
 
             {/* Content */}
-            <div className="relative z-10 px-6 md:px-8 lg:px-16 py-16 md:py-6 lg:py-20 flex items-center justify-between">
+            <div className="relative z-10 px-6 md:px-8 lg:px-16 py-16 md:py-6 lg:py-25 flex items-center justify-between">
                 <img src={bot} alt="" className="hidden lg:block absolute -bottom-29 -right-10 w-100 -rotate-[20deg] hover:scale-105 transition-all duration-300" />
-                <div className="max-w-2xl space-y-6">
-                    <h2 className="font-sans text-5xl md:text-7xl font-extrabold text-black tracking-tight">
-                        <span className="bg-gradient-to-r from-gray-800/90 to-black bg-clip-text text-transparent">Hi {firstName}!</span>
+                <div className="max-w-2xl space-y-10">
+                    <h2 className="font-sans text-4xl md:text-5xl font-extrabold text-black tracking-tight">
+                        <span className="bg-gradient-to-r from-gray-800/90 to-black bg-clip-text text-transparent">Configure Interview</span>
                     </h2>
 
-                    <p className="font-space text-sm lg:text-2xl font-semibold text-slate-900 tracking-tight">
-                        Ready for your next mock interview?<br />
-                        Go ahead and create your first interview!
+                    <p className="font-space text-sm lg:text-xl font-semibold text-slate-900 tracking-tight">
+                        Configure your first interview?<br />
+                        Go ahead and configure your first interview!
                     </p>
 
                     <div className="flex items-center gap-4 pt-4">

@@ -153,7 +153,7 @@ const LoginPage = () => {
                                                 value={formData.firstName}
                                                 onChange={handleChange}
                                                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all placeholder:text-slate-400"
-                                                placeholder="John"
+                                                placeholder="Vaibhav"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -164,7 +164,7 @@ const LoginPage = () => {
                                                 value={formData.lastName}
                                                 onChange={handleChange}
                                                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all placeholder:text-slate-400"
-                                                placeholder="Doe"
+                                                placeholder="K"
                                             />
                                         </div>
                                     </div>
@@ -180,7 +180,7 @@ const LoginPage = () => {
                                             value={formData.email}
                                             onChange={handleChange}
                                             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all placeholder:text-slate-400"
-                                            placeholder="john@example.com"
+                                            placeholder="vaibhav@example.com"
                                         />
                                         <Mail className="absolute right-4 top-3.5 w-5 h-5 text-slate-400" />
                                     </div>
@@ -199,7 +199,7 @@ const LoginPage = () => {
                                             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all placeholder:text-slate-400"
                                             placeholder="••••••••"
                                         />
-                                        <Lock className="absolute right-4 top-3.5 w-5 h-5 text-slate-400" />
+                                        {!formData.password && <Lock className="absolute right-4 top-3.5 w-5 h-5 text-slate-400" />}
                                     </div>
                                     {errors.password && <p className="text-xs text-red-500 font-medium">Password must be at least 6 characters</p>}
                                 </div>

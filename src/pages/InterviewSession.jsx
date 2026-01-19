@@ -9,6 +9,7 @@ import UserCard from "../components/UserCard"
 import LoadingState from "../components/LoadingState"
 import StatusBox from "../components/StatusBox"
 import { Mic, Video, PhoneOff, Settings } from "lucide-react"
+import { getSystemPrompt } from "../utils/prompts/index"
 
 // Helper for credit deduction - defined outside component to be accessible everywhere
 const deductCredits = async (durationSeconds) => {
@@ -77,7 +78,8 @@ const InterviewSession = () => {
     name,
     company,
     type,
-    questionPool,
+    title,
+    welcomeMessage,
     roundKey,
     roundId,
     roundIntent,
@@ -89,7 +91,8 @@ const InterviewSession = () => {
     followUpGuidelines,
     evaluationSignals,
     interviewerPersonality,
-    commonFailureReasons
+    commonFailureReasons,
+    filter_type
   } = location.state || {}
 
   console.log(location.state)
@@ -116,37 +119,31 @@ const InterviewSession = () => {
       console.log("Vapi instance created")
 
       // Define Overrides
-      const assistantOverrides = {
-        recordingEnabled: false,
-        variableValues: {
-          firstName: firstName || "User",
-          role: role || "",
-          level: level || "",
-          focus: Array.isArray(focus) ? focus.join(", ") : (focus || ""),
-          description: description || "",
-          company: company || "",
-          type: type || "",
-          // New structured data fields
-          roundTitle: name || "",
-          roundIntent: roundIntent || "",
-          skillsEvaluated: Array.isArray(skillsEvaluated) ? skillsEvaluated.join(", ") : (skillsEvaluated || ""),
-          difficultyBand: typeof difficultyBand === 'object' ? JSON.stringify(difficultyBand) : (difficultyBand || ""),
-          acceptableProblemTypes: Array.isArray(acceptableProblemTypes) ? acceptableProblemTypes.join(", ") : (acceptableProblemTypes || ""),
-          interviewerFocus: Array.isArray(interviewerFocus) ? interviewerFocus.join(", ") : (interviewerFocus || ""),
-          antiPatternsToWatch: Array.isArray(antiPatternsToWatch) ? antiPatternsToWatch.join(", ") : (antiPatternsToWatch || ""),
-          followUpGuidelines: typeof followUpGuidelines === 'object' ? JSON.stringify(followUpGuidelines) : (followUpGuidelines || ""),
-          evaluationSignals: typeof evaluationSignals === 'object' ? JSON.stringify(evaluationSignals) : (evaluationSignals || ""),
-          interviewerPersonality: interviewerPersonality || "professional, technical",
-          commonFailureReasons: Array.isArray(commonFailureReasons) ? commonFailureReasons.join(", ") : (commonFailureReasons || "")
-        },
-      }
+      // Construct the System Prompt using the utility
+      const promptContext = {
+        company,
+        role,
+        level,
+        name,
+        type,
+        firstName,
+        roundTitle: title,
+        interviewerPersonality,
+        skillsEvaluated,
+        difficultyBand,
+        acceptableProblemTypes,
+        interviewerFocus,
+        antiPatternsToWatch,
+        followUpGuidelines,
+        commonFailureReasons: location.state?.commonFailureReasons, // Ensure we pass this if available
+        focus,
+        filter_type
+      };
 
-      console.log("Starting Vapi with overrides:", assistantOverrides)
+      const systemPrompt = getSystemPrompt(promptContext);
+      console.log("System Prompt:", systemPrompt);
 
-      const assistantId = customInterview
-        ? "30a57c80-c3cf-47c3-a4e1-2cc326afa7b6"
-        : "610fd4be-f85c-4731-83d2-beb3dd0b846c";
-
+      console.log("Starting Vapi with transient assistant config...");
 
       // Define Handlers
       const callStartHandler = () => {
@@ -217,8 +214,52 @@ const InterviewSession = () => {
 
       console.log("✅ All event listeners attached")
 
-      // Start Call
-      vapi.current.start(assistantId, assistantOverrides)
+      // Start Call with Direct Object Configuration
+      vapi.current.start({
+        voice: {
+          model: "sonic-3",
+          voiceId: "a167e0f3-df7e-4d52-a9c3-f949145efdab",
+          provider: "cartesia"
+        },
+        model: {
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
+            }
+          ],
+          provider: "openai",
+          temperature: 0.2
+        },
+        firstMessage: `Hi, this is Jonathan from ${company}. Can you hear me clearly?`,
+        transcriber: {
+          model: "nova-2",
+          language: "en",
+          provider: "deepgram"
+        },
+        maxDurationSeconds: 1240,
+        analysisPlan: {
+          summaryPlan: {
+            enabled: false
+          },
+          successEvaluationPlan: {
+            enabled: false
+          }
+        },
+        startSpeakingPlan: {
+          waitSeconds: 0.6,
+          smartEndpointingPlan: {
+            provider: "livekit",
+            waitFunction: "1800 + 5500 * max(0, x-0.5)"
+          }
+        },
+        stopSpeakingPlan: {
+          numWords: 3,
+          voiceSeconds: 0.5,
+          backoffSeconds: 3
+        }
+      })
         .then((res) => {
           console.log("Crucial: Call started successfully", res);
         })
@@ -269,38 +310,6 @@ const InterviewSession = () => {
     }
   }, [interviewState, isTimerActive])
 
-  // Time remaining reminders - EVERY 30 SECONDS
-  React.useEffect(() => {
-    if (!vapi.current || (interviewState !== 'ai-speaking' && interviewState !== 'user-speaking')) {
-      return;
-    }
-
-    // Time remaining reminders - EVERY 30 SECONDS
-    // We check for 30s intervals to avoid spamming.
-    if (elapsedTime > 0 && elapsedTime % 30 === 0) {
-      const remainingSeconds = INTERVIEW_DURATION_SECONDS - elapsedTime;
-      const remainingMinutes = Math.floor(remainingSeconds / 60);
-      const remainingSecondsDisplay = remainingSeconds % 60;
-      const progressPercent = Math.floor((elapsedTime / INTERVIEW_DURATION_SECONDS) * 100);
-
-      // Only send reminders if we haven't reached wrap-up time
-      // CRITICAL: Only send while USER is speaking to avoid interrupting the AI's speech
-      if (elapsedTime < WRAP_UP_TIME_SECONDS && vapi.current && !interviewEnded.current && interviewState === 'user-speaking') {
-        vapi.current.send({
-          type: "add-message",
-          message: {
-            role: "system",
-            content: `⏰ TIME UPDATE: ${remainingMinutes}m ${remainingSecondsDisplay}s remaining (${progressPercent}% complete). Continue with technical questions.`
-          }
-        });
-
-        console.log(`📢 Time reminder sent to Vapi: ${remainingMinutes}m ${remainingSecondsDisplay}s remaining`);
-      } else {
-        console.log(`📢 Time reminder skipped (AI speaking or ended): ${remainingMinutes}m ${remainingSecondsDisplay}s remaining`);
-      }
-    }
-  }, [elapsedTime, interviewState]);
-
   // Wrap-up message at 19 minutes (1140 seconds)
   React.useEffect(() => {
     if (elapsedTime >= WRAP_UP_TIME_SECONDS && !wrapUpMessageSent && vapi.current && !interviewEnded.current) {
@@ -330,7 +339,10 @@ const InterviewSession = () => {
           formattedTranscript: formattedTranscriptText,
           role: role,
           level: level,
-          focus: focus
+          focus: focus,
+          company: company,
+          roundTitle: name, // Using 'name' from location.state as roundTitle
+          roundType: type
         })
       })
 

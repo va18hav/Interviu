@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate, } from "react-router-dom"
-import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash } from 'lucide-react';
+import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash, Signal } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import bot from "../assets/images/bot.png"
 import { supabase } from "../supabaseClient"
@@ -182,6 +182,80 @@ const InterviewDashboard = () => {
         <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
       </div> : <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
 
+        {/* Popular Interviews Section */}
+        <section className="space-y-6">
+          <PopularInterviewsBanner firstName={userCredentials?.firstName || "User"} />
+          <div className="flex items-center gap-2">
+            <p className="text-slate-900 text-sm mt-1">In Demand</p>
+            <TrendingUp className="w-6 h-6 text-cyan-400" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {popularInterviews.map((interview) => {
+              const colorKey = getCompanyColor(interview.company);
+
+              const colorClasses = {
+                cyan: { bg: "from-cyan-500/20 to-cyan-600/20", border: "border-cyan-500/20", text: "text-cyan-400", accent: "from-cyan-500 to-cyan-600" },
+                blue: { bg: "from-blue-500/20 to-blue-600/20", border: "border-blue-500/20", text: "text-blue-400", accent: "from-blue-500 to-blue-600" },
+                purple: { bg: "from-purple-500/20 to-purple-600/20", border: "border-purple-500/20", text: "text-purple-400", accent: "from-purple-500 to-purple-600" },
+                pink: { bg: "from-pink-500/20 to-pink-600/20", border: "border-pink-500/20", text: "text-pink-400", accent: "from-pink-500 to-pink-600" },
+                green: { bg: "from-green-500/20 to-green-600/20", border: "border-green-500/20", text: "text-green-400", accent: "from-green-500 to-green-600" },
+                orange: { bg: "from-orange-500/20 to-orange-600/20", border: "border-orange-500/20", text: "text-orange-400", accent: "from-orange-500 to-orange-600" }
+              };
+              const colors = colorClasses[colorKey] || colorClasses.cyan;
+
+              return (
+                <div
+                  key={interview.id}
+                  className="relative group rounded-2xl border border-slate-500/20 bg-gradient-to-br from-slate-200/90 to-slate-200/80 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                  <div className="p-6 space-y-4">
+                    {/* Icon */}
+                    <div className={`w-14 h-14 rounded-xl border border-slate-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <img src={interview.icon_url} alt="" className="w-10" />
+                    </div>
+
+                    {/* Header */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-black group-hover:text-cyan-400 transition-colors mb-1">
+                        {interview.role}
+                      </h4>
+                      <p className="text-sm text-black">{interview.level} Level</p>
+
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-4 pt-2">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm text-slate-400">1.2k</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <span className="text-sm text-slate-400">4.8</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm text-slate-400">{interview.total_duration}</span>
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <button
+                      onClick={() => navigate(`/dashboard/interview-details/${interview.id}`)}
+                      className="w-full py-2.5 rounded-lg bg-slate-200/50 border border-slate-500 text-black hover:bg-slate-300/50 hover:text-slate-800 transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-slate-500/30">
+                      View Details
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Hero Banner */}
         <DashboardBanner firstName={userCredentials?.firstName || "User"} />
 
@@ -267,78 +341,6 @@ const InterviewDashboard = () => {
           </div>
         )}
 
-        {/* Popular Interviews Section */}
-        <section className="space-y-6">
-          <PopularInterviewsBanner />
-          <div className="flex items-center gap-2">
-            <p className="text-slate-900 text-sm mt-1">In Demand</p>
-            <TrendingUp className="w-6 h-6 text-cyan-400" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularInterviews.map((interview) => {
-              const colorKey = getCompanyColor(interview.company);
-
-              const colorClasses = {
-                cyan: { bg: "from-cyan-500/20 to-cyan-600/20", border: "border-cyan-500/20", text: "text-cyan-400", accent: "from-cyan-500 to-cyan-600" },
-                blue: { bg: "from-blue-500/20 to-blue-600/20", border: "border-blue-500/20", text: "text-blue-400", accent: "from-blue-500 to-blue-600" },
-                purple: { bg: "from-purple-500/20 to-purple-600/20", border: "border-purple-500/20", text: "text-purple-400", accent: "from-purple-500 to-purple-600" },
-                pink: { bg: "from-pink-500/20 to-pink-600/20", border: "border-pink-500/20", text: "text-pink-400", accent: "from-pink-500 to-pink-600" },
-                green: { bg: "from-green-500/20 to-green-600/20", border: "border-green-500/20", text: "text-green-400", accent: "from-green-500 to-green-600" },
-                orange: { bg: "from-orange-500/20 to-orange-600/20", border: "border-orange-500/20", text: "text-orange-400", accent: "from-orange-500 to-orange-600" }
-              };
-              const colors = colorClasses[colorKey] || colorClasses.cyan;
-
-              return (
-                <div
-                  key={interview.id}
-                  className="relative group rounded-2xl border border-slate-500/20 bg-gradient-to-br from-slate-200/90 to-slate-200/80 backdrop-blur-xl overflow-hidden hover:border-slate-700 transition-all duration-300 cursor-pointer"
-                >
-                  <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/15 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-                  <div className="p-6 space-y-4">
-                    {/* Icon */}
-                    <div className={`w-14 h-14 rounded-xl border border-slate-500/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <img src={interview.icon_url} alt="" className="w-10" />
-                    </div>
-
-                    {/* Header */}
-                    <div>
-                      <h4 className="text-lg font-semibold text-black group-hover:text-cyan-400 transition-colors mb-1">
-                        {interview.company} {interview.role}
-                      </h4>
-                      <p className="text-sm text-black">{interview.level}</p>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 pt-2">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-400">1.2k</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm text-slate-400">4.8</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-400">{interview.total_duration}</span>
-                      </div>
-                    </div>
-
-                    {/* Action */}
-                    <button
-                      onClick={() => navigate(`/dashboard/interview-details/${interview.id}`)}
-                      className="w-full py-2.5 rounded-lg bg-slate-200/50 border border-slate-500 text-black hover:bg-slate-300/50 hover:text-slate-800 transition-all text-sm font-medium flex items-center justify-center gap-2 group-hover:border-slate-500/30">
-                      View Details
-                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-
-                </div>
-              );
-            })}
-          </div>
-        </section>
       </main>}
     </div>
   );

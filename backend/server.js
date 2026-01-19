@@ -31,57 +31,101 @@ app.use(express.json({ limit: '10mb' }))
 // Fixed: The route path should just be the endpoint, not the full URL
 app.post('/api/generate-feedback', async (req, res) => {
     try {
-        const { formattedTranscript, role, level, focus } = req.body
+        const { formattedTranscript, role, level, focus, company, roundTitle, roundType, expectedDepth } = req.body
+
+        // Construct the prompt context
+        const promptContext = `
+Role: ${role}
+Level: ${level}
+Focus Area(s): ${focus}
+Company (if applicable): ${company || 'Not specified'}
+Round Type (if applicable): ${roundType || 'Not specified'}
+Round Title (if applicable): ${roundTitle || 'Not specified'}
+
+Transcript:
+${formattedTranscript}
+`
 
         // Using Llama-3.3-70b-versatile for high-quality reasoning
         const chatCompletion = await groq.chat.completions.create({
             messages: [
                 {
                     role: "system",
-                    content: "You are a Senior Technical Hiring Committee Member. Your goal is to provide a balanced, highly accurate evaluation of a candidate's performance. You must respond with ONLY valid JSON."
+                    content: `You are a Senior Technical Hiring Committee Member at a top technology company.
+
+Your responsibility is to evaluate interview performance conservatively and realistically,
+exactly as a real interviewer would after a phone screen or onsite round.
+
+This is NOT coaching. This is NOT encouragement.
+This is a hiring signal evaluation.
+
+STRICT RULES:
+- Do NOT inflate ratings.
+- Do NOT assume knowledge beyond what is explicitly demonstrated.
+- Penalize vague, generic, buzzword-heavy, or AI-like responses.
+- Penalize answers that lack prioritization, trade-offs, or causal reasoning.
+- If the interviewer had to rephrase, guide, or narrow questions, this is a NEGATIVE signal.
+- Strong terminology without explanation does NOT equal strong understanding.
+- Silence, hesitation, or partial reasoning should be treated neutrally or negatively — never positively.
+
+You must respond with ONLY valid JSON.`
                 },
                 {
                     role: "user",
-                    content: `Analyze this ${role} mock interview for a ${level} candidate focusing on ${focus}.
-                    Transcript: ${formattedTranscript}. Some important instructions:
-                    1. If the transcript is very small or if the user has ended the interview without speaking much, keep all the scores as 0 and return empty arrays for key strengths. Add three points in areas to improve that indiacate the user had left the interview without speaking much.
-                    2. Keep the scores realistic and based on the transcript. Do not underestimate.
-                    3. Return the summary as a string. The summary must have the entire summary of the conversation in the form of a paragraph, should precisely point where the candidate is technically sound, confident, and where the candidate is not. 
-                    Respond in this exact JSON format:
-                    4. Return the qna as an object with questions from the ${formattedTranscript} and answers from your own perspective. Think of it like, what would be the best answer for the particular question, of course in questions where there are multiple possiblities such as explaining a project, or a follow-up question regarding that,
-                       or if the interview is a behavioural interview, what would you do if you were in the candidate's shoes, with the same project explanations, this should focus on the framing and explaining technical depth of the same project.
-                    5. jobReadyScore is the combination of all performance metrics to indicate your overall preparedness for real interviews.
-                    {
-                      "overallScore": 0-100,
-                      "technicalKnowledge": 0-100,
-                      "technicalKnowledgeJustification": "string",
-                      "communicationSkills": 0-100,
-                      "communicationSkillsJustification": "string",
-                      "problemSolving": 0-100,
-                      "problemSolvingJustification": "string",
-                      "confidenceLevel": 0-100,
-                      "confidenceLevelJustification": "string",
-                      "jobReadyScore": 0-100,
-                      "jobReadyScoreJustification": "string",
-                      "keyStrengths": ["string", "string", "string"],
-                      "areasToImprove": ["string", "string", "string"]
-                      "summary" : "string"
-                      "qna": [
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },
-                                { "question": "Question text...", "answer": "Suggested answer..." },   
-                                ]
-                    }`
+                    content: `"Evaluate the following mock interview.
+
+${promptContext}
+
+SPECIAL CONDITIONS:
+1. If the transcript is very short, incomplete, or the candidate exits early:
+   - overallAssessment must be 'weak'
+   - keyStrengths must be empty
+   - areasToImprove must include 3 points explaining insufficient participation
+
+2. Judge ONLY what is explicitly demonstrated.
+   - Do NOT reward what the candidate could have said.
+   - Do NOT reward completeness without ownership or reasoning.
+
+3. Use conservative calibration.
+   - Most real interviews fall between 'borderline' and 'acceptable'.
+
+Return the response in EXACTLY the following JSON format:
+
+{
+  "technicalKnowledge": "insufficient | basic | solid | strong",
+  "technicalEvidence": "Concrete transcript-based justification",
+
+  "problemSolving": "insufficient | basic | solid | strong",
+  "problemSolvingEvidence": "How the candidate reasons, debugs, or approaches problems",
+
+  "communicationClarity": "low | moderate | high",
+  "communicationEvidence": "Structure, clarity, precision, conciseness",
+
+  "confidenceSignal": "low | moderate | high",
+  "confidenceEvidence": "Ownership, decisiveness, consistency",
+
+  "interviewerInterventionNeeded": true | false,
+  "genericResponsesObserved": true | false,
+
+  "overallAssessment": "weak | borderline | acceptable | strong",
+
+  "keyStrengths": [
+    "Strength backed by transcript evidence",
+    "Strength backed by transcript evidence"
+  ],
+
+  "areasToImprove": [
+    "Specific, actionable weakness",
+    "Specific, actionable weakness",
+    "Specific, actionable weakness"
+  ],
+
+  "summary": "One concise paragraph written like a real hiring committee note"
+}"`
                 }
             ],
-            model: "llama-3.3-70b-versatile", // Powerful free-tier model
-            temperature: 0.5,
+            model: "groq/compound", // Powerful free-tier model
+            temperature: 0.2, // Low temperature for consistent, conservative evaluation
             response_format: { type: "json_object" } // Forces the model to return valid JSON
         })
 
@@ -92,7 +136,52 @@ app.post('/api/generate-feedback', async (req, res) => {
         }
 
         const feedback = JSON.parse(feedbackText)
-        res.json(feedback)
+
+        // --- DERIVE NUMERIC SCORES (INTERNAL LOGIC) ---
+        const assessmentScoreMap = {
+            weak: 45,
+            borderline: 58,
+            acceptable: 68,
+            strong: 78
+        };
+
+        const skillScoreMap = {
+            insufficient: 30,
+            basic: 50,
+            solid: 70,
+            strong: 88,
+            low: 40,
+            moderate: 65,
+            high: 85
+        };
+
+        // Calculate derived scores
+        const overallScore = assessmentScoreMap[feedback.overallAssessment] || 50;
+
+        // Map skill ratings to numbers for frontend progress bars
+        const derivedFeedback = {
+            ...feedback,
+            overallScore: overallScore,
+            technicalKnowledgeScore: skillScoreMap[feedback.technicalKnowledge] || 50,
+            problemSolvingScore: skillScoreMap[feedback.problemSolving] || 50,
+            communicationSkillsScore: skillScoreMap[feedback.communicationClarity] || 50,
+            confidenceLevelScore: skillScoreMap[feedback.confidenceSignal] || 50,
+            // Map old field names to new values for frontend compatibility where needed
+            technicalKnowledgeJustification: feedback.technicalEvidence,
+            problemSolvingJustification: feedback.problemSolvingEvidence,
+            communicationSkillsJustification: feedback.communicationEvidence,
+            confidenceLevelJustification: feedback.confidenceEvidence,
+            // Job Ready Score can be an average of the others
+            jobReadyScore: Math.round(
+                ((skillScoreMap[feedback.technicalKnowledge] || 50) +
+                    (skillScoreMap[feedback.problemSolving] || 50) +
+                    (skillScoreMap[feedback.communicationClarity] || 50) +
+                    (skillScoreMap[feedback.confidenceSignal] || 50)) / 4
+            ),
+            jobReadyScoreJustification: "Composite score based on technical, problem solving, communication, and confidence signals."
+        };
+
+        res.json(derivedFeedback)
 
     } catch (error) {
         console.error('Groq API Error:', error)

@@ -211,12 +211,14 @@ const InterviewDetails = () => {
             state: {
                 role: interview.role,
                 icon: interview.icon_url,
-                name: `${interview.company} ${interview.role}`,
+                name: `${interview.role}`,
                 level: interview.level,
                 company: interview.company,
                 customInterview: false,
                 roundKey: roundKey,
                 type: selectedRound ? selectedRound.type : '',
+                title: selectedRound ? selectedRound.title : '',
+                welcomeMessage: selectedRound ? selectedRound.welcomeMessage : '',
                 roundIntent: selectedRound ? selectedRound.roundIntent : '',
                 skillsEvaluated: selectedRound ? selectedRound.skillsEvaluated : [],
                 difficultyBand: selectedRound ? selectedRound.difficultyBand : {},
@@ -227,7 +229,8 @@ const InterviewDetails = () => {
                 evaluationSignals: selectedRound ? selectedRound.evaluationSignals : {},
                 interviewerPersonality: interview.interviewer_personality,
                 commonFailureReasons: interview.common_failure_reasons,
-                description: selectedRound ? selectedRound.overview : interview.overview
+                description: selectedRound ? selectedRound.overview : interview.overview,
+                filter_type: interview.filter_type
             }
         });
     }

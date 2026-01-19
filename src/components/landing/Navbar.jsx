@@ -5,7 +5,7 @@ import logo from '../../assets/images/logo.png';
 
 const Navbar = () => {
     return (
-        <nav className="absolute top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-md">
+        <nav className="absolute top-0 w-full z-50 border-b border-white/10 bg-black/10 backdrop-blur-md">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
                     <img src={logo} alt="Intervyu" className="w-8 h-8 contrast-125 brightness-150" />

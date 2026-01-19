@@ -12,9 +12,6 @@ const InterviewFeedback = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const [expandedMetric, setExpandedMetric] = React.useState(null);
-    const [showAnswersModal, setShowAnswersModal] = React.useState(false);
-    const [showSummaryModal, setShowSummaryModal] = React.useState(false);
-    const [isAnswerExpanded, setIsAnswerExpanded] = React.useState(null)
     const feedbackData = location.state || {}
     console.log("This is the feedback data from the interview: ", location.state)
 
@@ -22,7 +19,7 @@ const InterviewFeedback = () => {
 
     // Mock feedback data
     const overallScore = feedbackData.overallScore;
-    const qnaData = feedbackData.qna || [];
+    // const qnaData = feedbackData.qna || []; // REMOVED
 
     // Animate score on mount
     React.useEffect(() => {
@@ -52,35 +49,40 @@ const InterviewFeedback = () => {
     const metrics = [
         {
             label: "Technical Knowledge",
-            score: feedbackData.technicalKnowledge,
+            score: feedbackData.technicalKnowledgeScore || 0,
+            rating: feedbackData.technicalKnowledge, // e.g. "solid"
             icon: Brain,
             color: "slate",
             description: feedbackData.technicalKnowledgeJustification
         },
         {
             label: "Communication Skills",
-            score: feedbackData.communicationSkills,
+            score: feedbackData.communicationSkillsScore || 0,
+            rating: feedbackData.communicationClarity, // e.g. "high"
             icon: MessageSquare,
             color: "slate",
             description: feedbackData.communicationSkillsJustification
         },
         {
             label: "Problem Solving",
-            score: feedbackData.problemSolving,
+            score: feedbackData.problemSolvingScore || 0,
+            rating: feedbackData.problemSolving, // e.g. "basic"
             icon: Target,
             color: "slate",
             description: feedbackData.problemSolvingJustification
         },
         {
             label: "Confidence Level",
-            score: feedbackData.confidenceLevel,
+            score: feedbackData.confidenceLevelScore || 0,
+            rating: feedbackData.confidenceSignal, // e.g. "moderate"
             icon: Zap,
             color: "slate",
             description: feedbackData.confidenceLevelJustification
         },
         {
             label: "Job Ready Score",
-            score: feedbackData.jobReadyScore,
+            score: feedbackData.jobReadyScore || 0,
+            rating: feedbackData.jobReadyScore > 70 ? "Ready" : "Not Ready",
             icon: Award,
             color: "slate",
             description: feedbackData.jobReadyScoreJustification
@@ -147,6 +149,23 @@ const InterviewFeedback = () => {
                         </div>
                     </div>
 
+                    {/* New Badges for Negative Signals */}
+                    <div className="flex gap-3 pt-2">
+                        {feedbackData.interviewerInterventionNeeded && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-50 border border-amber-200 text-xs font-bold text-amber-700 uppercase tracking-wide">
+                                <Award className="w-3.5 h-3.5 text-amber-500" />
+                                Intervention Required
+                            </span>
+                        )}
+                        {feedbackData.genericResponsesObserved && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-red-50 border border-red-200 text-xs font-bold text-red-700 uppercase tracking-wide">
+                                <Award className="w-3.5 h-3.5 text-red-500" />
+                                Generic Responses
+                            </span>
+                        )}
+                    </div>
+
+
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handleGoToDashboard}
@@ -178,14 +197,15 @@ const InterviewFeedback = () => {
                                     {feedbackData.summary || "No summary available for this interview."}
                                 </p>
                             </div>
-                            <div className="mt-6 pt-6 border-t border-gray-100 flex gap-4">
+
+                            {/* <div className="mt-6 pt-6 border-t border-gray-100 flex gap-4">
                                 <button
                                     onClick={() => setShowAnswersModal(true)}
                                     className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline flex items-center gap-1"
                                 >
                                     View Full Transcript & Answers <ArrowRight className="w-3 h-3" />
                                 </button>
-                            </div>
+                            </div> */}
                         </section>
 
                         {/* Detailed Metrics Section */}
@@ -226,8 +246,13 @@ const InterviewFeedback = () => {
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div className={`text-lg font-bold w-12 text-right ${getScoreColor(metric.score)}`}>
-                                                        {metric.score}%
+                                                    <div className={`text-lg font-bold w-full sm:w-auto text-right ${getScoreColor(metric.score)} flex flex-col items-end`}>
+                                                        <span>{metric.score}%</span>
+                                                        {metric.rating && (
+                                                            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                                                                {metric.rating}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     {isExpanded ?
                                                         <ChevronUp className="w-5 h-5 text-gray-400" /> :
@@ -356,49 +381,11 @@ const InterviewFeedback = () => {
                         </div>
 
                     </div>
-                </div>
+                </div >
 
-            </div>
+            </div >
 
-            {/* Answers Modal - Document Style */}
-            {showAnswersModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
-                        <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-slate-500" />
-                                Interview Transcript & Analysis
-                            </h3>
-                            <button onClick={() => setShowAnswersModal(false)} className="text-slate-400 hover:text-slate-600">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <div className="p-8 overflow-y-auto space-y-8 bg-white">
-                            {qnaData.map((item, index) => (
-                                <div key={index} className="space-y-3">
-                                    <div className="flex gap-4">
-                                        <span className="text-xs font-bold text-slate-400 pt-1">Q{index + 1}</span>
-                                        <div className="space-y-4 flex-1">
-                                            <h4 className="font-semibold text-slate-900 text-lg leading-snug">{item.question}</h4>
-
-                                            <div className="bg-green-50 rounded-lg p-5 border border-green-100">
-                                                <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2">Ideal Answer</div>
-                                                <p className="text-slate-700 text-sm leading-relaxed">{item.answer}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {index < qnaData.length - 1 && <hr className="border-gray-100" />}
-                                </div>
-                            ))}
-                        </div>
-                        <div className="p-4 border-t border-gray-200 bg-gray-50 text-right">
-                            <button onClick={() => setShowAnswersModal(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 px-4 py-2">
-                                Close Document
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Answers Modal REMOVED */}
         </main >
     );
 };

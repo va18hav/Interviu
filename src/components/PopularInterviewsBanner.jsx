@@ -3,20 +3,20 @@ import { ArrowRight, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import techbanner from '../assets/images/techbanner.png'
 
-const PopularInterviewsBanner = () => {
+const PopularInterviewsBanner = ({ firstName }) => {
     const navigate = useNavigate()
     return (
         <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-gradient-to-br from black/100 via black/60 to black/100 backdrop-blur-sm border border-slate-300/50'>
             {/* Background decoration */}
-            <div className="absolute top-30 right-0 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-30 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+            <div className="absolute top-30 right-0 w-[500px] h-[500px] bg-red-500/6 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-30 left-0 w-[500px] h-[500px] bg-cyan-500/6 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
             <div className="flex items-center md:gap-10 lg:gap-8">
                 <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-15 lg:px-16 lg:py-20 max-w-4xl space-y-8">
 
-                    <h1 className='font-sans text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tighter'>
-                        Top Tech
+                    <h1 className='font-sans text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight'>
+                        Hi {firstName},
                         <br />
-                        Interview Simulations
+                        <span className='text-3xl md:text-4xl font-extrabold'>Welcome to Inter<span className='text-cyan-500'>viu</span></span>
                     </h1>
 
                     <p className='font-space text-md lg:text-lg text-slate-800 max-w-sm lg:max-w-xl tracking-tight'>
