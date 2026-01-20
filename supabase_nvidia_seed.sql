@@ -1,7 +1,3 @@
-
--- Clear existing Nvidia data to start fresh
-DELETE FROM popular_interviews WHERE company = 'Nvidia';
-
 INSERT INTO popular_interviews (company, role, level, total_duration, skills, overview, icon_url, company_traits, rounds) 
 VALUES
 -- 1. Nvidia AI/ML Engineer

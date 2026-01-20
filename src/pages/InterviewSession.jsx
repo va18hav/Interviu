@@ -62,10 +62,13 @@ const InterviewSession = () => {
   const elapsedTimeRef = React.useRef(0) // Ref to access latest elapsed time in callbacks
   const vapi = React.useRef(null)
 
-  // FIXED DURATION: 25 minutes
-  const INTERVIEW_DURATION_MINUTES = 25;
-  const INTERVIEW_DURATION_SECONDS = INTERVIEW_DURATION_MINUTES * 60; // 1500 seconds
-  const WRAP_UP_TIME_SECONDS = 24 * 60; // 24 minutes = 1440 seconds
+  // Track triggered milestones to prevent duplicate sends
+  const triggeredMilestones = React.useRef(new Set())
+
+  // FIXED DURATION: 20 minutes
+  const INTERVIEW_DURATION_MINUTES = 20;
+  const INTERVIEW_DURATION_SECONDS = INTERVIEW_DURATION_MINUTES * 60; // 1200 seconds
+  const WRAP_UP_TIME_SECONDS = 19 * 60; // 19 minutes = 1140 seconds
 
   // Consolidated destructuring for both interview types
   const {
@@ -191,7 +194,7 @@ const InterviewSession = () => {
 
               console.log(`Tool 'wrap_up_interview' intercepted. Elapsed: ${elapsedMinutes.toFixed(2)} mins`);
 
-              if (elapsedMinutes < 24) {
+              if (elapsedMinutes < 18.83) { // ~18 minutes 50 seconds (1130s)
                 console.log("Interception: AI attempted early wrap-up. Nudge injected.");
                 vapi.current.send({
                   type: 'add-message',
@@ -201,7 +204,7 @@ const InterviewSession = () => {
                   }
                 });
               } else {
-                console.log("Duration >= 24 mins. Allowing termination.");
+                console.log("Duration >= 18:50. Allowing termination.");
                 vapi.current.stop();
               }
             }
@@ -282,7 +285,7 @@ const InterviewSession = () => {
           language: "en",
           provider: "deepgram"
         },
-        maxDurationSeconds: 1540,
+        maxDurationSeconds: 1380, // ~21 minutes buffer
         analysisPlan: {
           summaryPlan: {
             enabled: false
@@ -355,22 +358,48 @@ const InterviewSession = () => {
     }
   }, [interviewState, isTimerActive])
 
-  // Wrap-up message at 24 minutes (1440 seconds)
+  // --- PERIODIC CONTEXT INJECTION (10m, 19m) ---
   React.useEffect(() => {
-    if (elapsedTime >= WRAP_UP_TIME_SECONDS && !wrapUpMessageSent && vapi.current && !interviewEnded.current) {
-      setWrapUpMessageSent(true);
+    if (!vapi.current || interviewEnded.current) return;
 
-      vapi.current.send({
-        type: "add-message",
-        message: {
-          role: "system",
-          content: `🎯 WRAP UP NOW: You have reached the 24-minute mark. You have 1 minute remaining. Begin wrapping up the interview now. Thank the candidate and ask if they have any final questions for you.`
-        }
-      });
+    // Define milestones in seconds
+    // Define milestones in seconds
+    const milestones = {
+      600: 'switch-problem', // 10 minutes
+      1140: 'wrap-up'        // 19 minutes (WRAP_UP_TIME_SECONDS)
+    };
 
-      console.log("🎯 WRAP UP MESSAGE SENT at 24 minutes");
+    // Check if current elapsedTime hits a milestone
+    if (milestones[elapsedTime] && !triggeredMilestones.current.has(elapsedTime)) {
+      const type = milestones[elapsedTime];
+      triggeredMilestones.current.add(elapsedTime);
+
+      console.log(`🎯 Milestone Reached: ${elapsedTime}s (${elapsedTime / 60}m) - Action: ${type}`);
+
+      let content = "";
+      if (type === 'switch-problem') {
+        content = `
+          [SYSTEM UPDATE]
+          10 minutes have elapsed.
+          INSTRUCTION: YOU STILL HAVE 10 MINUNTES IN THE INTERVIEW. DO NOT ASK THE FINAL QUESTION OR WRAP UP THE INTERVIEW. CONTINUE ASKING NEW QUESTIONS AND DEEP PROBING FOR EACH NEW QUESTION. STRESS TEST THE CANDIDATE
+          `;
+      } else if (type === 'wrap-up') {
+        setWrapUpMessageSent(true);
+        content = `🎯 FINAL PHASE: You have reached the 19-minute mark. You are now permitted to conclude the technical portion. Thank the candidate, ask for their final questions, and then call the 'wrap_up_interview' tool to finish.`;
+        console.log("🎯 WRAP UP MESSAGE SENT at 19 minutes");
+      }
+
+      if (content) {
+        vapi.current.send({
+          type: "add-message",
+          message: {
+            role: "system",
+            content: content
+          }
+        });
+      }
     }
-  }, [elapsedTime, wrapUpMessageSent]);
+  }, [elapsedTime])
 
   async function generateFeedback(formattedTranscriptText) {
     try {
@@ -563,7 +592,7 @@ const InterviewSession = () => {
     animation: "slideUp 0.8s ease-out forwards"
   };
 
-  // Minimum 10 minutes for feedback (half of 20 minutes)
+  // Minimum 10 minutes for feedback
   const isEligibleForFeedback = elapsedTime > 300;
 
   const FeedbackGeneratedCards = () => (

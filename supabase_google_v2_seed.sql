@@ -20,7 +20,7 @@ INSERT INTO popular_interviews (
     rounds
 ) VALUES (
     'Google',
-    'Software Engineer L3',
+    'Google Software Engineer L3',
     'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
     'Entry',
     '60 min',

@@ -1,7 +1,3 @@
-
--- Clear existing Microsoft data to start fresh (as requested)
-DELETE FROM popular_interviews WHERE company = 'Microsoft';
-
 INSERT INTO popular_interviews (company, role, level, total_duration, skills, overview, icon_url, company_traits, rounds) 
 VALUES
 -- 1. Microsoft Software Engineer
