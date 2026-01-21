@@ -6,11 +6,11 @@ const ResumeHero = (props) => {
     return (
         <div className='relative rounded-xl md:rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-sm'>
             {/* Background decoration */}
-            <div className="absolute top-50 right-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-50 right-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
             <div className="flex items-center md:gap-10 lg:gap-8">
-                <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-20 lg:px-16 lg:py-28 max-w-4xl space-y-8">
+                <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-15 lg:px-16 lg:py-20 max-w-4xl space-y-8">
 
-                    <h1 className='font-sans text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tighter'>
+                    <h1 className='font-sans text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-800 tracking-tighter'>
                         Craft a Resume that <br />
                         Gets You Hired
                     </h1>

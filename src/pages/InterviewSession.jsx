@@ -9,7 +9,7 @@ import UserCard from "../components/UserCard"
 import LoadingState from "../components/LoadingState"
 import StatusBox from "../components/StatusBox"
 import { Mic, Video, PhoneOff, Settings } from "lucide-react"
-import { getSystemPrompt } from "../utils/prompts/index"
+import { getSystemPrompt, getDrillDeeperPrompt, getNextProblemJuniorPrompt } from "../utils/prompts/index"
 
 // Helper for credit deduction - defined outside component to be accessible everywhere
 const deductCredits = async (durationSeconds) => {
@@ -62,6 +62,11 @@ const InterviewSession = () => {
   const elapsedTimeRef = React.useRef(0) // Ref to access latest elapsed time in callbacks
   const vapi = React.useRef(null)
 
+  // Orchestration State
+  const currentProblemIndex = React.useRef(0);
+  const isStressTestPhase = React.useRef(false);
+  const hasWrappedUp = React.useRef(false);
+
   // Track triggered milestones to prevent duplicate sends
   const triggeredMilestones = React.useRef(new Set())
 
@@ -95,7 +100,11 @@ const InterviewSession = () => {
     evaluationSignals,
     interviewerPersonality,
     commonFailureReasons,
-    filter_type
+    filter_type,
+    // New Orchestration Fields
+    depthLevel,
+    // problemQueue removed
+    stressTestPrompt
   } = location.state || {}
 
   console.log(location.state)
@@ -131,6 +140,7 @@ const InterviewSession = () => {
         type,
         firstName,
         roundTitle: title,
+        roundIntent,
         interviewerPersonality,
         skillsEvaluated,
         difficultyBand,
@@ -140,7 +150,12 @@ const InterviewSession = () => {
         followUpGuidelines,
         commonFailureReasons: location.state?.commonFailureReasons, // Ensure we pass this if available
         focus,
-        filter_type
+        filter_type,
+        // Pass orchestration initial state to prompt
+        depthLevel,
+        // problemQueue removed
+        stressTestPrompt,
+        evaluationSignals
       };
 
       const systemPrompt = getSystemPrompt(promptContext);
@@ -188,29 +203,88 @@ const InterviewSession = () => {
           const toolCalls = message.toolCallList;
           if (toolCalls && toolCalls.length > 0) {
             const firstTool = toolCalls[0];
-            if (firstTool.function && firstTool.function.name === 'wrap_up_interview') {
-              const currentElapsedSeconds = elapsedTimeRef.current;
-              const elapsedMinutes = currentElapsedSeconds / 60;
+            const name = firstTool.function.name;
+            const currentElapsedMinutes = elapsedTimeRef.current / 60;
 
-              console.log(`Tool 'wrap_up_interview' intercepted. Elapsed: ${elapsedMinutes.toFixed(2)} mins`);
+            console.log(`Tool '${name}' intercepted. Elapsed: ${currentElapsedMinutes.toFixed(2)} mins`);
 
-              if (elapsedMinutes < 18.83) { // ~18 minutes 50 seconds (1130s)
-                console.log("Interception: AI attempted early wrap-up. Nudge injected.");
+            if (name === 'signal_problem_end') {
+              handleSignalProblemEnd(currentElapsedMinutes);
+            } else if (name === 'wrap_up_interview') {
+              // Only allow if injection D has authorized it (implicitly via time or prompt)
+              // But we force injection D at 19m. 
+              // If AI calls it early without permission, we block it.
+              if (currentElapsedMinutes < 18.83 && !hasWrappedUp.current) {
+                console.log("Blocking early wrap-up.");
                 vapi.current.send({
                   type: 'add-message',
                   message: {
                     role: 'system',
-                    content: "PROMPT INJECTION: The interview is too short. Ignore your previous closing intent. You MUST continue the interview for at least 5 more minutes. Immediately introduce a new, difficult technical complication based on the candidate's previous response. Do not say goodbye yet."
-                  }
+                    content: "SYSTEM: ALARM. You are ending too early. We have time. Ask one more deep technical question about the tradeoffs."
+                  },
                 });
               } else {
-                console.log("Duration >= 18:50. Allowing termination.");
+                console.log("Allowing wrap-up.");
                 vapi.current.stop();
               }
             }
           }
         }
       }
+
+      const handleSignalProblemEnd = (minutes) => {
+        // INJECTION_D Logic (Signal & Time > 19m)
+        // Hard stop at 19 minutes for all levels
+        if (minutes >= 19.0) {
+          sendInjection("D");
+          return;
+        }
+
+        const isJunior = level?.toLowerCase() === 'junior';
+
+        if (isJunior) {
+          // Junior Logic: 2 Problems (0-10m, 10-19m)
+          if (minutes < 10.0) {
+            // Problem 1 should last until 10m
+            sendInjection("DRILL_DEEPER");
+          } else {
+            // After 10m, check if we need to move to Problem 2
+            if (currentProblemIndex.current === 0) {
+              currentProblemIndex.current = 1;
+              sendInjection("NEXT_PROBLEM_JUNIOR");
+            } else {
+              // Already on Problem 2 (or later), keep drilling until 19m
+              sendInjection("DRILL_DEEPER");
+            }
+          }
+        } else {
+          // Intermediate / Senior Logic
+          // Single Problem for entire duration (0-19m)
+          // Always drill deeper if signal comes early
+          sendInjection("DRILL_DEEPER");
+        }
+      };
+
+      const sendInjection = (type) => {
+        let content = "";
+
+        if (type === "DRILL_DEEPER") {
+          content = getDrillDeeperPrompt(promptContext);
+        } else if (type === "NEXT_PROBLEM_JUNIOR") {
+          content = getNextProblemJuniorPrompt(promptContext);
+        } else if (type === "D") {
+          hasWrappedUp.current = true;
+          content = `SYSTEM: INTERVIEW OVER. Stop technical probing. Politely inform the candidate we are out of time. Ask for one final question. Answer briefly, then call 'wrap_up_interview' to end the session.`;
+        }
+
+        if (content) {
+          console.log(`Injecting System Prompt [${type}]`);
+          vapi.current.send({
+            type: 'add-message',
+            message: { role: 'system', content }
+          });
+        }
+      };
 
       const callEndHandler = async () => {
         console.log("✅ Call ended event received");
@@ -269,15 +343,27 @@ const InterviewSession = () => {
             {
               type: "function",
               function: {
-                name: "wrap_up_interview",
-                description: "Use this tool ONLY when you are completely finished with the interview and ready to say goodbye.",
-                parameters: {
-                  type: "object",
-                  properties: {}
+                name: "signal_problem_end",
+                description: "Call this tool when you have reached the target depth for the current aspect and are ready to transition.",
+                parameters: { type: "object", properties: {} }
+              },
+              messages: [
+                {
+                  type: "request-start",
+                  content: "Okay!",
+                  blocking: false
                 }
+              ]
+            },
+            {
+              type: "function",
+              function: {
+                name: "wrap_up_interview",
+                description: "Call this tool ONLY when instructed by the system to end the interview session.",
+                parameters: { type: "object", properties: {} }
               }
             }
-          ]
+          ],
         },
         firstMessage: `Hi, this is Jonathan from ${company}. Can you hear me clearly?`,
         transcriber: {
@@ -295,16 +381,16 @@ const InterviewSession = () => {
           }
         },
         startSpeakingPlan: {
-          waitSeconds: 0.6,
+          waitSeconds: 1.0,
           smartEndpointingPlan: {
             provider: "livekit",
             waitFunction: "1800 + 5500 * max(0, x-0.5)"
           }
         },
         stopSpeakingPlan: {
-          numWords: 3,
-          voiceSeconds: 0.5,
-          backoffSeconds: 3
+          numWords: 2,
+          voiceSeconds: 0.2,
+          backoffSeconds: 1
         }
       })
         .then((res) => {
@@ -358,46 +444,25 @@ const InterviewSession = () => {
     }
   }, [interviewState, isTimerActive])
 
-  // --- PERIODIC CONTEXT INJECTION (10m, 19m) ---
+  // --- PERIODIC CONTEXT INJECTION & CHECKS ---
   React.useEffect(() => {
     if (!vapi.current || interviewEnded.current) return;
 
-    // Define milestones in seconds
-    // Define milestones in seconds
-    const milestones = {
-      600: 'switch-problem', // 10 minutes
-      1140: 'wrap-up'        // 19 minutes (WRAP_UP_TIME_SECONDS)
-    };
+    // Check for 19-minute hard stop (INJECTION_D)
+    // 19 minutes = 1140 seconds
+    const HARD_STOP_TIME = 1140;
 
-    // Check if current elapsedTime hits a milestone
-    if (milestones[elapsedTime] && !triggeredMilestones.current.has(elapsedTime)) {
-      const type = milestones[elapsedTime];
-      triggeredMilestones.current.add(elapsedTime);
-
-      console.log(`🎯 Milestone Reached: ${elapsedTime}s (${elapsedTime / 60}m) - Action: ${type}`);
-
-      let content = "";
-      if (type === 'switch-problem') {
-        content = `
-          [SYSTEM UPDATE]
-          10 minutes have elapsed.
-          INSTRUCTION: YOU STILL HAVE 10 MINUNTES IN THE INTERVIEW. DO NOT ASK THE FINAL QUESTION OR WRAP UP THE INTERVIEW. CONTINUE ASKING NEW QUESTIONS AND DEEP PROBING FOR EACH NEW QUESTION. STRESS TEST THE CANDIDATE
-          `;
-      } else if (type === 'wrap-up') {
-        setWrapUpMessageSent(true);
-        content = `🎯 FINAL PHASE: You have reached the 19-minute mark. You are now permitted to conclude the technical portion. Thank the candidate, ask for their final questions, and then call the 'wrap_up_interview' tool to finish.`;
-        console.log("🎯 WRAP UP MESSAGE SENT at 19 minutes");
-      }
-
-      if (content) {
-        vapi.current.send({
-          type: "add-message",
-          message: {
-            role: "system",
-            content: content
-          }
-        });
-      }
+    if (elapsedTime === HARD_STOP_TIME && !hasWrappedUp.current) {
+      console.log("⏰ Timer HIT 19m. Triggering INJECTION_D");
+      hasWrappedUp.current = true;
+      vapi.current.send({
+        type: "add-message",
+        message: {
+          role: "system",
+          content: `SYSTEM: INTERVIEW OVER. Stop technical probing. Politely inform the candidate we are out of time. Ask for one final question. Answer briefly, then call 'wrap_up_interview' to end the session.`
+        }
+      });
+      setWrapUpMessageSent(true);
     }
   }, [elapsedTime])
 

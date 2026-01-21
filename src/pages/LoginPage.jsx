@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, User, Mail, ArrowRight, Shield, Zap, Award, Lock } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import { supabase } from "../supabaseClient"
+import { sanitizeInput } from "../utils/sanitize";
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -72,12 +73,12 @@ const LoginPage = () => {
                 if (isSignUp) {
                     // --- SIGN UP ---
                     const result = await supabase.auth.signUp({
-                        email: formData.email,
+                        email: sanitizeInput(formData.email),
                         password: formData.password,
                         options: {
                             data: {
-                                first_name: formData.firstName,
-                                last_name: formData.lastName,
+                                first_name: sanitizeInput(formData.firstName),
+                                last_name: sanitizeInput(formData.lastName),
                             },
                         },
                     });
@@ -86,7 +87,7 @@ const LoginPage = () => {
                 } else {
                     // --- SIGN IN ---
                     const result = await supabase.auth.signInWithPassword({
-                        email: formData.email,
+                        email: sanitizeInput(formData.email),
                         password: formData.password,
                     });
                     data = result.data;

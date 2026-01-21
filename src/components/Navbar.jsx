@@ -121,6 +121,59 @@ const Navbar = ({ credits: propCredits }) => {
     // Clear refs on re-render to avoid duplicates
     menuItemsRef.current = [];
 
+    // Desktop Nav Refs
+    const navRef = useRef(null);
+    const navLinksRef = useRef([]);
+
+    // Initialize state from sessionStorage to persist position across page loads (since Navbar re-mounts)
+    const [indicatorStyle, setIndicatorStyle] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem('navIndicatorStyle');
+            return saved ? JSON.parse(saved) : { left: 0, width: 0, opacity: 0 };
+        } catch (e) {
+            return { left: 0, width: 0, opacity: 0 };
+        }
+    });
+
+    useEffect(() => {
+        const updateIndicator = () => {
+            const activeIndex = navLinks.findIndex(link => isActive(link.path));
+
+            if (activeIndex !== -1 && navLinksRef.current[activeIndex] && navRef.current) {
+                const activeLink = navLinksRef.current[activeIndex];
+                const navRect = navRef.current.getBoundingClientRect();
+                const linkRect = activeLink.getBoundingClientRect();
+
+                const newStyle = {
+                    left: linkRect.left - navRect.left,
+                    width: linkRect.width,
+                    opacity: 1
+                };
+
+                setIndicatorStyle(newStyle);
+                sessionStorage.setItem('navIndicatorStyle', JSON.stringify(newStyle));
+            } else {
+                setIndicatorStyle(prev => ({ ...prev, opacity: 0 }));
+            }
+        };
+
+        // Run calculation after a short delay to ensure DOM is ready/fonts loaded
+        const timeoutId = setTimeout(updateIndicator, 50);
+
+        window.addEventListener('resize', updateIndicator);
+        return () => {
+            window.removeEventListener('resize', updateIndicator);
+            clearTimeout(timeoutId);
+        };
+
+    }, [location.pathname]);
+
+    const addToNavLinksRef = (el, index) => {
+        if (el) {
+            navLinksRef.current[index] = el;
+        }
+    };
+
     return (
         <>
             <header className="border-b border-slate-400/50 bg-white/50 backdrop-blur-xl sticky top-0 z-40 w-full ">
@@ -140,14 +193,25 @@ const Navbar = ({ credits: propCredits }) => {
                         </div>
 
                         {/* Desktop Nav-bar */}
-                        <nav className='hidden md:flex items-center gap-1 bg-slate-100/30 p-1.5 rounded-full border border-slate-300/50'>
-                            {navLinks.map((link) => (
+                        <nav ref={navRef} className='hidden md:flex items-center gap-1 bg-slate-100/30 p-1.5 rounded-full border border-slate-300/50 relative'>
+                            {/* Sliding Indicator */}
+                            <div
+                                className="absolute top-1.5 bottom-1.5 bg-white rounded-full shadow-sm transition-all duration-300 ease-out"
+                                style={{
+                                    left: `${indicatorStyle.left}px`,
+                                    width: `${indicatorStyle.width}px`,
+                                    opacity: indicatorStyle.opacity
+                                }}
+                            />
+
+                            {navLinks.map((link, index) => (
                                 <Link
                                     key={link.path}
+                                    ref={el => addToNavLinksRef(el, index)}
                                     to={link.path}
-                                    className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${isActive(link.path)
-                                        ? 'text-black bg-slate-100/50 shadow-sm'
-                                        : 'text-slate-900 hover:text-black hover:bg-slate-200/50'
+                                    className={`relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${isActive(link.path)
+                                        ? 'text-black'
+                                        : 'text-slate-600 hover:text-slate-900'
                                         }`}
                                 >
                                     {link.name === 'My Interviews' ? 'Interviews' : link.name === 'Create Interview' ? 'Create' : link.name}

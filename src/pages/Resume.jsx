@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import ResumeHero from '../components/ResumeHero';
 import { supabase } from '../supabaseClient';
+import { sanitizeInput } from '../utils/sanitize';
 
 const TECH_ROLES = [
     "AI Ethics Researcher",
@@ -260,7 +261,11 @@ const Resume = () => {
             const response = await fetch('http://localhost:5000/api/analyze-resume', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pdfBase64: base64, jobRole, jobDescription })
+                body: JSON.stringify({
+                    pdfBase64: base64,
+                    jobRole: sanitizeInput(jobRole),
+                    jobDescription: sanitizeInput(jobDescription)
+                })
             });
 
             let analysis = await response.json();

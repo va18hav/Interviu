@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { User, Mail, Save, ArrowLeft, Loader2, Shield, Lock, Briefcase, GraduationCap, Code } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { sanitizeInput } from "../utils/sanitize";
 
 const ProfileSettings = () => {
     const navigate = useNavigate();
@@ -68,8 +69,8 @@ const ProfileSettings = () => {
             // 1. Update Auth Metadata
             const { error: authError } = await supabase.auth.updateUser({
                 data: {
-                    first_name: formData.firstName,
-                    last_name: formData.lastName,
+                    first_name: sanitizeInput(formData.firstName),
+                    last_name: sanitizeInput(formData.lastName),
                 },
             });
 
@@ -80,9 +81,9 @@ const ProfileSettings = () => {
             const { error: profileError } = await supabase
                 .from('profiles')
                 .update({
-                    role: formData.role,
-                    experience_level: formData.experience_level,
-                    skills: formData.skills
+                    role: sanitizeInput(formData.role),
+                    experience_level: sanitizeInput(formData.experience_level),
+                    skills: sanitizeInput(formData.skills)
                 })
                 .eq('id', user.id);
 

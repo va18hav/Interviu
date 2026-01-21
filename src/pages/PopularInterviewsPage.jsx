@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Users, Star, Clock, ChevronRight, TrendingUp, Filter } from 'lucide-react';
 import Navbar from "../components/Navbar";
+import PopularInterviewsHero from "../components/PopularInterviewsHero";
 import { supabase } from "../supabaseClient";
 
 const PopularInterviewsPage = () => {
@@ -111,8 +112,12 @@ const PopularInterviewsPage = () => {
             <Navbar />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+
+
+                {/* Hero Banner */}
+                <PopularInterviewsHero />
+
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate('/dashboard')}
@@ -125,9 +130,8 @@ const PopularInterviewsPage = () => {
                             <p className="text-slate-500 mt-1">Explore trending interview templates used by the community</p>
                         </div>
                     </div>
-
-                    {/* Filters */}
-                    <div className="flex flex-wrap items-center gap-3">
+                    {/* Filters Row */}
+                    <div className="flex flex-wrap items-center justify-end gap-3">
                         <div className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 text-sm">
                             <Filter className="w-4 h-4" />
                             <span className="font-medium">Filters:</span>

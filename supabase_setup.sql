@@ -66,7 +66,20 @@ VALUES
                 "Given the head of a singly linked list, reorder it from L0→L1→…→Ln-1→Ln to L0→Ln→L1→Ln-1→… without using extra arrays; outline the three main steps of your algorithm.",
                 "Write a recursive function to generate all subsets (the power set) of a given set of integers and explain the recursion tree and base cases clearly.",
                 "Given a positive integer n, write a recursive function to compute the nth Fibonacci number, then refine it to an optimal O(n) or better solution and explain why the naive recursion is inefficient."
-            ]
+            ],
+            "depthLevel": { 
+                "target": "D4", 
+                "exitCriteria": "Candidate identifies optimal solution and edge cases independently." 
+            },
+            "problemQueue": [
+                "Given an integer array, return the length of the longest contiguous subarray with sum equal to a target K.",
+                "You are given a sorted array that has been rotated at an unknown pivot; find the minimum element in O(log n) time."
+            ],
+            "stressTestPrompt": "The input stream is now infinite and noisy. How do you handle it?",
+            "evaluationSignals": { 
+                "strongSignal": ["Uses prefix sums", "Binary Search invariant"], 
+                "weakSignal": ["Nested loops", "Linear scan"] 
+            }
         },
         "techRoundTwo": {
             "title": "Advanced Algorithms & Optimization",

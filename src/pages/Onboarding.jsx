@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ArrowRight, Briefcase, Code, GraduationCap, X, Check } from 'lucide-react';
 import LandingLoader from '../components/landing/LandingLoader';
+import { sanitizeInput } from '../utils/sanitize';
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -50,9 +51,9 @@ const Onboarding = () => {
             const { error } = await supabase
                 .from('profiles')
                 .update({
-                    role: formData.role,
-                    experience_level: formData.experience_level,
-                    skills: formData.skills, // Assuming text or array
+                    role: sanitizeInput(formData.role),
+                    experience_level: sanitizeInput(formData.experience_level),
+                    skills: sanitizeInput(formData.skills), // Assuming text or array
                     onboarding_completed: true
                 })
                 .eq('id', user.id);

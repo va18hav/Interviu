@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { Upload, Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Clock, FileText, Lasso } from 'lucide-react'
 import logo from "../assets/images/logo.png"
 import Navbar from "../components/Navbar"
+import { sanitizeInput } from "../utils/sanitize"
 
 const TECH_ROLES = [
   "AI Ethics Researcher",
@@ -195,11 +196,11 @@ const CreateInterview = () => {
 
     navigate("/create/interview/1", {
       state: {
-        role: formData.role,
-        level: formData.level,
-        focus: formData.focus,
+        role: sanitizeInput(formData.role),
+        level: sanitizeInput(formData.level),
+        focus: sanitizeInput(formData.focus),
         length: "15 min",
-        description: formData.description,
+        description: sanitizeInput(formData.description),
         customInterview: true
       },
     })

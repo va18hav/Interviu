@@ -3,6 +3,9 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import Groq from 'groq-sdk' // Import Groq SDK
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 
 async function extractTextFromPDF(pdfBuffer) {
     const data = new Uint8Array(pdfBuffer);
@@ -25,11 +28,56 @@ const PORT = 5000
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-app.use(cors())
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api', limiter);
+
+app.use(cors({
+    origin: process.env.CLIENT_URL || ['http://localhost:5173', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 app.use(express.json({ limit: '10mb' }))
 
+// Validation Schemas
+const feedbackSchema = z.object({
+    formattedTranscript: z.string().min(1, "Transcript is required"),
+    role: z.string().optional(),
+    level: z.string().optional(),
+    focus: z.string().optional(),
+    company: z.string().optional().nullable(),
+    roundTitle: z.string().optional().nullable(),
+    roundType: z.string().optional().nullable(),
+    expectedDepth: z.any().optional()
+});
+
+const resumeSchema = z.object({
+    pdfBase64: z.string().min(1, "PDF data is required"),
+    jobRole: z.string().optional(),
+    jobDescription: z.string().optional()
+});
+
+// Validation Middleware
+const validate = (schema) => (req, res, next) => {
+    try {
+        schema.parse(req.body);
+        next();
+    } catch (err) {
+        return res.status(400).json({ error: err.errors });
+    }
+};
+
 // Fixed: The route path should just be the endpoint, not the full URL
-app.post('/api/generate-feedback', async (req, res) => {
+app.post('/api/generate-feedback', validate(feedbackSchema), async (req, res) => {
     try {
         const { formattedTranscript, role, level, focus, company, roundTitle, roundType, expectedDepth } = req.body
 
@@ -189,7 +237,7 @@ Return the response in EXACTLY the following JSON format:
     }
 })
 
-app.post('/api/analyze-resume', async (req, res) => {
+app.post('/api/analyze-resume', validate(resumeSchema), async (req, res) => {
     try {
         const { pdfBase64, jobRole, jobDescription } = req.body;
         if (!pdfBase64) return res.status(400).json({ error: "No PDF data provided" })

@@ -171,8 +171,17 @@ const InterviewDetails = () => {
             icon: Code,
             desc: interview.rounds.techRoundThree.overview
         });
-        if (interview.rounds.behavioral) roundsList.push({
+        if (interview.rounds.techRoundFour) roundsList.push({
             id: 4,
+            key: 'techRoundFour',
+            title: interview.rounds.techRoundFour.title,
+            type: Array.isArray(interview.rounds.techRoundFour.focus) ? interview.rounds.techRoundFour.focus.join(',') : interview.rounds.techRoundFour.focus,
+            duration: `${interview.rounds.techRoundFour.duration}`,
+            icon: Code,
+            desc: interview.rounds.techRoundFour.overview
+        });
+        if (interview.rounds.behavioral) roundsList.push({
+            id: 5,
             key: 'behavioral',
             title: interview.rounds.behavioral.title,
             type: interview.company_traits?.behavioralFocus || "Behavioral",
@@ -227,6 +236,9 @@ const InterviewDetails = () => {
                 antiPatternsToWatch: selectedRound ? selectedRound.antiPatternsToWatch : [],
                 followUpGuidelines: selectedRound ? selectedRound.followUpGuidelines : {},
                 evaluationSignals: selectedRound ? selectedRound.evaluationSignals : {},
+                depthLevel: selectedRound?.depthLevel,
+                problemQueue: selectedRound?.problemQueue,
+                stressTestPrompt: selectedRound?.stressTestPrompt,
                 interviewerPersonality: interview.interviewer_personality,
                 commonFailureReasons: interview.common_failure_reasons,
                 description: selectedRound ? selectedRound.overview : interview.overview,

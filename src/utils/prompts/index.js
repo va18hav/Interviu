@@ -1,79 +1,56 @@
-import { softwarePrompts } from './softwarePrompts';
-import { devopsPrompts } from './devopsPrompts';
-import { dataAnalystPrompts } from './dataAnalystPrompts';
+import { softwarePrompt, softwareDrillDeeperPrompt, softwareNextProblemJuniorPrompt } from './softwarePrompts';
+import { dataAnalystPrompt, dataAnalystDrillDeeperPrompt, dataAnalystNextProblemJuniorPrompt } from './dataAnalystPrompts';
 
-// Combine all role prompts here
-const LEVEL_PROMPTS = {
-    software: softwarePrompts,
-    devops: devopsPrompts,
-    dataanalyst: dataAnalystPrompts,
+// Helper to get value from context using path (e.g. "depthLevel.target" or "problemQueue[0]")
+const getValue = (path, obj) => {
+    return path.split(/[\.\[\]]/).filter(p => p).reduce((o, p) => o ? o[p] : undefined, obj);
+};
+
+const resolveTemplate = (template, context) => {
+    return template.replace(/{{([\w\d\.\[\]]+)}}/g, (match, key) => {
+        const value = getValue(key, context);
+        if (value === undefined || value === null) {
+            console.warn(`Template variable {{${key}}} not found in context.`);
+            return `[MISSING: ${key}]`;
+        }
+        return Array.isArray(value) ? value.join(", ") : String(value);
+    });
 };
 
 export const getSystemPrompt = (context) => {
     console.log("getSystemPrompt Context:", context);
-    const { role, level, company, filter_type } = context;
+    const { role } = context;
 
-    // Normalize inputs
-    let roleKey = 'software'; // Default
+    let selectedPrompt = softwarePrompt;
 
-    // Priority 1: Check filter_type explicitly
-    if (filter_type) {
-        // Normalize: lowercase and remove spaces (e.g. "Data Analyst" -> "dataanalyst")
-        const typeKey = filter_type.toLowerCase().replace(/\s+/g, '');
-        console.log("Checking filter_type:", typeKey);
-        // Check if we have a prompt set for this filter type
-        if (Object.keys(LEVEL_PROMPTS).some(k => typeKey.includes(k))) {
-            roleKey = Object.keys(LEVEL_PROMPTS).find(k => typeKey.includes(k));
-        } else if (typeKey === 'devops') {
-            roleKey = 'devops';
-        }
-    } else {
-        console.log("No filter_type, checking role:", role);
-        // Priority 2: Fallback to role name matching
-        roleKey = Object.keys(LEVEL_PROMPTS).find(r => role.toLowerCase().includes(r)) || 'software';
+    // Simple verification for Data Analyst
+    if (role && role.toLowerCase().includes('data analyst')) {
+        selectedPrompt = dataAnalystPrompt;
     }
 
-    console.log("Resolved roleKey:", roleKey);
+    return resolveTemplate(selectedPrompt, context);
+};
 
-    const levelKey = level?.toLowerCase().includes('senior') ? 'senior'
-        : level?.toLowerCase().includes('lead') ? 'senior'
-            : level?.toLowerCase().includes('entry') ? 'entry'
-                : level?.toLowerCase().includes('junior') ? 'entry'
-                    : 'intermediate';
+export const getDrillDeeperPrompt = (context) => {
+    const { role } = context;
 
-    console.log("Resolved levelKey:", levelKey);
+    let selectedPrompt = softwareDrillDeeperPrompt;
 
-    // Get specific prompt configuration
-    // Default to intermediate text string if not found
-    const promptConfig = LEVEL_PROMPTS[roleKey]?.[levelKey] || LEVEL_PROMPTS.software.intermediate;
-
-    // Determine full prompt content
-    let fullPrompt = "";
-
-    if (typeof promptConfig === 'object' && promptConfig.type === 'full') {
-        fullPrompt = promptConfig.content;
-    } else if (typeof promptConfig === 'string') {
-        fullPrompt = promptConfig;
-    } else {
-        fullPrompt = "Error: Invalid prompt configuration.";
+    if (role && role.toLowerCase().includes('data analyst')) {
+        selectedPrompt = dataAnalystDrillDeeperPrompt;
     }
 
-    // Replace placeholders
-    Object.keys(context).forEach(key => {
-        const value = context[key] || "Not specified";
-        const stringValue = Array.isArray(value) ? value.join(", ") :
-            typeof value === 'object' ? JSON.stringify(value) : String(value);
+    return resolveTemplate(selectedPrompt, context);
+};
 
-        // Create a regex to replace all occurrences of {{key}}
-        const regex = new RegExp(`{{${key}}}`, 'g');
-        fullPrompt = fullPrompt.replace(regex, stringValue);
-    });
+export const getNextProblemJuniorPrompt = (context) => {
+    const { role } = context;
 
-    // Default replacements for missing keys
-    fullPrompt = fullPrompt.replace(/{{company}}/g, context.company || "a tech company")
-        .replace(/{{role}}/g, context.role || "Software Engineer")
-        .replace(/{{level}}/g, context.level || "Mid-Level")
-        .replace(/{{type}}/g, context.type || "Technical");
+    let selectedPrompt = softwareNextProblemJuniorPrompt;
 
-    return fullPrompt;
+    if (role && role.toLowerCase().includes('data analyst')) {
+        selectedPrompt = dataAnalystNextProblemJuniorPrompt;
+    }
+
+    return resolveTemplate(selectedPrompt, context);
 };
