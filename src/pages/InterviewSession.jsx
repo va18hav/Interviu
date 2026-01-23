@@ -107,8 +107,6 @@ const InterviewSession = () => {
     stressTestPrompt
   } = location.state || {}
 
-  console.log(location.state)
-
   React.useEffect(() => {
 
     const isEnded = sessionStorage.getItem("interviewEnded") === "true"
@@ -220,7 +218,7 @@ const InterviewSession = () => {
                   type: 'add-message',
                   message: {
                     role: 'system',
-                    content: "SYSTEM: ALARM. You are ending too early. We have time. Ask one more deep technical question about the tradeoffs."
+                    content: "SYSTEM: ALARM. You are ending the interview too early. YOU STILL HAVE TIME. Drill Deeper"
                   },
                 });
               } else {
@@ -240,7 +238,8 @@ const InterviewSession = () => {
           return;
         }
 
-        const isJunior = level?.toLowerCase() === 'junior';
+        const levelKey = level?.toLowerCase() || '';
+        const isJunior = levelKey.includes('entry') || levelKey.includes('junior');
 
         if (isJunior) {
           // Junior Logic: 2 Problems (0-10m, 10-19m)
@@ -350,7 +349,7 @@ const InterviewSession = () => {
               messages: [
                 {
                   type: "request-start",
-                  content: "Okay!",
+                  content: "Okay",
                   blocking: false
                 }
               ]
@@ -361,7 +360,14 @@ const InterviewSession = () => {
                 name: "wrap_up_interview",
                 description: "Call this tool ONLY when instructed by the system to end the interview session.",
                 parameters: { type: "object", properties: {} }
-              }
+              },
+              messages: [
+                {
+                  type: "request-start",
+                  content: "Alright",
+                  blocking: false
+                }
+              ]
             }
           ],
         },

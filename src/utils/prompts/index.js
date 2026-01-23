@@ -1,5 +1,6 @@
 import { softwarePrompt, softwareDrillDeeperPrompt, softwareNextProblemJuniorPrompt } from './softwarePrompts';
 import { dataAnalystPrompt, dataAnalystDrillDeeperPrompt, dataAnalystNextProblemJuniorPrompt } from './dataAnalystPrompts';
+import { devopsPrompt, devopsDrillDeeperPrompt, devopsNextProblemJuniorPrompt } from './devopsPrompts';
 
 // Helper to get value from context using path (e.g. "depthLevel.target" or "problemQueue[0]")
 const getValue = (path, obj) => {
@@ -26,6 +27,8 @@ export const getSystemPrompt = (context) => {
     // Simple verification for Data Analyst
     if (role && role.toLowerCase().includes('data analyst')) {
         selectedPrompt = dataAnalystPrompt;
+    } else if (role && (role.toLowerCase().includes('devops') || role.toLowerCase().includes('sre') || role.toLowerCase().includes('reliability'))) {
+        selectedPrompt = devopsPrompt;
     }
 
     return resolveTemplate(selectedPrompt, context);
@@ -38,6 +41,8 @@ export const getDrillDeeperPrompt = (context) => {
 
     if (role && role.toLowerCase().includes('data analyst')) {
         selectedPrompt = dataAnalystDrillDeeperPrompt;
+    } else if (role && (role.toLowerCase().includes('devops') || role.toLowerCase().includes('sre') || role.toLowerCase().includes('reliability'))) {
+        selectedPrompt = devopsDrillDeeperPrompt;
     }
 
     return resolveTemplate(selectedPrompt, context);
@@ -50,6 +55,8 @@ export const getNextProblemJuniorPrompt = (context) => {
 
     if (role && role.toLowerCase().includes('data analyst')) {
         selectedPrompt = dataAnalystNextProblemJuniorPrompt;
+    } else if (role && (role.toLowerCase().includes('devops') || role.toLowerCase().includes('sre') || role.toLowerCase().includes('reliability'))) {
+        selectedPrompt = devopsNextProblemJuniorPrompt;
     }
 
     return resolveTemplate(selectedPrompt, context);

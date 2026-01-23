@@ -32,7 +32,7 @@ const HeroSection = () => {
                         {userCredentials ? (
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2 rounded-full bg-gradient-to-r from-cyan-400/70 to-cyan-500 text-white hover:scale-105 text-sm font-semibold hover:bg-slate-300 transition-all flex items-center gap-2"
+                                className="px-5 py-2 rounded-full text-black border border-blue-500/50 hover:scale-105 text-sm font-semibold hover:bg-slate-300 transition-all flex items-center gap-2"
                             >
                                 Dashboard
                                 <ArrowRight className="w-4 h-4" />
@@ -47,7 +47,7 @@ const HeroSection = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="px-5 py-2 rounded-full bg-white/40 text-slate-900 hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                    className="px-5 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-300 text-white hover:scale-105 text-sm font-semibold hover:bg-slate-200 transition-all flex items-center gap-2"
                                 >
                                     Get Started
                                 </button>
@@ -128,14 +128,14 @@ const HeroSection = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up delay-300">
                     <button
                         onClick={() => navigate('/login')}
-                        className="h-12 px-8 rounded-full bg-gradient-to-r from-gray-200/70 to-gray-300 text-black font-semibold text-base hover:bg-gray-500 hover:scale-105 transition-all flex items-center gap-2"
+                        className="h-12 px-8 rounded-full bg-gradient-to-r from-blue-600 to-blue-400 text-white font-semibold text-base hover:bg-gradient-to-r from-blue-400 to-blue-200 hover:scale-105 transition-all flex items-center gap-2"
                     >
-                        Practice Interview
+                        Practice Interviews
                         <ArrowRight className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => navigate('/about')}
-                        className="hidden md:block h-12 px-8 rounded-full border border-black/10 text-black font-medium text-base hover:bg-gray-500/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
+                        className="hidden md:block h-12 px-8 rounded-full border border-blue-600/50 text-black font-medium text-base hover:bg-gray-500/10 hover:scale-105 transition-all backdrop-blur-sm px-12"
                     >
                         Custom Interview
                     </button>

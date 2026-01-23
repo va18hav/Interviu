@@ -15,6 +15,7 @@ import './App.css'
 
 import DashboardBlack from "./pages/DashboardBlack"
 import Onboarding from "./pages/Onboarding"
+import CreditsPage from "./pages/Credits"
 
 const App = () => {
   return (
@@ -40,6 +41,7 @@ const App = () => {
           <Route path="/create/interview/:id" element={<InterviewSession />} />
           <Route path="/create/interview/:id/feedback" element={<Feedback />} />
           <Route path="/profile" element={<ProfileSettings />} />
+          <Route path="/credits" element={<CreditsPage />} />
           <Route path="/onboarding" element={<Onboarding />} />
         </Route>
       </Routes>
@@ -50,5 +52,3 @@ const App = () => {
 
 
 export default App
-
-

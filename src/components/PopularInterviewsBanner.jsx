@@ -11,7 +11,7 @@ const PopularInterviewsBanner = ({ firstName }) => {
             <div className="absolute top-30 right-0 w-[500px] h-[500px] bg-red-500/6 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-30 left-0 w-[500px] h-[500px] bg-cyan-500/6 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
             <div className="flex items-center md:gap-10 lg:gap-8">
-                <div className="relative flex flex-col gap-1 items-start z-10 px-8 py-15 lg:px-16 lg:py-20 max-w-4xl space-y-8">
+                <div className="relative flex flex-col gap-1 items-start z-10 px-4 py-6 md:py-15 lg:px-16 lg:py-20 max-w-4xl space-y-6 w-full md:w-auto">
 
                     <h1 className='font-sans text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight'>
                         Hi {firstName},
@@ -22,6 +22,7 @@ const PopularInterviewsBanner = ({ firstName }) => {
                     <p className='font-space text-md lg:text-lg text-slate-800 max-w-sm lg:max-w-xl tracking-tight'>
                         Practice for top tech companies. Choose from our most popular and realistic interview simulations.
                     </p>
+
                     <button
                         onClick={() => navigate('/dashboard/all-popular-interviews')}
                         className="group relative px-5 md:px-8 py-4 rounded-2xl font-semibold text-base overflow-hidden transition-all duration-300 shadow-lg shadow-gray-500/30">
@@ -32,7 +33,20 @@ const PopularInterviewsBanner = ({ firstName }) => {
                             <ChevronRight className="w-4 h-4" />
                         </span>
                     </button>
+
+                    {/* Mobile Image - Visible only on mobile, between text and button */}
+                    <div className="block md:hidden w-full flex justify-center py-4">
+                        <img
+                            src={techbanner}
+                            alt="Resume Banner"
+                            className="w-80 object-cover filter drop-shadow-[0_0_1px_rgba(255,255,255,0.7)]"
+                        />
+                    </div>
+
+
                 </div>
+
+                {/* Desktop Image - Visible only on desktop */}
                 <div
                     className="hidden md:block relative z-20"
                     onMouseMove={(e) => {

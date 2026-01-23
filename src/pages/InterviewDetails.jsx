@@ -324,26 +324,26 @@ const InterviewDetails = () => {
                 </div>
 
                 {/* Hero Section */}
-                <div className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-sm p-8 md:px-8 md:py-6">
+                <div className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-sm p-5 sm:p-6 md:p-8">
                     <div className={`absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-br ${colors.bg} rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 opacity-60`} />
 
-                    <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
-                        <div className="flex items-start gap-6">
-                            <div className={`w-24 h-24 rounded-2xl flex items-center justify-center p-2 bg-white shadow-lg border border-slate-100`}>
+                    <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 items-center justify-between">
+                        <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 text-center md:text-left">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl flex items-center justify-center p-2 bg-white shadow-lg border border-slate-100 shrink-0`}>
                                 <img src={interview.icon_url} alt={interview.company} className="w-full h-full object-contain" />
                             </div>
-                            <div className="space-y-2">
-                                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">{interview.company} {interview.role}</h1>
-                                <div className="flex items-center gap-4 text-slate-500">
-                                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{interview.total_duration}</span>
-                                    <span className="w-1 h-1 rounded-full bg-slate-400" />
-                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700">{interview.level}</span>
+                            <div className="space-y-3 md:space-y-2">
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">{interview.role}</h1>
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-slate-500">
+                                    <span className="flex items-center gap-1.5 text-sm md:text-base"><Clock className="w-4 h-4" />{interview.total_duration}</span>
+                                    <span className="hidden md:block w-1 h-1 rounded-full bg-slate-400" />
+                                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700">{interview.level}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className='flex flex-col gap-4 items-center justify-center'>
-                            <div className="w-[200px] flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <div className='flex flex-col gap-4 items-center justify-center w-full md:w-auto'>
+                            {progress > 0 && <div className="w-full max-w-[280px] md:w-[200px] flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-slate-500 font-medium">Progress</span>
                                     <span className={`text-sm font-bold ${colors.text}`}>{progress}%</span>
@@ -354,8 +354,8 @@ const InterviewDetails = () => {
                                         style={{ width: `${progress}%` }}
                                     />
                                 </div>
-                            </div>
-                            {progress > 0 && <div className="w-[200px] flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            </div>}
+                            {progress > 0 && <div className="w-full max-w-[280px] md:w-[200px] flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                                 <span className="text-sm text-slate-500 font-medium">Current Score</span>
                                 <div className="flex items-center gap-1.5">
                                     <Star className="w-4 h-4 text-orange-500 fill-orange-500" />
@@ -419,13 +419,13 @@ const InterviewDetails = () => {
                                                 </span>
                                             </div>
                                             <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">{round.title}</h3>
-                                            <div className="flex flex-wrap gap-2 mb-3">
+                                            {/* <div className="flex flex-wrap gap-2 mb-3">
                                                 {typeof round.type === 'string' && round.type.split(',').map((t, i) => (
                                                     <span key={i} className={`text-[10px] font-semibold ${colors.text} ${colors.bg} border ${colors.border} px-2.5 py-1 rounded-full uppercase tracking-wider`}>
                                                         {t.trim()}
                                                     </span>
                                                 ))}
-                                            </div>
+                                            </div> */}
                                             <p className="text-sm text-slate-500 leading-relaxed mb-4">
                                                 {round.desc}
                                             </p>

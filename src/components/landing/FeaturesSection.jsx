@@ -44,18 +44,18 @@ const FeaturesSection = () => {
 
     const features = [
         {
-            icon: <Target className="w-10 h-10" />, // Removed text-white to allow parent color control
-            title: "Personalized Interviews",
-            description: "Create custom interview scenarios tailored specifically to your target role, experience level, and desired skill set. AI adapts to your responses in real-time.",
-            action: "Create Interview",
-            link: "/create"
-        },
-        {
             icon: <Mic className="w-10 h-10" />,
             title: "Top Tech Simulations",
             description: "Practice with realistic interview loops modeled after top tech giants like Google, Amazon, and Meta. Master the specific formats and questions used by industry leaders.",
             action: "View Companies",
             link: "/dashboard/all-popular-interviews"
+        },
+        {
+            icon: <Target className="w-10 h-10" />, // Removed text-white to allow parent color control
+            title: "Personalized Interviews",
+            description: "Create custom interview scenarios tailored specifically to your target role, experience level, and desired skill set. AI adapts to your responses in real-time.",
+            action: "Create Interview",
+            link: "/create"
         },
         {
             icon: <FileText className="w-10 h-10" />,
@@ -98,7 +98,7 @@ const FeaturesSection = () => {
                                 <div className="mb-10 flex justify-center feature-icon text-slate-400">
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-900 mb-4">
+                                <h3 className="text-center text-xl font-bold text-slate-900 mb-4">
                                     {feature.title}
                                 </h3>
 

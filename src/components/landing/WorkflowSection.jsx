@@ -116,10 +116,6 @@ const WorkflowSection = () => {
 
     return (
         <section ref={sectionRef} className="relative bg-white overflow-hidden min-h-screen md:h-screen py-12 md:py-0">
-            {/* Background Glows */}
-            <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] -translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
-
             {/* Container */}
             <div ref={containerRef} className="w-full max-w-7xl mx-auto px-6 h-full relative z-10 flex flex-col justify-center">
 

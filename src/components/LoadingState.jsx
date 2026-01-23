@@ -11,7 +11,7 @@ const FeedbackLoading = ({ header, description }) => {
                     <div className="absolute inset-0 m-auto w-4 h-4 bg-cyan-400 rounded-full animate-pulse shadow-lg shadow-cyan-400/50"></div>
                 </div>
                 <div className="text-center space-y-2">
-                    <h3 className="text-xl font-semibold text-white">{header}</h3>
+                    <h3 className="text-xl font-semibold text-black">{header}</h3>
                     <p className="text-slate-400 text-sm">{description}</p>
                 </div>
             </div>

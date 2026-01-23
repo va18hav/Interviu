@@ -8,7 +8,7 @@ import netflixLogo from '../assets/images/netflix.png';
 import appleLogo from '../assets/images/apple.png';
 
 // Fallback or external URL for the 7th icon (Nvidia)
-const nvidiaLogo = "https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg";
+const nvidiaLogo = "https://upload.wikimedia.org/wikipedia/commons/a/a4/NVIDIA_logo.svg";
 
 const logos = [
     googleLogo,
