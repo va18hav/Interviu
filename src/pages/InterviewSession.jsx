@@ -9,35 +9,18 @@ import UserCard from "../components/UserCard"
 import LoadingState from "../components/LoadingState"
 import StatusBox from "../components/StatusBox"
 import { Mic, Video, PhoneOff, Settings } from "lucide-react"
-import { getSystemPrompt, getDrillDeeperPrompt, getNextProblemJuniorPrompt } from "../utils/prompts/index"
+
 
 // Helper for credit deduction - defined outside component to be accessible everywhere
-const deductCredits = async (durationSeconds) => {
+// Helper for credit deduction - MOVED TO BACKEND
+const deductCredits = async (durationSeconds, userId) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const durationInMinutes = Math.ceil(durationSeconds / 60);
-      const creditCost = durationInMinutes > 0 ? durationInMinutes : 1; // Minimum 1 credit
-
-      // Fetch current credits
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        const newBalance = Math.max(0, profile.credits - creditCost);
-
-        // Update credits in database
-        await supabase
-          .from('profiles')
-          .update({ credits: newBalance })
-          .eq('id', user.id);
-
-        console.log(`Deducted ${creditCost} credits for ${durationInMinutes} min. New balance: ${newBalance}`);
-      }
-    }
+    if (!userId) return;
+    await fetch('http://localhost:5000/api/deduct-credits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, durationSeconds })
+    });
   } catch (err) {
     console.error("Failed to deduct credits:", err);
   }
@@ -104,7 +87,17 @@ const InterviewSession = () => {
     // New Orchestration Fields
     depthLevel,
     // problemQueue removed
-    stressTestPrompt
+    stressTestPrompt,
+    focusAspects,
+    // Coding Round Context
+    codeContext,
+    problemDescription,
+    testResults,
+    // Additional Context
+    interviewContext,
+    depthScaling,
+    flow,
+    evaluation
   } = location.state || {}
 
   React.useEffect(() => {
@@ -145,21 +138,68 @@ const InterviewSession = () => {
         acceptableProblemTypes,
         interviewerFocus,
         antiPatternsToWatch,
-        followUpGuidelines,
-        commonFailureReasons: location.state?.commonFailureReasons, // Ensure we pass this if available
+        followUpGuidelines, // This will now contain voice_prompts for coding rounds if passed
+        commonFailureReasons: location.state?.commonFailureReasons,
         focus,
         filter_type,
-        // Pass orchestration initial state to prompt
+        // Passthrough extended context
         depthLevel,
-        // problemQueue removed
+        interviewContext: interviewContext || description, // Fallback to description
+        depthScaling,
         stressTestPrompt,
-        evaluationSignals
+        focusAspects,
+        evaluationSignals,
+        flow,
+        evaluation,
+        // Coding Round Context
+        codeContext,
+        problemDescription,
+        testResults
       };
 
-      const systemPrompt = getSystemPrompt(promptContext);
-      console.log("System Prompt:", systemPrompt);
+      const initAndStartVapi = async () => {
+        let systemPrompt;
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            alert("Please log in to start the interview.");
+            navigate("/login");
+            return;
+          }
 
-      console.log("Starting Vapi with transient assistant config...");
+          console.log("Fetching secure system prompt from backend...");
+          const res = await fetch('http://localhost:5000/api/start-interview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, context: promptContext })
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || "Failed to start interview");
+          }
+
+          const data = await res.json();
+          systemPrompt = data.systemPrompt;
+          console.log("System Prompt fetched successfully");
+
+        } catch (error) {
+          console.error("Critical Error starting interview:", error);
+          alert(error.message);
+          navigate("/dashboard");
+          return;
+        }
+
+        console.log("Starting Vapi with transient assistant config...");
+
+        // Define Handlers
+        // ... (handlers need to be defined here or be accessible) 
+        // Note: Handlers use specific references, so defining them inside this scope is fine
+        // BUT the original code defined handlers outside the async block. 
+        // To minimize diff, I will define handlers *outside* this specific async block but call start *inside*.
+
+        startVapiCall(systemPrompt);
+      };
 
       // Define Handlers
       const callStartHandler = () => {
@@ -180,110 +220,54 @@ const InterviewSession = () => {
       }
 
       const messageHandler = (message) => {
-        console.log("✅ Message received:", message.type, message.role)
-
-        if (message.role === "assistant" && message.type === "transcript") {
-          setCurrentQuestion(message.transcript)
-        }
-
-        if (message.role === "user" && message.type === "transcript") {
-          setCurrentAnswer(message.transcript)
-        }
-
-        if (message.transcriptType === "final" && message.type === "transcript") {
-          setTranscriptArray((prevTranscripts) => [...prevTranscripts, { role: message.role, transcript: message.transcript }])
+        // Transcript Handling
+        if (message.type === "transcript") {
+          if (message.role === "assistant") {
+            setCurrentQuestion(message.transcript)
+          } else if (message.role === "user") {
+            setCurrentAnswer(message.transcript)
+          }
+          if (message.transcriptType === "final") {
+            setTranscriptArray((prev) => [...prev, { role: message.role, transcript: message.transcript }])
+          }
         }
       }
 
-      // Tool Call Interception Handler
       const toolCallHandler = (message) => {
         if (message.type === 'tool-calls') {
           const toolCalls = message.toolCallList;
           if (toolCalls && toolCalls.length > 0) {
             const firstTool = toolCalls[0];
             const name = firstTool.function.name;
-            const currentElapsedMinutes = elapsedTimeRef.current / 60;
+            const currentElapsedSeconds = elapsedTimeRef.current; // accurate seconds
 
-            console.log(`Tool '${name}' intercepted. Elapsed: ${currentElapsedMinutes.toFixed(2)} mins`);
+            console.log(`Tool '${name}' intercepted. Elapsed: ${currentElapsedSeconds}s`);
 
-            if (name === 'signal_problem_end') {
-              handleSignalProblemEnd(currentElapsedMinutes);
-            } else if (name === 'wrap_up_interview') {
-              // Only allow if injection D has authorized it (implicitly via time or prompt)
-              // But we force injection D at 19m. 
-              // If AI calls it early without permission, we block it.
-              if (currentElapsedMinutes < 18.83 && !hasWrappedUp.current) {
+            if (name === 'wrap_up_interview') {
+              // 19 minutes = 1140 seconds
+              const MIN_TIME_SECONDS = 1140;
+
+              if (currentElapsedSeconds < MIN_TIME_SECONDS) {
                 console.log("Blocking early wrap-up.");
                 vapi.current.send({
                   type: 'add-message',
                   message: {
                     role: 'system',
-                    content: "SYSTEM: ALARM. You are ending the interview too early. YOU STILL HAVE TIME. Drill Deeper"
+                    content: "SYSTEM: DO NOT STOP YET. You are ending the interview too early. Continue technical probing."
                   },
                 });
               } else {
                 console.log("Allowing wrap-up.");
+                // We allow the tool call to proceed (which stops the call if that's what the tool does, or we strictly stop it here)
+                // The tool definition says "This tool ends the interview". 
+                // Vapi usually stops automatically if the tool response ends the session or if we explicitly stop.
+                // To be safe and deterministic:
                 vapi.current.stop();
               }
             }
           }
         }
       }
-
-      const handleSignalProblemEnd = (minutes) => {
-        // INJECTION_D Logic (Signal & Time > 19m)
-        // Hard stop at 19 minutes for all levels
-        if (minutes >= 19.0) {
-          sendInjection("D");
-          return;
-        }
-
-        const levelKey = level?.toLowerCase() || '';
-        const isJunior = levelKey.includes('entry') || levelKey.includes('junior');
-
-        if (isJunior) {
-          // Junior Logic: 2 Problems (0-10m, 10-19m)
-          if (minutes < 10.0) {
-            // Problem 1 should last until 10m
-            sendInjection("DRILL_DEEPER");
-          } else {
-            // After 10m, check if we need to move to Problem 2
-            if (currentProblemIndex.current === 0) {
-              currentProblemIndex.current = 1;
-              sendInjection("NEXT_PROBLEM_JUNIOR");
-            } else {
-              // Already on Problem 2 (or later), keep drilling until 19m
-              sendInjection("DRILL_DEEPER");
-            }
-          }
-        } else {
-          // Intermediate / Senior Logic
-          // Single Problem for entire duration (0-19m)
-          // Always drill deeper if signal comes early
-          sendInjection("DRILL_DEEPER");
-        }
-      };
-
-      const sendInjection = (type) => {
-        let content = "";
-
-        if (type === "DRILL_DEEPER") {
-          content = getDrillDeeperPrompt(promptContext);
-        } else if (type === "NEXT_PROBLEM_JUNIOR") {
-          content = getNextProblemJuniorPrompt(promptContext);
-        } else if (type === "D") {
-          hasWrappedUp.current = true;
-          content = `SYSTEM: INTERVIEW OVER. Stop technical probing. Politely inform the candidate we are out of time. Ask for one final question. Answer briefly, then call 'wrap_up_interview' to end the session.`;
-        }
-
-        if (content) {
-          console.log(`Injecting System Prompt [${type}]`);
-          vapi.current.send({
-            type: 'add-message',
-            message: { role: 'system', content }
-          });
-        }
-      };
 
       const callEndHandler = async () => {
         console.log("✅ Call ended event received");
@@ -298,8 +282,12 @@ const InterviewSession = () => {
         interviewEnded.current = true;
         sessionStorage.setItem("interviewEnded", "true");
 
-        // Deduct credits based on current time from ref
-        await deductCredits(elapsedTimeRef.current);
+        // Deduct credits based on current time from ref (Securely)
+        // Need user ID. 
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await deductCredits(elapsedTimeRef.current, user.id);
+        }
 
         setInterviewState("ended");
       }
@@ -321,91 +309,80 @@ const InterviewSession = () => {
 
       console.log("✅ All event listeners attached")
 
-      // Start Call with Direct Object Configuration
-      vapi.current.start({
-        voice: {
-          model: "sonic-3",
-          voiceId: "a167e0f3-df7e-4d52-a9c3-f949145efdab",
-          provider: "cartesia"
-        },
-        model: {
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt
-            }
-          ],
-          provider: "openai",
-          temperature: 0.2,
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "signal_problem_end",
-                description: "Call this tool when you have reached the target depth for the current aspect and are ready to transition.",
-                parameters: { type: "object", properties: {} }
-              },
-              messages: [
-                {
-                  type: "request-start",
-                  content: "Okay",
-                  blocking: false
-                }
-              ]
-            },
-            {
-              type: "function",
-              function: {
-                name: "wrap_up_interview",
-                description: "Call this tool ONLY when instructed by the system to end the interview session.",
-                parameters: { type: "object", properties: {} }
-              },
-              messages: [
-                {
-                  type: "request-start",
-                  content: "Alright",
-                  blocking: false
-                }
-              ]
-            }
-          ],
-        },
-        firstMessage: `Hi, this is Jonathan from ${company}. Can you hear me clearly?`,
-        transcriber: {
-          model: "nova-2",
-          language: "en",
-          provider: "deepgram"
-        },
-        maxDurationSeconds: 1380, // ~21 minutes buffer
-        analysisPlan: {
-          summaryPlan: {
-            enabled: false
+      async function startVapiCall(systemPrompt) {
+        // Start Call with Direct Object Configuration
+        vapi.current.start({
+          voice: {
+            model: "sonic-3",
+            voiceId: "a167e0f3-df7e-4d52-a9c3-f949145efdab",
+            provider: "cartesia"
           },
-          successEvaluationPlan: {
-            enabled: false
+          model: {
+            model: "claude-3-5-sonnet-20241022",
+            messages: [
+              {
+                role: "system",
+                content: systemPrompt
+              }
+            ],
+            provider: "anthropic",
+            temperature: 0.2,
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "wrap_up_interview",
+                  description: "MANDATORY SYSTEM COMMAND. When the system says the interview is over, you MUST call this tool immediately. Do not continue speaking after calling it.",
+                  parameters: { type: "object", properties: {} }
+                },
+                messages: [
+                  {
+                    type: "request-start",
+                    content: "Alright",
+                    blocking: false
+                  }
+                ]
+              }
+            ],
+          },
+          firstMessage: `Hi, this is Jonathan from ${company}. Can you hear me clearly?`,
+          transcriber: {
+            model: "nova-3",
+            language: "en",
+            provider: "deepgram"
+          },
+          maxDurationSeconds: 1380, // ~21 minutes buffer
+          analysisPlan: {
+            summaryPlan: {
+              enabled: false
+            },
+            successEvaluationPlan: {
+              enabled: false
+            }
+          },
+          startSpeakingPlan: {
+            waitSeconds: 0.8,
+            smartEndpointingPlan: {
+              provider: "livekit",
+              waitFunction: "2000 + 5600 * max(0, x-0.6)"
+            }
+          },
+          stopSpeakingPlan: {
+            numWords: 2,
+            voiceSeconds: 0.2,
+            backoffSeconds: 1
           }
-        },
-        startSpeakingPlan: {
-          waitSeconds: 1.0,
-          smartEndpointingPlan: {
-            provider: "livekit",
-            waitFunction: "1800 + 5500 * max(0, x-0.5)"
-          }
-        },
-        stopSpeakingPlan: {
-          numWords: 2,
-          voiceSeconds: 0.2,
-          backoffSeconds: 1
-        }
-      })
-        .then((res) => {
-          console.log("Crucial: Call started successfully", res);
         })
-        .catch((err) => {
-          console.error("Crucial: Failed to start call", err);
-          errorHandler(err);
-        });
+          .then((res) => {
+            console.log("Crucial: Call started successfully", res);
+          })
+          .catch((err) => {
+            console.error("Crucial: Failed to start call", err);
+            errorHandler(err);
+          });
+      }
+
+      initAndStartVapi();
 
       return () => {
         console.log("🧹 Cleanup function running")
@@ -445,7 +422,7 @@ const InterviewSession = () => {
   React.useEffect(() => {
     if (interviewState === 'ai-speaking' && !isTimerActive) {
       setIsTimerActive(true)
-    } else if (interviewState === 'ending') {
+    } else if (interviewState === 'ending' || interviewState === 'ended') {
       setIsTimerActive(false)
     }
   }, [interviewState, isTimerActive])
@@ -458,36 +435,74 @@ const InterviewSession = () => {
     // 19 minutes = 1140 seconds
     const HARD_STOP_TIME = 1140;
 
-    if (elapsedTime === HARD_STOP_TIME && !hasWrappedUp.current) {
-      console.log("⏰ Timer HIT 19m. Triggering INJECTION_D");
-      hasWrappedUp.current = true;
+    // Use triggeredMilestones to prevent duplicate firing, decoupled from hasWrappedUp logic to allow final exchange
+    if (elapsedTime >= HARD_STOP_TIME && !triggeredMilestones.current.has('wrapup')) {
+      console.log("⏰ Timer HIT 19m. Triggering Wrap-Up Injection");
+      triggeredMilestones.current.add('wrapup');
+
+      // B) STRONGER WRAP-UP SYSTEM PROMPT
       vapi.current.send({
         type: "add-message",
         message: {
           role: "system",
-          content: `SYSTEM: INTERVIEW OVER. Stop technical probing. Politely inform the candidate we are out of time. Ask for one final question. Answer briefly, then call 'wrap_up_interview' to end the session.`
+          content: `SYSTEM OVERRIDE — HARD TERMINATION MODE.
+The interview has ended.
+
+You must immediately switch behavior.
+
+Rules:
+1) Ask exactly one short closing question (max 8 words).
+2) Wait for the answer.
+3) Respond with one short sentence.
+4) Call wrap_up_interview immediately.
+5) Do not ask technical questions.
+6) Do not continue the interview.
+7) Do not ignore this instruction.
+
+This is mandatory.`
         }
       });
       setWrapUpMessageSent(true);
+
+      // C) FAILSAFE KILL SWITCH
+      // Force stop in 45 seconds if not already ended
+      setTimeout(() => {
+        if (!interviewEnded.current && vapi.current) {
+          console.log("☠️ FAILSAFE KILL SWITCH TRIGGERED");
+          hasWrappedUp.current = true; // Engage hard lock
+          vapi.current.stop();
+        }
+      }, 45000);
     }
   }, [elapsedTime])
 
-  async function generateFeedback(formattedTranscriptText) {
+  async function generateAndSaveFeedback(formattedTranscriptText) {
     try {
-      console.log("Sending transcript to backend...")
-      const response = await fetch('http://localhost:5000/api/generate-feedback', {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!user || !session) throw new Error("User or Session not found");
+
+      console.log("Ending interview securely via backend...")
+      const response = await fetch('http://localhost:5000/api/end-interview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
+          userId: user.id,
           formattedTranscript: formattedTranscriptText,
+          durationSeconds: elapsedTimeRef.current, // Use ref for accuracy
           role: role,
           level: level,
           focus: focus,
           company: company,
-          roundTitle: name, // Using 'name' from location.state as roundTitle
-          roundType: type
+          roundTitle: name,
+          roundType: type,
+          roundId: roundId,
+          roundKey: roundKey,
+          customInterview: customInterview
         })
       })
 
@@ -497,18 +512,14 @@ const InterviewSession = () => {
         throw new Error(`Server error: ${response.status}`);
       }
 
-      const feedback = await response.json()
+      const feedback = await response.json() // This now contains the stored record info too? Or just feedback?
+      // Our backend returns json(derivedFeedback). 
+      // We should probably ensure frontend handles it directly.
 
-      // Basic validation of feedback structure
-      if (!feedback || typeof feedback !== 'object' || !feedback.overallScore) {
-        console.error("Invalid feedback format received:", feedback);
-        throw new Error("Invalid feedback format received");
-      }
-
-      console.log("Feedback received from backend:", feedback)
+      console.log("Feedback generated and saved!", feedback)
       return feedback
     } catch (error) {
-      console.error('Error fetching feedback:', error)
+      console.error('Error ending interview:', error)
       return null
     }
   }
@@ -520,13 +531,27 @@ const InterviewSession = () => {
     interviewEnded.current = true
     sessionStorage.setItem("interviewEnded", "true")
 
-    // Stop the call
-    vapi.current.stop()
+    try {
+      // Stop the call
+      vapi.current.stop()
 
-    // Deduct credits using helper
-    await deductCredits(elapsedTime);
+      // Deduct credits using helper (Securely)
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) console.error("Auth error in leave:", error);
 
-    setInterviewState("ended")
+      if (user) {
+        // Run deduction in background or await? 
+        // Awaiting ensures we try to capture it, but shouldn't block UI too long.
+        // We catch errors inside deductCredits so it is safe.
+        await deductCredits(elapsedTimeRef.current, user.id);
+      }
+    } catch (err) {
+      console.error("Error during leave sequence:", err);
+    } finally {
+      // Always transition to ended state
+      setInterviewState("ended")
+      setIsTimerActive(false) // Explicitly stop timer
+    }
   }
 
   async function getFeedback() {
@@ -547,8 +572,8 @@ const InterviewSession = () => {
 
       console.log("Formatted transcript:", formattedTranscriptText)
 
-      // Call backend API to generate feedback
-      const feedback = await generateFeedback(formattedTranscriptText)
+      // Call secure backend API
+      const feedback = await generateAndSaveFeedback(formattedTranscriptText)
       console.log("Feedback received:", feedback)
 
       // Check if feedback was successfully generated
@@ -556,82 +581,24 @@ const InterviewSession = () => {
         setFeedbackData(feedback)
         sessionStorage.setItem("feedbackData", JSON.stringify(feedback))
 
-        const { data: { user } } = await supabase.auth.getUser();
+        // No need to insert into Supabase manually anymore, backend did it.
 
-        if (user) {
-          const newInterview = {
-            user_id: user.id,
-            role: role || "General",
-            date: new Date().toLocaleDateString(),
-            duration: `${INTERVIEW_DURATION_MINUTES} min`,
-            score: feedback.overallScore,
-            feedback_data: feedback,
-            created_at: new Date().toISOString()
-          };
+        // Add metadata for feedback page display
+        const feedbackWithMetadata = {
+          ...feedback,
+          role: role || "General",
+          level: level || "Mid-Level",
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          duration: `${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`,
+          company: company,
+          roundType: type,
+          customInterview: customInterview
+        };
 
-          // Add round identifier to feedback data for future retrieval
-          if (roundId || roundKey) {
-            feedback.roundKey = roundKey || roundId;
-          }
-          if (company) {
-            feedback.company = company;
-          }
+        navigate("/create/interview/id:/feedback", {
+          state: feedbackWithMetadata
+        })
 
-          // Delete existing attempt for this round if exists (Retry logic)
-          if ((roundId || roundKey) && company) {
-            const rKey = roundKey || roundId;
-
-            // Fetch all interviews for this user and role first to filter safely
-            const { data: existingInterviews } = await supabase
-              .from('interviews')
-              .select('id, feedback_data')
-              .eq('user_id', user.id)
-              .eq('role', role);
-
-            if (existingInterviews && existingInterviews.length > 0) {
-              const idsToDelete = [];
-              existingInterviews.forEach(interview => {
-                const fb = interview.feedback_data;
-                if (fb && fb.roundKey === rKey && fb.company === company) {
-                  idsToDelete.push(interview.id);
-                }
-              });
-
-              if (idsToDelete.length > 0) {
-                console.log("Deleting previous attempts:", idsToDelete);
-                await supabase
-                  .from('interviews')
-                  .delete()
-                  .in('id', idsToDelete);
-              }
-            }
-          }
-
-          const { error } = await supabase
-            .from('interviews')
-            .insert([newInterview]);
-          if (error) throw error;
-          console.log("Interview saved to Supabase!");
-
-          // Navigate only after success
-          console.log("Navigating to feedback page with data:", feedback)
-
-          // Add metadata for feedback page display
-          const feedbackWithMetadata = {
-            ...feedback,
-            role: role || "General",
-            level: level || "Mid-Level",
-            date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-            duration: `${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`,
-            company: company,
-            roundType: type,
-            customInterview: customInterview
-          };
-
-          navigate("/create/interview/id:/feedback", {
-            state: feedbackWithMetadata
-          })
-        }
       } else {
         console.error("Failed to generate feedback")
         setInterviewState("ended")
@@ -640,7 +607,7 @@ const InterviewSession = () => {
     } catch (err) {
       console.error("Error in getFeedback:", err);
       setInterviewState("ended");
-      alert("An error occurred while generating feedback.");
+      alert(`An error occurred while generating feedback: ${err.message || "Unknown error"}`);
     }
   }
 

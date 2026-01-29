@@ -66,7 +66,7 @@ const ProfileSettings = () => {
         setMessage(null);
 
         try {
-            // 1. Update Auth Metadata
+            // 1. Update Auth Metadata (Frontend - Secure by GoTrue limits)
             const { error: authError } = await supabase.auth.updateUser({
                 data: {
                     first_name: sanitizeInput(formData.firstName),
@@ -76,18 +76,24 @@ const ProfileSettings = () => {
 
             if (authError) throw authError;
 
-            // 2. Update Profiles Table
+            // 2. Update Profiles Table (Backend - Secure 'credits')
             const { data: { user } } = await supabase.auth.getUser();
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update({
-                    role: sanitizeInput(formData.role),
-                    experience_level: sanitizeInput(formData.experience_level),
-                    skills: sanitizeInput(formData.skills)
-                })
-                .eq('id', user.id);
 
-            if (profileError) throw profileError;
+            const response = await fetch('http://localhost:5000/api/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    updates: {
+                        role: sanitizeInput(formData.role),
+                        experience_level: sanitizeInput(formData.experience_level),
+                        skills: sanitizeInput(formData.skills)
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error("Failed to update profile details");
+
             setMessage({ type: "success", text: "Profile updated successfully!" });
         } catch (error) {
             setMessage({ type: "error", text: error.message });

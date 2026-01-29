@@ -16,6 +16,8 @@ import './App.css'
 import DashboardBlack from "./pages/DashboardBlack"
 import Onboarding from "./pages/Onboarding"
 import CreditsPage from "./pages/Credits"
+import CodingInterview from "./pages/CodingInterview"
+import DevOpsCodingInterview from "./pages/DevOpsCodingInterview"
 
 const App = () => {
   return (
@@ -43,6 +45,8 @@ const App = () => {
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/coding-interview" element={<CodingInterview />} />
+          <Route path="/devops-coding-interview" element={<DevOpsCodingInterview />} />
         </Route>
       </Routes>
     </BrowserRouter>

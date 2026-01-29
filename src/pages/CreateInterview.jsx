@@ -140,6 +140,7 @@ const CreateInterview = () => {
   const [formData, setFormData] = React.useState({
     role: "",
     level: "",
+    type: "",
     focus: "",
     length: "",
     description: ""
@@ -194,20 +195,26 @@ const CreateInterview = () => {
 
     sessionStorage.removeItem("interviewEnded")
 
-    navigate("/create/interview/1", {
-      state: {
-        role: sanitizeInput(formData.role),
-        level: sanitizeInput(formData.level),
-        focus: sanitizeInput(formData.focus),
-        length: "15 min",
-        description: sanitizeInput(formData.description),
-        customInterview: true
-      },
-    })
+    // Common state object
+    const interviewState = {
+      role: sanitizeInput(formData.role),
+      level: sanitizeInput(formData.level),
+      type: sanitizeInput(formData.type),
+      focus: sanitizeInput(formData.focus),
+      length: "15 min",
+      description: sanitizeInput(formData.description),
+      customInterview: true
+    };
+
+    if (formData.type === 'coding') {
+      navigate("/coding-interview", { state: interviewState });
+    } else {
+      navigate("/create/interview/1", { state: interviewState });
+    }
   }
 
   // Simple derived state
-  const canGenerate = formData.role.trim() !== "" && formData.level.trim() !== "" && formData.focus.trim() !== ""
+  const canGenerate = formData.role.trim() !== "" && formData.level.trim() !== "" && formData.type.trim() !== "" && formData.focus.trim() !== ""
 
   return (
     <>
@@ -366,9 +373,34 @@ const CreateInterview = () => {
                       }}
                     >
                       <option value="" className="bg-white">Select level</option>
-                      <option value="junior" className="bg-white">Junior</option>
-                      <option value="mid" className="bg-white">Mid-Level</option>
+                      <option value="intermediate" className="bg-white">Intermediate</option>
                       <option value="senior" className="bg-white">Senior</option>
+                    </select>
+                  </div>
+
+                  {/* Round Type */}
+                  <div className="space-y-2.5">
+                    <label className="flex items-center gap-2 text-sm font-medium text-black">
+                      <Lasso className="w-4 h-4 text-slate-500" />
+                      Round Type
+                      <span className="text-red-400 text-xs">*</span>
+                    </label>
+                    <select
+                      name="type"
+                      value={formData.type}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all appearance-none cursor-pointer hover:border-slate-300"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.75rem center',
+                        backgroundSize: '1.25rem'
+                      }}
+                    >
+                      <option value="" className="bg-white">Select round type</option>
+                      <option value="coding" className="bg-white">Coding Round</option>
+                      <option value="system_design" className="bg-white">System Design</option>
+                      <option value="behavioral" className="bg-white">Behavioral</option>
                     </select>
                   </div>
 

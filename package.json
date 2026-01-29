@@ -25,9 +25,11 @@
     "livekit-client": "^2.17.0",
     "livekit-server-sdk": "^2.15.0",
     "lucide-react": "^0.562.0",
+    "prismjs": "^1.30.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.11.0",
+    "react-simple-code-editor": "^0.14.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "uuid": "^13.0.0"

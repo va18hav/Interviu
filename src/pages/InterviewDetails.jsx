@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2 } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2, Bug } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { supabase } from '../supabaseClient';
 
 const InterviewDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const type = searchParams.get('type'); // 'sde' or 'devops'
+
     const [interview, setInterview] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -20,15 +23,40 @@ const InterviewDetails = () => {
             try {
                 if (!id) return;
 
-                // Fetch interview data
-                const { data, error } = await supabase
-                    .from('popular_interviews')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+                let data, error;
 
-                if (error) throw error;
-                setInterview(data);
+                // Fetch based on type parameter
+                if (type === 'devops') {
+                    ({ data, error } = await supabase
+                        .from('devops_interviews')
+                        .select('*')
+                        .eq('id', id)
+                        .single());
+                } else {
+                    // Default to sde_interviews (for type='sde' or missing type)
+                    ({ data, error } = await supabase
+                        .from('sde_interviews')
+                        .select('*')
+                        .eq('id', id)
+                        .single());
+                }
+
+                // Fallback / Error Handling
+                if (error) {
+                    // Optional: If specific not found and no type specified, could try other table
+                    // But explicitly respecting the type is safer to avoid ID collisions.
+                    throw error;
+                }
+
+                if (!data) {
+                    throw new Error('Interview not found');
+                }
+
+                // Normalize data
+                setInterview({
+                    ...data,
+                    icon_url: data.icon_link
+                });
             } catch (err) {
                 console.error("Error fetching interview details:", err);
             } finally {
@@ -37,7 +65,7 @@ const InterviewDetails = () => {
         };
 
         fetchInterviewDetails();
-    }, [id]);
+    }, [id, type]);
 
     useEffect(() => {
         const fetchCompletedRounds = async () => {
@@ -143,57 +171,30 @@ const InterviewDetails = () => {
 
     // Mapping rounds to UI structure
     const roundsList = [];
-    if (interview.rounds) {
-        if (interview.rounds.techRoundOne) roundsList.push({
-            id: 1,
-            key: 'techRoundOne',
-            title: interview.rounds.techRoundOne.title,
-            type: Array.isArray(interview.rounds.techRoundOne.focus) ? interview.rounds.techRoundOne.focus.join(',') : interview.rounds.techRoundOne.focus,
-            duration: `${interview.rounds.techRoundOne.duration}`,
-            icon: Code,
-            desc: interview.rounds.techRoundOne.overview
-        });
-        if (interview.rounds.techRoundTwo) roundsList.push({
-            id: 2,
-            key: 'techRoundTwo',
-            title: interview.rounds.techRoundTwo.title,
-            type: Array.isArray(interview.rounds.techRoundTwo.focus) ? interview.rounds.techRoundTwo.focus.join(',') : interview.rounds.techRoundTwo.focus,
-            duration: `${interview.rounds.techRoundTwo.duration}`,
-            icon: Code,
-            desc: interview.rounds.techRoundTwo.overview
-        });
-        if (interview.rounds.techRoundThree) roundsList.push({
-            id: 3,
-            key: 'techRoundThree',
-            title: interview.rounds.techRoundThree.title,
-            type: Array.isArray(interview.rounds.techRoundThree.focus) ? interview.rounds.techRoundThree.focus.join(',') : interview.rounds.techRoundThree.focus,
-            duration: `${interview.rounds.techRoundThree.duration}`,
-            icon: Code,
-            desc: interview.rounds.techRoundThree.overview
-        });
-        if (interview.rounds.techRoundFour) roundsList.push({
-            id: 4,
-            key: 'techRoundFour',
-            title: interview.rounds.techRoundFour.title,
-            type: Array.isArray(interview.rounds.techRoundFour.focus) ? interview.rounds.techRoundFour.focus.join(',') : interview.rounds.techRoundFour.focus,
-            duration: `${interview.rounds.techRoundFour.duration}`,
-            icon: Code,
-            desc: interview.rounds.techRoundFour.overview
-        });
-        if (interview.rounds.behavioral) roundsList.push({
-            id: 5,
-            key: 'behavioral',
-            title: interview.rounds.behavioral.title,
-            type: interview.company_traits?.behavioralFocus || "Behavioral",
-            duration: `${interview.rounds.behavioral.duration}`,
-            icon: MessageSquare,
-            desc: interview.rounds.behavioral.overview
+    if (interview.rounds && Array.isArray(interview.rounds)) {
+        interview.rounds.forEach((round, index) => {
+            roundsList.push({
+                id: index + 1,
+                key: index, // Use index as key for now since we traverse array
+                roundId: round.id, // Actual ID from JSON
+                title: round.title,
+                type: round.type, // 'coding', 'design', 'behavioral', 'debugging'
+                duration: `${round.duration} min`,
+                icon: round.type === 'behavioral' ? MessageSquare : round.type === 'debugging' ? Bug : Code,
+                desc: round.overview,
+                // Pass-through fields
+                depthScaling: round.depthScaling,
+                interviewContext: round.interviewContext,
+                focusAspects: round.focusAspects,
+                flow: round.flow,
+                evaluation: round.evaluation,
+            });
         });
     }
 
     const rounds = roundsList.length > 0 ? roundsList : [];
 
-    async function startRound(roundKey) {
+    async function startRound(index) {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
@@ -214,37 +215,50 @@ const InterviewDetails = () => {
 
         sessionStorage.removeItem("interviewEnded");
 
-        const selectedRound = interview.rounds[roundKey];
+        const selectedRound = roundsList[index]; // Use the parsed roundsList
 
-        navigate("/dashboard/interview", {
-            state: {
-                role: interview.role,
-                icon: interview.icon_url,
-                name: `${interview.role}`,
-                level: interview.level,
-                company: interview.company,
-                customInterview: false,
-                roundKey: roundKey,
-                type: selectedRound ? selectedRound.type : '',
-                title: selectedRound ? selectedRound.title : '',
-                welcomeMessage: selectedRound ? selectedRound.welcomeMessage : '',
-                roundIntent: selectedRound ? selectedRound.roundIntent : '',
-                skillsEvaluated: selectedRound ? selectedRound.skillsEvaluated : [],
-                difficultyBand: selectedRound ? selectedRound.difficultyBand : {},
-                acceptableProblemTypes: selectedRound ? selectedRound.acceptableProblemTypes : [],
-                interviewerFocus: selectedRound ? selectedRound.interviewerFocus : [],
-                antiPatternsToWatch: selectedRound ? selectedRound.antiPatternsToWatch : [],
-                followUpGuidelines: selectedRound ? selectedRound.followUpGuidelines : {},
-                evaluationSignals: selectedRound ? selectedRound.evaluationSignals : {},
-                depthLevel: selectedRound?.depthLevel,
-                problemQueue: selectedRound?.problemQueue,
-                stressTestPrompt: selectedRound?.stressTestPrompt,
-                interviewerPersonality: interview.interviewer_personality,
-                commonFailureReasons: interview.common_failure_reasons,
-                description: selectedRound ? selectedRound.overview : interview.overview,
-                filter_type: interview.filter_type
+        const commonState = {
+            role: interview.role,
+            icon: interview.icon_url, // Use normalized icon_url
+            name: `${interview.role}`,
+            level: interview.level,
+            company: interview.company,
+            customInterview: false,
+            roundKey: `${interview.id}-round-${index + 1}`, // Unique key for progress tracking
+            roundId: selectedRound.roundId,
+            type: selectedRound.type,
+            title: selectedRound.title,
+            description: selectedRound.desc,
+            // Context passing
+            depthScaling: selectedRound.depthScaling,
+            interviewContext: selectedRound.interviewContext,
+            focusAspects: selectedRound.focusAspects,
+            flow: selectedRound.flow,
+            evaluation: selectedRound.evaluation,
+            // Round Number for Coding Question Fetching
+            roundNum: index + 1
+        };
+
+        if (selectedRound.type === 'coding') {
+            // Check if it's a DevOps role to route to the specialized page
+            const isDevOps = interview.role.toLowerCase().includes('devops') ||
+                interview.role.toLowerCase().includes('sre') ||
+                interview.role.toLowerCase().includes('reliability');
+
+            if (isDevOps) {
+                navigate("/devops-coding-interview", {
+                    state: commonState
+                });
+            } else {
+                navigate("/coding-interview", {
+                    state: commonState
+                });
             }
-        });
+        } else {
+            navigate("/create/interview/session", {
+                state: commonState
+            });
+        }
     }
 
     async function resetProgress() {

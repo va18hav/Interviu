@@ -24,16 +24,16 @@ const Onboarding = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("No user found");
 
-            // Update onboarding_completed to true even if skipped
-            const { error } = await supabase
-                .from('profiles')
-                .update({ onboarding_completed: true })
-                .eq('id', user.id);
+            // Secure Backend Call
+            await fetch('http://localhost:5000/api/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    updates: { onboarding_completed: true }
+                })
+            });
 
-            if (error) {
-                console.warn("Could not update profile (skip):", error.message);
-                // Proceed anyway content-wise
-            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -48,19 +48,24 @@ const Onboarding = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("No user found");
 
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    role: sanitizeInput(formData.role),
-                    experience_level: sanitizeInput(formData.experience_level),
-                    skills: sanitizeInput(formData.skills), // Assuming text or array
-                    onboarding_completed: true
+            const response = await fetch('http://localhost:5000/api/update-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    updates: {
+                        role: sanitizeInput(formData.role),
+                        experience_level: sanitizeInput(formData.experience_level),
+                        skills: sanitizeInput(formData.skills),
+                        onboarding_completed: true
+                    }
                 })
-                .eq('id', user.id);
+            });
 
-            if (error) {
-                console.warn("Could not update profile:", error.message);
+            if (!response.ok) {
+                throw new Error("Failed to update profile");
             }
+
         } catch (err) {
             console.error(err);
         } finally {

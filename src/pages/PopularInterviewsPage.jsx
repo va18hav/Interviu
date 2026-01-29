@@ -24,39 +24,35 @@ const PopularInterviewsPage = () => {
     useEffect(() => {
         const fetchInterviews = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('popular_interviews')
-                    .select('*');
+                const [sdeResponse, devopsResponse] = await Promise.all([
+                    supabase.from('sde_interviews').select('*'),
+                    supabase.from('devops_interviews').select('*')
+                ]);
 
-                if (error) throw error;
+                if (sdeResponse.error) throw sdeResponse.error;
+                if (devopsResponse.error) throw devopsResponse.error;
 
-                if (data) {
-                    const companies = [...new Set(data.map(item => item.company))].sort();
-                    const levels = [...new Set(data.map(item => item.level))].sort();
+                const sdeData = (sdeResponse.data || []).map(item => ({ ...item, type: 'sde' }));
+                const devopsData = (devopsResponse.data || []).map(item => ({ ...item, type: 'devops' }));
+
+                // Combine data
+                const allData = [...sdeData, ...devopsData];
+
+                if (allData.length > 0) {
+                    // Normalize data: map icon_link to icon_url
+                    const normalizedData = allData.map(item => ({
+                        ...item,
+                        icon_url: item.icon_link
+                    }));
+
+                    const companies = [...new Set(normalizedData.map(item => item.company))].sort();
+                    const levels = [...new Set(normalizedData.map(item => item.level))].sort();
 
                     setUniqueCompanies(companies);
                     setUniqueLevels(levels);
 
-                    const sortedData = data.sort((a, b) => {
-                        const getPriority = (role) => {
-                            const r = role.toLowerCase();
-                            // 1. SDE Roles
-                            if (r.includes('software engineer') || r.includes('sde') || r.includes('developer') || r.includes('frontend') || r.includes('backend') || r.includes('full stack') || r.includes('ios') || r.includes('android')) return 1;
-                            // 2. AI/ML Roles
-                            if (r.includes('ai') || r.includes('machine learning') || r.includes('ml') || r.includes('deep learning') || r.includes('vision') || r.includes('nlp')) return 2;
-                            // 3. Data Roles
-                            if (r.includes('data')) return 3;
-                            // 4. Others
-                            return 4;
-                        };
-
-                        const priorityA = getPriority(a.role);
-                        const priorityB = getPriority(b.role);
-
-                        if (priorityA !== priorityB) {
-                            return priorityA - priorityB;
-                        }
-                        return a.company.localeCompare(b.company);
+                    const sortedData = normalizedData.sort((a, b) => {
+                        return new Date(b.created_at) - new Date(a.created_at);
                     });
                     setInterviews(sortedData);
                 }
@@ -127,7 +123,7 @@ const PopularInterviewsPage = () => {
                         </button>
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900">Popular Interviews</h1>
-                            <p className="text-slate-500 mt-1">Explore trending interview templates used by the community</p>
+                            <p className="text-slate-500 mt-1">Explore trending interview simulations</p>
                         </div>
                     </div>
                     {/* Filters Row */}
@@ -195,22 +191,22 @@ const PopularInterviewsPage = () => {
                             const colorKey = getCompanyColor(interview.company);
 
                             const colorClasses = {
-                                cyan: { bg: "from-cyan-50 to-cyan-100", border: "border-cyan-200", text: "text-cyan-600", accent: "from-cyan-500 to-cyan-600" },
-                                blue: { bg: "from-blue-50 to-blue-100", border: "border-blue-200", text: "text-blue-600", accent: "from-blue-500 to-blue-600" },
-                                purple: { bg: "from-purple-50 to-purple-100", border: "border-purple-200", text: "text-purple-600", accent: "from-purple-500 to-purple-600" },
-                                pink: { bg: "from-pink-50 to-pink-100", border: "border-pink-200", text: "text-pink-600", accent: "from-pink-500 to-pink-600" },
-                                green: { bg: "from-green-50 to-green-100", border: "border-green-200", text: "text-green-600", accent: "from-green-500 to-green-600" },
-                                orange: { bg: "from-orange-50 to-orange-100", border: "border-orange-200", text: "text-orange-600", accent: "from-orange-500 to-orange-600" },
-                                red: { bg: "from-red-50 to-red-100", border: "border-red-200", text: "text-red-600", accent: "from-red-500 to-red-600" }
+                                cyan: { bg: "from-cyan-100 to-cyan-200", border: "border-cyan-200", text: "text-cyan-600", accent: "from-cyan-500 to-cyan-600" },
+                                blue: { bg: "from-blue-100 to-blue-200", border: "border-blue-200", text: "text-blue-600", accent: "from-blue-500 to-blue-600" },
+                                purple: { bg: "from-purple-100 to-purple-200", border: "border-purple-200", text: "text-purple-600", accent: "from-purple-500 to-purple-600" },
+                                pink: { bg: "from-pink-100 to-pink-200", border: "border-pink-200", text: "text-pink-600", accent: "from-pink-500 to-pink-600" },
+                                green: { bg: "from-green-100 to-green-200", border: "border-green-200", text: "text-green-600", accent: "from-green-500 to-green-600" },
+                                orange: { bg: "from-orange-100 to-orange-200", border: "border-orange-200", text: "text-orange-600", accent: "from-orange-500 to-orange-600" },
+                                red: { bg: "from-red-100 to-red-200", border: "border-red-200", text: "text-red-600", accent: "from-red-500 to-red-600" }
                             };
                             const colors = colorClasses[colorKey] || colorClasses.cyan;
 
                             return (
                                 <div
                                     key={interview.id}
-                                    className="relative group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col shadow-sm"
+                                    className={`relative group rounded-2xl border border ${colors.border} bg-white overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col shadow-sm`}
                                 >
-                                    <div className={`absolute top-0 right-0 w-[150px] h-[150px] bg-gradient-to-br ${colors.bg} rounded-full blur-[60px] opacity-60 -translate-y-1/2 translate-x-1/2`} />
+                                    <div className={`absolute top-0 -right-40 w-[350px] h-[350px] bg-gradient-to-br ${colors.bg} rounded-full blur-[60px] opacity-60 -translate-y-1/2 translate-x-1/2`} />
                                     <div className="p-6 space-y-4 flex-1">
                                         {/* Icon */}
                                         <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
@@ -251,7 +247,7 @@ const PopularInterviewsPage = () => {
                                     {/* Action Button */}
                                     <div className="p-4 pt-0">
                                         <button
-                                            onClick={() => navigate(`/dashboard/interview-details/${interview.id}`)}
+                                            onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
                                             className="w-full py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-cyan-700 hover:border-cyan-200 transition-all text-sm font-semibold flex items-center justify-center gap-2">
                                             View More
                                             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
