@@ -447,7 +447,7 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
                 params.set('type', r === 'SDE' ? 'sde' : 'devops');
                 if (l && levelMap[l]) params.set('level', levelMap[l]);
                 if (s && s.length > 0) params.set('skills', s.join(','));
-                return `http://localhost:5000/api/onboarding-interviews?${params.toString()}`;
+                return `${import.meta.env.VITE_API_URL}/api/onboarding-interviews?${params.toString()}`;
             };
 
             let res = await fetch(buildUrl(currentRole, currentLevel, currentSkills));
@@ -720,7 +720,7 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
             const type = profileData.role === 'SDE' ? 'sde' : 'devops';
             const levelMap = { 'Junior': 'junior', 'Mid-Level': 'intermediate', 'Senior': 'senior' };
             const level = levelMap[profileData.experience_level] || '';
-            const url = `http://localhost:5000/api/onboarding-interviews?type=${type}${level ? `&level=${level}` : ''}`;
+            const url = `${import.meta.env.VITE_API_URL}/api/onboarding-interviews?type=${type}${level ? `&level=${level}` : ''}`;
             fetch(url)
                 .then(r => r.json())
                 .then(data => {
@@ -943,7 +943,7 @@ const Onboarding = ({ onComplete }) => {
         try {
             const userCredentials = JSON.parse(localStorage.getItem('userCredentials'));
             if (!userCredentials?.id) return;
-            await fetch('http://localhost:5000/api/onboarding', {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/onboarding`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: userCredentials.id, onboardingData: { onboarding_completed: true } })
@@ -963,7 +963,7 @@ const Onboarding = ({ onComplete }) => {
         try {
             const userCredentials = JSON.parse(localStorage.getItem('userCredentials'));
             if (!userCredentials?.id) return;
-            const response = await fetch('http://localhost:5000/api/onboarding', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/onboarding`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: userCredentials.id, onboardingData: dataToSave })

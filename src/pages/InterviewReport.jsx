@@ -66,7 +66,7 @@ const InterviewReport = () => {
         }
 
         console.log(`[Report] Connecting for session: ${sessionId}`);
-        ws.current = new WebSocket('ws://localhost:8081');
+        ws.current = new WebSocket(import.meta.env.VITE_WS_URL);
 
         ws.current.onopen = () => {
             console.log('[Report] WebSocket Connected');

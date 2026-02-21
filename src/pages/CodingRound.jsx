@@ -192,7 +192,7 @@ ${formatList(critical_requirements)}
         });
 
         // WebSocket Connection
-        ws.current = new WebSocket('ws://localhost:8081');
+        ws.current = new WebSocket(import.meta.env.VITE_WS_URL);
 
         ws.current.onopen = () => {
             console.log('[WS] Connected');
@@ -702,7 +702,7 @@ ${formatList(critical_requirements)}
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/run-code', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/run-code`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -800,7 +800,7 @@ ${formatList(critical_requirements)}
                 }
             };
 
-            const response = await fetch('http://localhost:5000/api/end-interview', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

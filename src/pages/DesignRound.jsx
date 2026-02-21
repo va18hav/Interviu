@@ -132,7 +132,7 @@ const DesignRound = () => {
         });
 
         // WebSocket Connection
-        ws.current = new WebSocket('ws://localhost:8081');
+        ws.current = new WebSocket(import.meta.env.VITE_WS_URL);
 
         ws.current.onopen = () => {
             console.log('[WS] Connected');
@@ -660,7 +660,7 @@ const DesignRound = () => {
             const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
             if (!userCreds?.id) return;
 
-            const response = await fetch('http://localhost:5000/api/end-interview', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

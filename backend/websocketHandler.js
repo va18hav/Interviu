@@ -1,5 +1,4 @@
 import './polyfills.js';
-import express from 'express';
 import { WebSocketServer } from 'ws';
 import Anthropic from '@anthropic-ai/sdk';
 import * as sdk from 'microsoft-cognitiveservices-speech-sdk'; // ✅ Added Azure SDK
@@ -7,11 +6,9 @@ import dotenv from 'dotenv';
 import { getSystemPrompt } from './prompts/index.js';
 import { createTTSProvider } from './utils/providers/tts-factory.js';
 import { generateInterviewReport } from './utils/reportGenerator.js';
-import cors from 'cors';
+import crypto from 'crypto';
 
 dotenv.config();
-
-const PORT = 8081;
 
 // Config checks
 if (!process.env.SPEECH_KEY || !process.env.SPEECH_REGION) {
@@ -20,199 +17,196 @@ if (!process.env.SPEECH_KEY || !process.env.SPEECH_REGION) {
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-
-const app = express();
-app.use(express.json());
-app.use(cors());
-
-const wss = new WebSocketServer({ port: PORT });
-console.log(`WebSocket Server running on port ${PORT}`);
-
 const sessions = new Map(); // sessionId -> session
 const wsToSessionId = new Map(); // ws -> sessionId
 
-wss.on('connection', (ws) => {
-    console.log('[WS] New Client Connected');
-    const sessionId = `session-${Date.now()}`;
+export function setupWebSocket(server) {
+    const wss = new WebSocketServer({ server });
+    console.log('WebSocket Server attached to HTTP server');
 
-    const session = {
-        id: sessionId,
-        ws,
-        history: [],
-        systemPrompt: "",
-        active: true,
-        turnParts: [],
-        utteranceEndTimer: null,
-        isProcessingResponse: false,
+    wss.on('connection', (ws) => {
+        console.log('[WS] New Client Connected');
+        const sessionId = `session-${crypto.randomUUID()}`;
 
-        // Azure STT State
-        pushStream: null,
-        recognizer: null,
-        lastRecognizedTime: 0,
-        tempTranscript: "", // For interim results
+        const session = {
+            id: sessionId,
+            ws,
+            history: [],
+            systemPrompt: "",
+            active: true,
+            turnParts: [],
+            utteranceEndTimer: null,
+            isProcessingResponse: false,
 
-        ttsProvider: 'azure',
-        designContext: null // 🎨 Stores latest design snapshot
-    };
+            // Azure STT State
+            pushStream: null,
+            recognizer: null,
+            lastRecognizedTime: 0,
+            tempTranscript: "", // For interim results
 
-    sessions.set(sessionId, session);
-    wsToSessionId.set(ws, sessionId);
+            ttsProvider: 'azure',
+            designContext: null // 🎨 Stores latest design snapshot
+        };
 
-    // Notify client of their session ID
-    sendData(session, { type: 'session_info', payload: { sessionId } });
+        sessions.set(sessionId, session);
+        wsToSessionId.set(ws, sessionId);
 
-    ws.on('message', async (message) => {
-        const session = sessions.get(wsToSessionId.get(ws));
-        if (!session) return;
-        try {
-            let msg;
+        // Notify client of their session ID
+        sendData(session, { type: 'session_info', payload: { sessionId } });
+
+        ws.on('message', async (message) => {
+            const session = sessions.get(wsToSessionId.get(ws));
+            if (!session) return;
             try {
-                const strData = message.toString();
-                msg = JSON.parse(strData);
-            } catch (e) {
-                // Binary Data (Audio) -> Send to Azure
-                if (session.pushStream) {
-                    session.pushStream.write(message);
+                let msg;
+                try {
+                    const strData = message.toString();
+                    msg = JSON.parse(strData);
+                } catch (e) {
+                    // Binary Data (Audio) -> Send to Azure
+                    if (session.pushStream) {
+                        session.pushStream.write(message);
+                    }
+                    return;
                 }
-                return;
-            }
 
-            if (msg.type === 'init') {
-                handleInit(session, msg.payload);
-            }
-            else if (msg.type === 'start_audio') {
-                // Initialize Azure STT if not already active
-                if (!session.recognizer) {
-                    console.log(`[${session.id}] 🎤 Frontend ready, starting Azure STT...`);
-                    setupAzureSTT(session);
-                } else {
-                    console.log(`[${session.id}] ⚠️ Received start_audio but Azure STT already active.`);
+                if (msg.type === 'init') {
+                    handleInit(session, msg.payload);
                 }
-            }
-            else if (msg.type === 'audio_chunk') { // Legacy fallback
-                const data = msg.data;
-                if (data && session.pushStream) {
-                    let buffer;
-                    if (typeof data === 'string') {
-                        buffer = Buffer.from(data, 'base64');
-                    } else if (Array.isArray(data)) {
-                        buffer = Buffer.alloc(data.length * 2);
-                        for (let i = 0; i < data.length; i++) {
-                            buffer.writeInt16LE(data[i], i * 2);
+                else if (msg.type === 'start_audio') {
+                    // Initialize Azure STT if not already active
+                    if (!session.recognizer) {
+                        console.log(`[${session.id}] 🎤 Frontend ready, starting Azure STT...`);
+                        setupAzureSTT(session);
+                    } else {
+                        console.log(`[${session.id}] ⚠️ Received start_audio but Azure STT already active.`);
+                    }
+                }
+                else if (msg.type === 'audio_chunk') { // Legacy fallback
+                    const data = msg.data;
+                    if (data && session.pushStream) {
+                        let buffer;
+                        if (typeof data === 'string') {
+                            buffer = Buffer.from(data, 'base64');
+                        } else if (Array.isArray(data)) {
+                            buffer = Buffer.alloc(data.length * 2);
+                            for (let i = 0; i < data.length; i++) {
+                                buffer.writeInt16LE(data[i], i * 2);
+                            }
+                        }
+                        if (buffer) {
+                            session.pushStream.write(buffer);
                         }
                     }
-                    if (buffer) {
-                        session.pushStream.write(buffer);
+                }
+                else if (msg.type === 'candidate_turn') {
+                    handleCandidateResponse(session, msg.payload.text);
+                }
+                else if (msg.type === 'code_submission') {
+                    // Phase 2 Code Submission
+                    console.log(`[${session.id}] 📝 Code submission received`);
+                    const { codeContext, message } = msg.payload;
+
+                    // Store context for System Prompt injection (persistence)
+                    session.codeContext = codeContext;
+                    session.currentPhase = 'review'; // Disable tools for Phase 3
+
+                    // 💉 Inject into Transcript (Real-time view)
+                    const formattedCode = `Candidate's code:\n${codeContext}`;
+                    sendData(session, {
+                        type: 'transcript',
+                        payload: { text: formattedCode }
+                    });
+
+                    // 📦 Store for final log (Avoid token bloat in active history)
+                    session.finalSubmissionLogs = session.finalSubmissionLogs || [];
+                    session.finalSubmissionLogs.push(formattedCode);
+
+                    // Trigger AI response with the user's message
+                    // The AI will see the code via System Prompt injection
+                    console.log(`[${session.id}] 🔄 Triggering AI review of code submission`);
+                    handleCandidateResponse(session, message);
+                }
+                else if (msg.type === 'design_submission') {
+                    // Phase 2 Design Submission
+                    console.log(`[${session.id}] 🎨 Design submission received`);
+                    const { designContext, message } = msg.payload;
+
+                    // Store context for System Prompt injection (persistence)
+                    session.designContext = designContext;
+                    session.currentPhase = 'deep-dive'; // Disable tools for Phase 3
+
+                    // 💉 Inject into Transcript (Real-time view)
+                    const formattedDesign = `Candidate's design:\n${designContext}`;
+                    sendData(session, {
+                        type: 'transcript',
+                        payload: { text: formattedDesign }
+                    });
+
+                    // 📦 Store for final log (Avoid token bloat in active history)
+                    session.finalSubmissionLogs = session.finalSubmissionLogs || [];
+                    session.finalSubmissionLogs.push(formattedDesign);
+
+                    // Trigger AI response with the user's message
+                    console.log(`[${session.id}] 🔄 Triggering AI review of design submission`);
+                    handleCandidateResponse(session, message);
+                }
+                else if (msg.type === 'inject_system_message') {
+                    console.log(`[${session.id}] 🤫 Injecting System Message: "${msg.payload.text}"`);
+                    session.history.push({ role: 'user', content: `SYSTEM: ${msg.payload.text}` });
+                }
+                else if (msg.type === 'reconnect') {
+                    const { sessionId: oldSessionId } = msg.payload;
+                    console.log(`[WS] Reconnect request for ${oldSessionId}`);
+                    const oldSession = sessions.get(oldSessionId);
+                    if (oldSession) {
+                        // Update the session's socket
+                        oldSession.ws = ws;
+                        wsToSessionId.set(ws, oldSessionId);
+                        console.log(`[WS] Session ${oldSessionId} re-associated with new socket`);
+                        sendData(oldSession, { type: 'reconnected', payload: { sessionId: oldSessionId } });
+                    } else {
+                        sendData({ ws }, { type: 'error', payload: { message: 'Session not found' } });
                     }
                 }
-            }
-            else if (msg.type === 'candidate_turn') {
-                handleCandidateResponse(session, msg.payload.text);
-            }
-            else if (msg.type === 'code_submission') {
-                // Phase 2 Code Submission
-                console.log(`[${session.id}] 📝 Code submission received`);
-                const { codeContext, message } = msg.payload;
-
-                // Store context for System Prompt injection (persistence)
-                session.codeContext = codeContext;
-                session.currentPhase = 'review'; // Disable tools for Phase 3
-
-                // 💉 Inject into Transcript (Real-time view)
-                const formattedCode = `Candidate's code:\n${codeContext}`;
-                sendData(session, {
-                    type: 'transcript',
-                    payload: { text: formattedCode }
-                });
-
-                // 📦 Store for final log (Avoid token bloat in active history)
-                session.finalSubmissionLogs = session.finalSubmissionLogs || [];
-                session.finalSubmissionLogs.push(formattedCode);
-
-                // Trigger AI response with the user's message
-                // The AI will see the code via System Prompt injection
-                console.log(`[${session.id}] 🔄 Triggering AI review of code submission`);
-                handleCandidateResponse(session, message);
-            }
-            else if (msg.type === 'design_submission') {
-                // Phase 2 Design Submission
-                console.log(`[${session.id}] 🎨 Design submission received`);
-                const { designContext, message } = msg.payload;
-
-                // Store context for System Prompt injection (persistence)
-                session.designContext = designContext;
-                session.currentPhase = 'deep-dive'; // Disable tools for Phase 3
-
-                // 💉 Inject into Transcript (Real-time view)
-                const formattedDesign = `Candidate's design:\n${designContext}`;
-                sendData(session, {
-                    type: 'transcript',
-                    payload: { text: formattedDesign }
-                });
-
-                // 📦 Store for final log (Avoid token bloat in active history)
-                session.finalSubmissionLogs = session.finalSubmissionLogs || [];
-                session.finalSubmissionLogs.push(formattedDesign);
-
-                // Trigger AI response with the user's message
-                console.log(`[${session.id}] 🔄 Triggering AI review of design submission`);
-                handleCandidateResponse(session, message);
-            }
-            else if (msg.type === 'inject_system_message') {
-                console.log(`[${session.id}] 🤫 Injecting System Message: "${msg.payload.text}"`);
-                session.history.push({ role: 'user', content: `SYSTEM: ${msg.payload.text}` });
-            }
-            else if (msg.type === 'reconnect') {
-                const { sessionId: oldSessionId } = msg.payload;
-                console.log(`[WS] Reconnect request for ${oldSessionId}`);
-                const oldSession = sessions.get(oldSessionId);
-                if (oldSession) {
-                    // Update the session's socket
-                    oldSession.ws = ws;
-                    wsToSessionId.set(ws, oldSessionId);
-                    console.log(`[WS] Session ${oldSessionId} re-associated with new socket`);
-                    sendData(oldSession, { type: 'reconnected', payload: { sessionId: oldSessionId } });
-                } else {
-                    sendData({ ws }, { type: 'error', payload: { message: 'Session not found' } });
+                else if (msg.type === 'commit_turn') {
+                    console.log(`[${session.id}] 🛑 Manual Commit Turn Signal Received`);
+                    finalizeTurn(session);
                 }
-            }
-            else if (msg.type === 'commit_turn') {
-                console.log(`[${session.id}] 🛑 Manual Commit Turn Signal Received`);
-                finalizeTurn(session);
-            }
-            else if (msg.type === 'generate_report') {
-                console.log(`[${session.id}] 📄 Report generation requested`);
-                try {
-                    const reportData = await generateInterviewReport(session, session.context);
-                    sendData(session, {
-                        type: 'report_generated',
-                        payload: reportData
-                    });
-                } catch (reportErr) {
-                    console.error(`[${session.id}] Report Generation Error:`, reportErr);
-                    sendData(session, {
-                        type: 'error',
-                        payload: { message: "Failed to generate report" }
-                    });
+                else if (msg.type === 'generate_report') {
+                    console.log(`[${session.id}] 📄 Report generation requested`);
+                    try {
+                        const reportData = await generateInterviewReport(session, session.context);
+                        sendData(session, {
+                            type: 'report_generated',
+                            payload: reportData
+                        });
+                    } catch (reportErr) {
+                        console.error(`[${session.id}] Report Generation Error:`, reportErr);
+                        sendData(session, {
+                            type: 'error',
+                            payload: { message: "Failed to generate report" }
+                        });
+                    }
                 }
+            } catch (err) {
+                console.error('[WS] Message Error:', err);
             }
-        } catch (err) {
-            console.error('[WS] Message Error:', err);
-        }
-    });
+        });
 
-    ws.on('close', () => {
-        const sessionId = wsToSessionId.get(ws);
-        console.log(`[WS] Client Disconnected (${sessionId})`);
-        // We don't cleanup immediately to allow reconnection for report
-        // sessions.delete(sessionId); // Delay this or keep it
-        wsToSessionId.delete(ws);
-    });
+        ws.on('close', () => {
+            const sessionId = wsToSessionId.get(ws);
+            console.log(`[WS] Client Disconnected (${sessionId})`);
+            // We don't cleanup immediately to allow reconnection for report
+            // sessions.delete(sessionId); // Delay this or keep it
+            wsToSessionId.delete(ws);
+        });
 
-    ws.on('error', (err) => {
-        console.error(`[WS] Connection Error (${session.id}):`, err);
+        ws.on('error', (err) => {
+            console.error(`[WS] Connection Error (${session.id}):`, err);
+        });
     });
-});
+}
 
 async function handleCandidateResponse(session, text, isDesignUpdate = false) {
     session.isProcessingResponse = true;

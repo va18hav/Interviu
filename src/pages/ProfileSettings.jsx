@@ -38,7 +38,7 @@ const ProfileSettings = () => {
                 return;
             }
 
-            const response = await fetch(`http://localhost:5000/api/profile?userId=${userCreds.id}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile?userId=${userCreds.id}`);
             const profile = await response.json();
 
             setFormData({
@@ -66,7 +66,7 @@ const ProfileSettings = () => {
             if (!userCreds?.id) throw new Error("User not found");
 
             // Update Backend
-            const response = await fetch('http://localhost:5000/api/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -111,7 +111,7 @@ const ProfileSettings = () => {
 
         try {
             const token = localStorage.getItem("authToken");
-            const response = await fetch('http://localhost:5000/api/auth/password', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

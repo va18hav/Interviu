@@ -23,7 +23,7 @@ const PopularInterviewsPage = () => {
     useEffect(() => {
         const fetchInterviews = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/interviews');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews`);
                 const allData = await response.json();
 
                 if (!response.ok) throw new Error(allData.error || "Failed to fetch interviews");

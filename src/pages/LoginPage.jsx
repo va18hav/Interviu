@@ -59,7 +59,7 @@ const LoginPage = () => {
 
         if (!hasErrors) {
             try {
-                let endpoint = isSignUp ? 'http://localhost:5000/api/auth/signup' : 'http://localhost:5000/api/auth/login';
+                let endpoint = isSignUp ? `${import.meta.env.VITE_API_URL}/api/auth/signup` : `${import.meta.env.VITE_API_URL}/api/auth/login`;
                 const payload = isSignUp ? {
                     email: formData.email,
                     password: formData.password,

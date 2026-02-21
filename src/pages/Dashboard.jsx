@@ -37,7 +37,7 @@ const InterviewDashboard = () => {
       // Set user details for display if not already set correctly from localStorage (though dashboard usually relies on this state)
       setUserCredentials(storedUser);
 
-      const response = await fetch(`http://localhost:5000/api/dashboard?userId=${storedUser.id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/dashboard?userId=${storedUser.id}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Failed to load dashboard data");
@@ -46,7 +46,7 @@ const InterviewDashboard = () => {
       setPopularInterviews(data.popularInterviews || []);
 
       // Fetch custom interviews separately
-      const customRes = await fetch(`http://localhost:5000/api/completed-interviews/custom?userId=${storedUser.id}`);
+      const customRes = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${storedUser.id}`);
       if (customRes.ok) {
         const customData = await customRes.json();
         setPastInterviews(customData || []);
@@ -72,7 +72,7 @@ const InterviewDashboard = () => {
     try {
       setPastInterviews(prev => prev.filter(i => i.id !== id));
 
-      const response = await fetch(`http://localhost:5000/api/interviews/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}`, {
         method: 'DELETE'
       });
 
@@ -90,7 +90,7 @@ const InterviewDashboard = () => {
   async function viewinterview(interview) {
     try {
       // Fetch the heavy feedback data only when requested
-      const response = await fetch(`http://localhost:5000/api/completed-interviews/${interview.id}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${interview.id}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Failed to fetch feedback");

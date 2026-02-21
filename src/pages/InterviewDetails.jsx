@@ -24,7 +24,7 @@ const InterviewDetails = () => {
             try {
                 if (!id) return;
 
-                const response = await fetch(`http://localhost:5000/api/interviews/${id}?type=${type || 'sde'}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}?type=${type || 'sde'}`);
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -159,7 +159,7 @@ const InterviewDetails = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/start-interview', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/start-interview`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ const InterviewDetails = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/start-interview', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/start-interview`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

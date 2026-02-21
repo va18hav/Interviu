@@ -30,8 +30,8 @@ const PreviousInterviews = () => {
 
             // Fetch both types in parallel
             const [curatedRes, customRes] = await Promise.all([
-                fetch(`http://localhost:5000/api/completed-interviews/curated?userId=${userCreds.id}`),
-                fetch(`http://localhost:5000/api/completed-interviews/custom?userId=${userCreds.id}`)
+                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}`),
+                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${userCreds.id}`)
             ]);
 
             const curatedData = curatedRes.ok ? await curatedRes.json() : [];

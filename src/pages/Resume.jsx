@@ -180,7 +180,7 @@ const Resume = () => {
                 setUser(userCreds);
 
                 // Fetch past resumes
-                const response = await fetch(`http://localhost:5000/api/resume-analyses?userId=${userCreds.id}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses?userId=${userCreds.id}`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -255,7 +255,7 @@ const Resume = () => {
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1]; // Remove data:application/pdf;base64,
 
-            const response = await fetch('http://localhost:5000/api/analyze-resume', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/analyze-resume`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -282,7 +282,7 @@ const Resume = () => {
             // Save to Backend
             if (user?.id) {
                 try {
-                    const saveResponse = await fetch('http://localhost:5000/api/resume-analyses', {
+                    const saveResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -322,7 +322,7 @@ const Resume = () => {
         if (!confirm("Are you sure you want to delete this analysis?")) return;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/resume-analyses/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses/${id}`, {
                 method: 'DELETE'
             });
 

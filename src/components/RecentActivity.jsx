@@ -13,7 +13,7 @@ const RecentActivity = () => {
                 const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
                 if (!userCreds?.id) return;
 
-                const response = await fetch(`http://localhost:5000/api/completed-interviews/curated?userId=${userCreds.id}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}`);
                 if (response.ok) {
                     const data = await response.json();
 

@@ -28,7 +28,7 @@ const Navbar = ({ credits: propCredits }) => {
                 const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
                 if (!userCreds?.id) return;
 
-                const response = await fetch(`http://localhost:5000/api/credits?userId=${userCreds.id}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/credits?userId=${userCreds.id}`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -101,7 +101,7 @@ const Navbar = ({ credits: propCredits }) => {
 
     const handleSignOut = async () => {
         try {
-            await fetch('http://localhost:5000/api/auth/logout', { method: 'POST' });
+            await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, { method: 'POST' });
         } catch (error) {
             console.error("Logout error:", error);
         }
