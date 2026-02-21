@@ -66,7 +66,7 @@ const DesignRound = () => {
                             if (ws.current) {
                                 ws.current.send(JSON.stringify({
                                     type: 'inject_system_message',
-                                    payload: { text: "Call wrap_up_interview now." }
+                                    payload: { text: "The interview has reached the duration limit. Please begin the final wrap-up of the interview." }
                                 }));
                             }
                         }

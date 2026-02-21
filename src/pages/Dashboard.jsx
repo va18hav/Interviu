@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate, } from "react-router-dom"
-import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash, Signal } from 'lucide-react';
+import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash, Signal, Layers } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import bot from "../assets/images/bot.png"
 
@@ -72,7 +72,7 @@ const InterviewDashboard = () => {
     try {
       setPastInterviews(prev => prev.filter(i => i.id !== id));
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${id}`, {
         method: 'DELETE'
       });
 
@@ -87,22 +87,7 @@ const InterviewDashboard = () => {
     }
   }
 
-  async function viewinterview(interview) {
-    try {
-      // Fetch the heavy feedback data only when requested
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${interview.id}`);
-      const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || "Failed to fetch feedback");
-
-      if (data && data.feedback_data) {
-        navigate("/dashboard/feedback", { state: data.feedback_data })
-      }
-    } catch (error) {
-      console.error("Error fetching details:", error);
-      alert("Failed to load interview details.");
-    }
-  }
   // Helper for company colors since they are not in the data
   const getCompanyColor = (company) => {
     const colors = {
@@ -153,7 +138,7 @@ const InterviewDashboard = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <p className="text-slate-900 text-sm mt-1">In Demand</p>
+              <p className="text-slate-900 text-sm mt-1">Latest Interviews</p>
               <TrendingUp className="w-6 h-6 text-cyan-400" />
             </div>
 
@@ -171,7 +156,7 @@ const InterviewDashboard = () => {
                         </div>
                         <div>
                           <h4 className="text-lg font-bold text-gray-900 group-hover:text-black transition-colors">
-                            {interview.role}
+                            {interview.company} {interview.role}
                           </h4>
                           <p className="text-sm text-gray-500 font-medium">{interview.level}</p>
                         </div>
@@ -180,16 +165,16 @@ const InterviewDashboard = () => {
 
                     <div className="flex items-center gap-4 py-2 border-t border-gray-50 mt-2">
                       <div className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-600 font-medium">1.2k</span>
+                        <Layers className="w-4 h-4 text-cyan-500" />
+                        <span className="text-sm text-gray-600 font-medium">{interview.rounds?.length || 0} Rounds</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      {/* <div className="flex items-center gap-1.5">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="text-sm text-gray-600 font-medium">4.8</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 ml-auto">
+                      </div> */}
+                      <div className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-600 font-medium">{interview.total_duration}</span>
+                        <span className="text-sm text-gray-600 font-medium">{interview.total_duration} minutes</span>
                       </div>
                     </div>
 

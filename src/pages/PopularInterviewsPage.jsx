@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Star, Clock, ChevronRight, TrendingUp, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Star, Clock, ChevronRight, TrendingUp, Filter, Layers } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import PopularInterviewsHero from "../components/PopularInterviewsHero";
 
@@ -191,11 +191,9 @@ const PopularInterviewsPage = () => {
                                             </div>
                                             <div>
                                                 <h4 className="text-lg font-bold text-gray-900 group-hover:text-black transition-colors line-clamp-1">
-                                                    {interview.role}
+                                                    {interview.company} - {interview.role}
                                                 </h4>
                                                 <div className="flex items-center gap-2 text-sm text-gray-500 mt-1 font-medium">
-                                                    <span>{interview.company}</span>
-                                                    <span className="text-gray-300">•</span>
                                                     <span>{interview.level}</span>
                                                 </div>
                                             </div>
@@ -205,16 +203,16 @@ const PopularInterviewsPage = () => {
                                     {/* Stats */}
                                     <div className="flex items-center gap-4 py-4 border-t border-gray-50 mt-auto">
                                         <div className="flex items-center gap-1.5">
-                                            <Users className="w-4 h-4 text-gray-400" />
-                                            <span className="text-sm text-gray-600 font-medium">1.2k</span>
+                                            <Layers className="w-4 h-4 text-cyan-500" />
+                                            <span className="text-sm text-gray-600 font-medium">{interview.rounds?.length || 0} Rounds</span>
                                         </div>
-                                        <div className="flex items-center gap-1.5">
+                                        {/* <div className="flex items-center gap-1.5">
                                             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                             <span className="text-sm text-gray-600 font-medium">4.8</span>
-                                        </div>
+                                        </div> */}
                                         <div className="flex items-center gap-1.5 ml-auto">
                                             <Clock className="w-4 h-4 text-gray-400" />
-                                            <span className="text-sm text-gray-600 font-medium">{interview.total_duration}</span>
+                                            <span className="text-sm text-gray-600 font-medium">{interview.total_duration} minutes</span>
                                         </div>
                                     </div>
 

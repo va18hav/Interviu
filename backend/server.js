@@ -63,7 +63,7 @@ app.use('/api', limiter);
 
 app.use(cors({
     origin: ['https://intervyu-virid.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
@@ -470,6 +470,82 @@ app.get('/api/completed-interviews/curated', async (req, res) => {
     }
 });
 
+// GET /api/recent-interviews?userId=...
+app.get('/api/recent-interviews', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    try {
+        // 1. Get unique recent curated_interview_ids
+        const { data: activity, error: activityError } = await supabaseAdmin
+            .from('completed_curated_interviews')
+            .select('curated_interview_id, round_id, completed_at')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false });
+
+        if (activityError) throw activityError;
+
+        const interviewMap = {};
+        const uniqueInterviewIds = [];
+
+        activity.forEach(item => {
+            if (!interviewMap[item.curated_interview_id]) {
+                if (uniqueInterviewIds.length < 3) {
+                    uniqueInterviewIds.push(item.curated_interview_id);
+                    interviewMap[item.curated_interview_id] = {
+                        id: item.curated_interview_id,
+                        completedRounds: new Set()
+                    };
+                }
+            }
+            if (interviewMap[item.curated_interview_id]) {
+                if (item.round_id) {
+                    interviewMap[item.curated_interview_id].completedRounds.add(item.round_id);
+                }
+            }
+        });
+
+        // 2. Fetch metadata for these IDs
+        const recentInterviews = [];
+        for (const id of uniqueInterviewIds) {
+            let { data: interview } = await supabaseAdmin
+                .from('sde_interviews')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (!interview) {
+                const { data: devops } = await supabaseAdmin
+                    .from('devops_interviews')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                interview = devops;
+            }
+
+            if (interview) {
+                const totalRounds = interview.rounds?.length || 0;
+                const completedCount = interviewMap[id].completedRounds.size;
+                const progress = totalRounds > 0 ? Math.round((completedCount / totalRounds) * 100) : 0;
+
+                recentInterviews.push({
+                    ...interview,
+                    icon_url: interview.icon_link,
+                    progress,
+                    completedCount,
+                    totalRounds
+                });
+            }
+        }
+
+        res.json(recentInterviews);
+    } catch (error) {
+        console.error('[recent-interviews]', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // GET /api/completed-interviews/custom?userId=...
 app.get('/api/completed-interviews/custom', async (req, res) => {
     const { userId } = req.query;
@@ -486,6 +562,34 @@ app.get('/api/completed-interviews/custom', async (req, res) => {
         res.json(data || []);
     } catch (error) {
         console.error('[completed-interviews/custom]', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /api/completed-interviews/:id
+app.delete('/api/completed-interviews/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // 1. Try deleting from curated interviews
+        const { error: curatedError } = await supabaseAdmin
+            .from('completed_curated_interviews')
+            .delete()
+            .eq('id', id);
+
+        // 2. Try deleting from custom interviews (even if curated failed, curated is usually what 'id' would match)
+        const { error: customError } = await supabaseAdmin
+            .from('completed_custom_interviews')
+            .delete()
+            .eq('id', id);
+
+        // Check if at least one succeeded or both failed
+        if (curatedError && customError) {
+            throw new Error(`Failed to delete from both tables: ${curatedError.message} | ${customError.message}`);
+        }
+
+        res.json({ message: "Interview record deleted successfully" });
+    } catch (error) {
+        console.error('[DELETE completed-interview]', error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -821,7 +925,7 @@ app.post('/api/end-interview', async (req, res) => {
 
                 if (isCustom) {
                     // Prepare title (System Context / Domain Context) with first letter capitalized
-                    let titleRaw = context.domain_context || context.systemContext || "Custom Interview";
+                    let titleRaw = context.domain_focus;
                     // Ensure only first letter is capitalized (rest kept as is, or lowercase? "first letter being upper-case always" usually implies fixing the first char)
                     const title = titleRaw.charAt(0).toUpperCase() + titleRaw.slice(1);
 
@@ -834,7 +938,7 @@ app.post('/api/end-interview', async (req, res) => {
                             job_description: context.job_description || context.problem_statement || null,
                             transcript: sessionData.history,
                             report_data: report,
-                            score: report.confidence || 0, // Assuming report has a score field
+                            score: report.verdict.confidence, // Assuming report has a score field
                             duration_mins: Math.ceil(durationInMinutes),
                             started_at: null, // We don't track start time explicitly in this endpoint input yet
                             completed_at: timestamp
@@ -866,7 +970,7 @@ app.post('/api/end-interview', async (req, res) => {
                             company: context.company,
                             transcript: sessionData.history,
                             report_data: report,
-                            score: report.verdict.confidence || 0,
+                            score: report.verdict.confidence,
                             duration_mins: Math.ceil(durationInMinutes),
                             started_at: null,
                             completed_at: timestamp

@@ -36,6 +36,7 @@ const DashboardBanner = ({ firstName }) => {
                         </button>
 
                         <button
+                            onClick={() => navigate('/dashboard/all-previous-interviews')}
                             className="hidden md:flex px-8 py-3.5 rounded-2xl border border-gray-200 bg-white text-gray-600 font-medium text-sm hover:bg-gray-50 hover:text-gray-900 transition-all items-center gap-2">
                             View History
                         </button>

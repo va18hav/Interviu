@@ -11,7 +11,7 @@ const PopularInterviewsBanner = ({ firstName }) => {
             {/* Subtle Textured Background */}
             <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50"></div>
 
-            <div className="relative flex flex-col items-start z-10 px-8 py-10 md:px-12 space-y-6 w-full">
+            <div className="relative flex flex-col items-start z-10 px-8 py-6 md:px-12 space-y-5 w-full">
 
                 <h1 className='font-sans text-4xl lg:text-5xl xl:text-6xl text-gray-900 font-extrabold tracking-tighter leading-tighter'>
                     Hi <span className='bg-gradient-to-r from-gray-900 to-gray-300 bg-clip-text text-transparent'>{firstName},</span>

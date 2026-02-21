@@ -263,6 +263,7 @@ const CreateInterview = () => {
     formData.interviewStrictness &&
     formData.yearsOfExperience &&
     formData.candidateStrengths.length > 0 &&
+    formData.candidateWeaknesses.length > 0 &&
     areRoundSpecificsValid()
 
   // -------------------------------------------------------------------------
@@ -577,6 +578,15 @@ const CreateInterview = () => {
                       options={CANDIDATE_STRENGTHS}
                       selected={formData.candidateStrengths}
                       onToggle={(val) => handleMultiSelect('candidateStrengths', val)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label required>Known Weaknesses</Label>
+                    <MultiSelectChips
+                      options={CANDIDATE_WEAKNESSES}
+                      selected={formData.candidateWeaknesses}
+                      onToggle={(val) => handleMultiSelect('candidateWeaknesses', val)}
                     />
                   </div>
 

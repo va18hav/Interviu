@@ -84,25 +84,26 @@ const PreviousInterviews = () => {
         setFilteredInterviews(result);
     };
 
-    const handleDelete = async (e, id, category) => {
+    const handleDelete = async (e, id) => {
         e.stopPropagation();
         if (!confirm("Are you sure you want to delete this interview record?")) return;
 
-        // Optimistic UI update
-        setInterviews(prev => prev.filter(i => i.id !== id));
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${id}`, {
+                method: 'DELETE'
+            });
 
-        // TODO: Implement DELETE endpoint in backend for specific tables if needed
-        // For now using the generic ID deletion if supported, or we might need specific endpoints
-        // Current backend generic DELETE /api/interviews/:id deletes from 'interviews' table
-        // We might need to add logic to delete from completed tables? 
-        // Backend `server.js` lines 374-387 deletes from 'interviews'.
-        // We haven't implemented DELETE for completed tables yet.
-        // Assuming user knows this is just UI for now or we add it quickly?
-        // Let's implement fetch delete efficiently or just hide it.
-        // Actually, let's try the generic delete endpoint, but mapped to correct table?
-        // Since we didn't add DELETE for these new tables in the plan, I'll omit functional delete for now to avoid errors,
-        // or just log it.
-        console.warn("Delete not fully implemented for new tables yet.");
+            if (response.ok) {
+                // Optimistic UI update
+                setInterviews(prev => prev.filter(i => i.id !== id));
+            } else {
+                const data = await response.json();
+                alert(data.error || "Failed to delete interview");
+            }
+        } catch (error) {
+            console.error("Error deleting interview:", error);
+            alert("Failed to delete interview record.");
+        }
     };
 
     const getScoreColor = (score) => {
@@ -224,8 +225,17 @@ const PreviousInterviews = () => {
                                         <span className="text-xs text-gray-400 mt-1">Overall Score</span>
                                     </div>
 
-                                    <div className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-cyan-600 transition-colors">
-                                        <ChevronRight className="w-5 h-5" />
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={(e) => handleDelete(e, interview.id)}
+                                            className="p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                                            title="Delete Interview"
+                                        >
+                                            <Trash className="w-4 h-4" />
+                                        </button>
+                                        <div className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-cyan-600 transition-colors">
+                                            <ChevronRight className="w-5 h-5" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
