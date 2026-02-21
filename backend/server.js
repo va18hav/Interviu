@@ -56,25 +56,29 @@ const ALLOWED_ORIGINS = [
     'http://localhost:3000'
 ];
 
-// Manual CORS – runs before everything so nothing can strip these headers
+// Manual CORS — absolute first middleware, sets headers before anything else
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (ALLOWED_ORIGINS.includes(origin)) {
+    console.log(`[CORS] ${req.method} ${req.path} | Origin: ${origin}`);
+
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Vary', 'Origin');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    // Respond 200 immediately for preflight OPTIONS requests
     if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
+        // Use status().end() not sendStatus() to avoid Express overwriting headers
+        res.status(200).end();
+        return;
     }
     next();
 });
 
 app.use(express.json({ limit: '50mb' }));
-app.use(helmet({ crossOriginResourcePolicy: false }));
+// helmet disabled – was overriding CORS headers. Re-enable per-header after CORS confirmed working.
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -85,6 +89,11 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api', limiter);
+
+// Diagnostic – lets us confirm CORS headers are being set on Railway
+app.get('/api/cors-test', (req, res) => {
+    res.json({ ok: true, origin: req.headers.origin, timestamp: Date.now() });
+});
 
 
 
