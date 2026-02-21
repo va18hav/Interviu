@@ -50,20 +50,31 @@ const supabaseAdmin = supabaseServiceKey
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const corsOptions = {
-    origin: ['https://intervyu-virid.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-};
+const ALLOWED_ORIGINS = [
+    'https://intervyu-virid.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+];
 
-// CORS must run FIRST — before helmet, body parser, and rate limiter
-// Otherwise helmet strips Access-Control-Allow-Origin from preflight responses
-app.options('/{*splat}', cors(corsOptions));
-app.use(cors(corsOptions));
+// Manual CORS – runs before everything so nothing can strip these headers
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Respond 200 immediately for preflight OPTIONS requests
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 app.use(express.json({ limit: '50mb' }));
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // Rate Limiting
 const limiter = rateLimit({
