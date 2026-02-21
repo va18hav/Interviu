@@ -50,50 +50,25 @@ const supabaseAdmin = supabaseServiceKey
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const ALLOWED_ORIGINS = [
-    'https://intervyu-virid.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000'
-];
-
-// Manual CORS — absolute first middleware, sets headers before anything else
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    console.log(`[CORS] ${req.method} ${req.path} | Origin: ${origin}`);
-
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Vary', 'Origin');
-    }
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    if (req.method === 'OPTIONS') {
-        // Use status().end() not sendStatus() to avoid Express overwriting headers
-        res.status(200).end();
-        return;
-    }
-    next();
-});
-
-app.use(express.json({ limit: '50mb' }));
-// helmet disabled – was overriding CORS headers. Re-enable per-header after CORS confirmed working.
+app.use(express.json({ limit: '50mb' })); // Add JSON body parser at the top
+app.use(helmet());
 
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
+    max: 100, // Limit each IP to 100 requests per windowMs
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api', limiter);
 
-// Diagnostic – lets us confirm CORS headers are being set on Railway
-app.get('/api/cors-test', (req, res) => {
-    res.json({ ok: true, origin: req.headers.origin, timestamp: Date.now() });
-});
+app.use(cors({
+    origin: ['https://intervyu-virid.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 
 
 
