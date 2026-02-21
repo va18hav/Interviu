@@ -26,10 +26,8 @@ const LoginPage = () => {
         if (errors.auth) setErrors(prev => ({ ...prev, auth: false }));
     };
 
-    const handleGoogleLogin = async () => {
-        alert("Google Login is temporarily unavailable during the system upgrade. Please use Email/Password.");
-        // To implement Google Auth without client SDK, we would need a backend endpoint that redirects to Supabase OAuth URL
-        // and handles the callback. For this migration, we are prioritizing the removal of client-side credentials.
+    const handleGoogleLogin = () => {
+        window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
     };
 
     const validateEmail = (email) => {

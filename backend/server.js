@@ -34,18 +34,16 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Initialize Supabase (Use env vars in production)
-// Using front-end keys temporarily as per plan, but ideally should be in backend .env
-const supabaseUrl = 'https://nfgforfzxarpjauiycar.supabase.co';
-const supabaseKey = 'sb_publishable_3jcEXhWkwMXxLHIyzP2b9w_90EUHSUf';
+// Initialize Supabase
+const supabaseUrl = process.env.SUPABASE_URL || 'https://nfgforfzxarpjauiycar.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_3jcEXhWkwMXxLHIyzP2b9w_90EUHSUf';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Admin client using service role key — bypasses RLS for backend-only operations
-// Get this from: Supabase Dashboard → Project Settings → API → service_role key
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseAdmin = supabaseServiceKey
     ? createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-    : supabase; // Fallback to anon client (will fail with RLS — add key to .env)
+    : supabase;
 
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
@@ -196,6 +194,82 @@ app.get('/api/auth/user', async (req, res) => {
         res.json({ user });
     } catch (error) {
         res.status(401).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// GOOGLE OAUTH ENDPOINTS
+// ==========================================
+
+// Step 1: Redirect browser to Google via Supabase
+app.get('/api/auth/google', async (req, res) => {
+    try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/callback`,
+                skipBrowserRedirect: true, // Don't let Supabase redirect - we will
+            }
+        });
+
+        if (error || !data?.url) {
+            console.error('[OAuth] Failed to get Google auth URL:', error);
+            return res.status(500).json({ error: 'Failed to initiate Google login' });
+        }
+
+        // Redirect user's browser to the Google OAuth consent screen
+        res.redirect(data.url);
+    } catch (err) {
+        console.error('[OAuth] Google redirect error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Step 2: Supabase/Google redirects back here with ?code=
+app.get('/api/auth/callback', async (req, res) => {
+    const { code, error: oauthError } = req.query;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+    if (oauthError) {
+        console.error('[OAuth] Callback error from Google:', oauthError);
+        return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
+
+    if (!code) {
+        return res.redirect(`${frontendUrl}/login?error=no_code`);
+    }
+
+    try {
+        // Exchange the authorization code for a real session
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (error || !data?.session) {
+            console.error('[OAuth] Code exchange failed:', error);
+            return res.redirect(`${frontendUrl}/login?error=session_failed`);
+        }
+
+        const { session, user } = data;
+        const userMeta = user?.user_metadata || {};
+
+        // Build a safe user object matching what email/password login returns
+        const safeUser = JSON.stringify({
+            id: user.id,
+            firstName: userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User',
+            lastName: userMeta.full_name?.split(' ').slice(1).join(' ') || '',
+            email: user.email,
+            avatarUrl: userMeta.avatar_url || null
+        });
+
+        // Redirect the browser to the frontend callback page with token embedded in URL
+        const params = new URLSearchParams({
+            token: session.access_token,
+            user: safeUser
+        });
+
+        res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
+    } catch (err) {
+        console.error('[OAuth] Callback processing error:', err);
+        res.redirect(`${frontendUrl}/login?error=internal_error`);
     }
 });
 
