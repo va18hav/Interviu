@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2, Bug } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2, Bug, Database, CodeXml } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { supabase } from '../supabaseClient';
 
 const InterviewDetails = () => {
     const { id } = useParams();
@@ -17,35 +16,19 @@ const InterviewDetails = () => {
     const [progress, setProgress] = useState(0);
     const [currentScore, setCurrentScore] = useState(0);
     const [showDetailsPopup, setShowDetailsPopup] = useState(false);
+    const [ttsProvider, setTtsProvider] = useState('google-cloud'); // Default to Google Cloud
+    const [showCreditModal, setShowCreditModal] = useState(false);
 
     useEffect(() => {
         const fetchInterviewDetails = async () => {
             try {
                 if (!id) return;
 
-                let data, error;
+                const response = await fetch(`http://localhost:5000/api/interviews/${id}?type=${type || 'sde'}`);
+                const data = await response.json();
 
-                // Fetch based on type parameter
-                if (type === 'devops') {
-                    ({ data, error } = await supabase
-                        .from('devops_interviews')
-                        .select('*')
-                        .eq('id', id)
-                        .single());
-                } else {
-                    // Default to sde_interviews (for type='sde' or missing type)
-                    ({ data, error } = await supabase
-                        .from('sde_interviews')
-                        .select('*')
-                        .eq('id', id)
-                        .single());
-                }
-
-                // Fallback / Error Handling
-                if (error) {
-                    // Optional: If specific not found and no type specified, could try other table
-                    // But explicitly respecting the type is safer to avoid ID collisions.
-                    throw error;
+                if (!response.ok) {
+                    throw new Error(data.error || 'Interview not found');
                 }
 
                 if (!data) {
@@ -67,69 +50,8 @@ const InterviewDetails = () => {
         fetchInterviewDetails();
     }, [id, type]);
 
-    useEffect(() => {
-        const fetchCompletedRounds = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user || !interview) return;
 
-                const { data, error } = await supabase
-                    .from('interviews')
-                    .select('feedback_data, score') // Fetch score column as well
-                    .eq('user_id', user.id)
-                    .eq('role', interview.role);
 
-                if (error) throw error;
-
-                const map = {};
-                let completedCount = 0;
-                let totalScore = 0;
-
-                if (data) {
-                    data.forEach(entry => {
-                        const feedback = entry.feedback_data;
-                        if (feedback && feedback.roundKey) {
-                            // Prevent cross-talk between companies with same role name
-                            if (feedback.company && feedback.company !== interview.company) {
-                                return;
-                            }
-                            map[feedback.roundKey] = { ...feedback, dbScore: parseFloat(entry.score) || 0 };
-                            completedCount++;
-                            // Safely handle score addition
-                            const score = parseFloat(entry.score) || 0;
-                            totalScore += score;
-                        }
-                    });
-                }
-                setCompletedRounds(map);
-
-                // Calculate Progress and Score
-                let roundsCount = 0;
-                if (interview.rounds) {
-                    if (interview.rounds.techRoundOne) roundsCount++;
-                    if (interview.rounds.techRoundTwo) roundsCount++;
-                    if (interview.rounds.techRoundThree) roundsCount++;
-                    if (interview.rounds.behavioral) roundsCount++;
-                } else {
-                    roundsCount = 5; // Fallback
-                }
-
-                const newProgress = roundsCount > 0 ? Math.round((completedCount / roundsCount) * 100) : 0;
-                setProgress(newProgress);
-
-                // Calculate Average Score (out of 10)
-                const avgScore = completedCount > 0 ? (totalScore / completedCount) : 0;
-                setCurrentScore((avgScore / 10).toFixed(1));
-
-            } catch (err) {
-                console.error("Error fetching completed rounds:", err);
-            }
-        };
-
-        if (interview) {
-            fetchCompletedRounds();
-        }
-    }, [id, interview]);
 
     // Helper for company colors
     const getCompanyColor = (company) => {
@@ -179,42 +101,94 @@ const InterviewDetails = () => {
                 roundId: round.id, // Actual ID from JSON
                 title: round.title,
                 type: round.type, // 'coding', 'design', 'behavioral', 'debugging'
-                duration: `${round.duration} min`,
-                icon: round.type === 'behavioral' ? MessageSquare : round.type === 'debugging' ? Bug : Code,
+                duration: `${round.duration}`,
+                icon: round.type === 'behavioral' ? MessageSquare : round.type === 'debugging' ? Bug : round.type === 'design' ? Database : CodeXml,
                 desc: round.overview,
-                // Pass-through fields
-                depthScaling: round.depthScaling,
-                interviewContext: round.interviewContext,
-                focusAspects: round.focusAspects,
+                // Pass-through fields from new data structure
                 flow: round.flow,
+                persona: round.persona,
+                problemData: round.problem, // Renamed to avoid confusion with actual problem fetching
                 evaluation: round.evaluation,
+                // New Feedback Data Fields
+                evaluation_intelligence: round.evaluation_intelligence,
+                candidate_reasoning_signals: round.candidate_reasoning_signals,
+                // Legacy fields (if any still exist, keep for safety)
+                slug: round.slug || round.questionSlug // Support both naming conventions
             });
         });
     }
 
     const rounds = roundsList.length > 0 ? roundsList : [];
 
-    async function startRound(index) {
+
+
+    // Official Design Round Launcher
+    async function startDesignRound(index, provider = ttsProvider) {
+        const selectedRound = roundsList[index];
+        const commonState = {
+            role: interview.role,
+            icon: interview.icon_url,
+            name: `${interview.role}`,
+            level: interview.level,
+            company: interview.company,
+            customInterview: false,
+            roundKey: `${interview.id}-round-${index + 1}`,
+            roundId: selectedRound.roundId,
+            type: selectedRound.type,
+            title: selectedRound.title,
+            description: selectedRound.desc,
+            flow: selectedRound.flow,
+            persona: selectedRound.persona,
+            roundProblemData: selectedRound.problemData,
+            evaluation: selectedRound.evaluation,
+            evaluation_intelligence: selectedRound.evaluation_intelligence,
+            candidate_reasoning_signals: selectedRound.candidate_reasoning_signals,
+            depthScaling: selectedRound.depthScaling,
+            interviewContext: selectedRound.interviewContext,
+            focusAspects: selectedRound.focusAspects,
+            roundNum: index + 1,
+            ttsProvider: provider // Pass selected provider
+        };
+
+        // Server-Side Credit Check
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('credits')
-                    .eq('id', user.id)
-                    .single();
-
-                if (!profile || profile.credits < 5) {
-                    alert("You need at least 5 credits to start an interview!");
-                    return;
-                }
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+            if (!userCreds?.id) {
+                console.error("No user found");
+                navigate('/login');
+                return;
             }
+
+            const response = await fetch('http://localhost:5000/api/start-interview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userCreds.id,
+                    context: commonState // Pass the state as context for prompt generation/logging
+                }),
+            });
+
+            if (response.status === 403) {
+                setShowCreditModal(true);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            // Success - Navigate
+            navigate("/design-round", { state: commonState });
+
         } catch (error) {
-            console.error("Error checking credits:", error);
+            console.error("Error starting Design Round:", error);
+            // Optionally show generic error toast here
         }
+    }
 
-        sessionStorage.removeItem("interviewEnded");
-
+    async function startRound(index) {
         const selectedRound = roundsList[index]; // Use the parsed roundsList
 
         const commonState = {
@@ -229,81 +203,122 @@ const InterviewDetails = () => {
             type: selectedRound.type,
             title: selectedRound.title,
             description: selectedRound.desc,
-            // Context passing
+
+            // New Data Structure Passing
+            flow: selectedRound.flow,
+            persona: selectedRound.persona,
+            roundProblemData: selectedRound.problemData, // Renamed
+            evaluation: selectedRound.evaluation,
+            evaluation_intelligence: selectedRound.evaluation_intelligence,
+            candidate_reasoning_signals: selectedRound.candidate_reasoning_signals,
+
+            // Legacy Context passing (keep for safety during migration)
             depthScaling: selectedRound.depthScaling,
             interviewContext: selectedRound.interviewContext,
             focusAspects: selectedRound.focusAspects,
-            flow: selectedRound.flow,
-            evaluation: selectedRound.evaluation,
+
             // Round Number for Coding Question Fetching
-            roundNum: index + 1
+            roundNum: index + 1,
+            slug: selectedRound.slug // Pass slug to CodingRound
         };
 
-        if (selectedRound.type === 'coding') {
-            // Check if it's a DevOps role to route to the specialized page
-            const isDevOps = interview.role.toLowerCase().includes('devops') ||
-                interview.role.toLowerCase().includes('sre') ||
-                interview.role.toLowerCase().includes('reliability');
+        // Server-Side Credit Check
+        try {
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+            if (!userCreds?.id) {
+                console.error("No user found");
+                navigate('/login');
+                return;
+            }
 
-            if (isDevOps) {
-                navigate("/devops-coding-interview", {
+            const response = await fetch('http://localhost:5000/api/start-interview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userCreds.id,
+                    context: commonState
+                }),
+            });
+
+            if (response.status === 403) {
+                setShowCreditModal(true);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            // Success - Navigate based on type
+            if (selectedRound.type === 'coding' || selectedRound.type === 'coding-algo' || selectedRound.type === 'coding-dsa') {
+
+                navigate("/coding-round", {
+                    state: commonState
+                });
+            } else if (selectedRound.type === 'debugging' || selectedRound.type === 'debug') {
+                navigate("/debug-round", {
+                    state: commonState
+                });
+            } else if (selectedRound.type === 'behavioral') {
+                navigate("/behavioral-round", {
                     state: commonState
                 });
             } else {
-                navigate("/coding-interview", {
+                navigate("/behavioral-round", {
                     state: commonState
                 });
             }
-        } else {
-            navigate("/create/interview/session", {
-                state: commonState
-            });
-        }
-    }
 
-    async function resetProgress() {
-        if (!confirm("Are you sure you want to reset your progress? This will delete all your interview history and feedback for this role.")) return;
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            const { data: existingInterviews } = await supabase
-                .from('interviews')
-                .select('id, feedback_data')
-                .eq('user_id', user.id)
-                .eq('role', interview.role);
-
-            if (existingInterviews && existingInterviews.length > 0) {
-                const idsToDelete = [];
-                existingInterviews.forEach(entry => {
-                    const fb = entry.feedback_data;
-                    if (fb && fb.company === interview.company) {
-                        idsToDelete.push(entry.id);
-                    }
-                });
-
-                if (idsToDelete.length > 0) {
-                    const { error } = await supabase
-                        .from('interviews')
-                        .delete()
-                        .in('id', idsToDelete);
-
-                    if (error) throw error;
-                    setCompletedRounds({});
-                    setProgress(0);
-                    setCurrentScore(0);
-                }
-            }
         } catch (error) {
-            console.error("Error resetting progress:", error);
-            alert("Failed to reset progress.");
+            console.error("Error starting Round:", error);
         }
     }
+
+    // Modal Component
+    const CreditWarningModal = () => (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200 border border-slate-100">
+                <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-2">
+                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                            <Star className="w-6 h-6 text-red-600 fill-red-600" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h3 className="text-xl font-bold text-slate-900">Insufficient Credits</h3>
+                        <p className="text-slate-500 leading-relaxed">
+                            You need at least <span className="font-semibold text-slate-900">5 credits</span> to start a new interview session.
+                        </p>
+                    </div>
+
+                    <div className="w-full pt-4 flex flex-col gap-3">
+                        <button
+                            onClick={() => navigate('/credits')}
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl transition-all hover:scale-[1.02] shadow-md shadow-slate-900/10 flex items-center justify-center gap-2"
+                        >
+                            <Star className="w-4 h-4 fill-white/20" />
+                            Get More Credits
+                        </button>
+                        <button
+                            onClick={() => setShowCreditModal(false)}
+                            className="w-full bg-white hover:bg-slate-50 text-slate-600 font-medium py-3 px-4 rounded-xl transition-colors border border-slate-200"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
+
+            {showCreditModal && <CreditWarningModal />}
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* Header & Buttons */}
@@ -315,26 +330,6 @@ const InterviewDetails = () => {
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                         <span>Back to Interviews</span>
                     </button>
-
-                    <div className="flex items-center gap-3">
-                        {progress > 0 && (
-                            <button
-                                onClick={() => setShowDetailsPopup(true)}
-                                className={`text-sm font-semibold px-4 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm`}
-                            >
-                                View Details
-                            </button>
-                        )}
-
-                        {progress > 0 && (
-                            <button
-                                onClick={resetProgress}
-                                className="text-red-600 hover:text-red-700 text-sm font-medium px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 transition-all flex items-center gap-2"
-                            >
-                                Reset Progress
-                            </button>
-                        )}
-                    </div>
                 </div>
 
                 {/* Hero Section */}
@@ -349,33 +344,11 @@ const InterviewDetails = () => {
                             <div className="space-y-3 md:space-y-2">
                                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight">{interview.role}</h1>
                                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 md:gap-4 text-slate-500">
-                                    <span className="flex items-center gap-1.5 text-sm md:text-base"><Clock className="w-4 h-4" />{interview.total_duration}</span>
+                                    <span className="flex items-center gap-1.5 text-sm md:text-base"><Clock className="w-4 h-4" />{interview.total_duration} minutes</span>
                                     <span className="hidden md:block w-1 h-1 rounded-full bg-slate-400" />
                                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-700">{interview.level}</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className='flex flex-col gap-4 items-center justify-center w-full md:w-auto'>
-                            {progress > 0 && <div className="w-full max-w-[280px] md:w-[200px] flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-slate-500 font-medium">Progress</span>
-                                    <span className={`text-sm font-bold ${colors.text}`}>{progress}%</span>
-                                </div>
-                                <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                        className={`bg-gradient-to-r ${colors.accent} h-1.5 rounded-full transition-all duration-500`}
-                                        style={{ width: `${progress}%` }}
-                                    />
-                                </div>
-                            </div>}
-                            {progress > 0 && <div className="w-full max-w-[280px] md:w-[200px] flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
-                                <span className="text-sm text-slate-500 font-medium">Current Score</span>
-                                <div className="flex items-center gap-1.5">
-                                    <Star className="w-4 h-4 text-orange-500 fill-orange-500" />
-                                    <span className="text-sm font-bold text-slate-900">{currentScore}/10</span>
-                                </div>
-                            </div>}
                         </div>
                     </div>
                 </div>
@@ -424,38 +397,41 @@ const InterviewDetails = () => {
                                         <div className={`absolute top-0 right-0 w-[100px] h-[100px] bg-gradient-to-br ${colors.bg} rounded-full blur-[40px] opacity-50`} />
 
                                         <div className="relative z-10 flex flex-col items-start gap-2 flex-grow">
-                                            <div className="w-full flex items-center justify-between gap-4 mb-4">
+                                            <div className="w-full flex items-start justify-between mb-4">
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <span className="text-sm font-bold text-slate-800 capitalize whitespace-nowrap">
+                                                        {round.type} Round
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                                        <Clock className="w-3.5 h-3.5" />
+                                                        {round.duration}
+                                                    </span>
+                                                </div>
+
                                                 <div className={`w-10 h-10 rounded-lg ${colors.iconBg} border border-slate-200 flex items-center justify-center ${colors.iconText} transition-all`}>
                                                     <round.icon className="w-5 h-5" />
                                                 </div>
-                                                <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                                                    {round.duration}
-                                                </span>
                                             </div>
                                             <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">{round.title}</h3>
-                                            {/* <div className="flex flex-wrap gap-2 mb-3">
-                                                {typeof round.type === 'string' && round.type.split(',').map((t, i) => (
-                                                    <span key={i} className={`text-[10px] font-semibold ${colors.text} ${colors.bg} border ${colors.border} px-2.5 py-1 rounded-full uppercase tracking-wider`}>
-                                                        {t.trim()}
-                                                    </span>
-                                                ))}
-                                            </div> */}
                                             <p className="text-sm text-slate-500 leading-relaxed mb-4">
                                                 {round.desc}
                                             </p>
+
                                         </div>
                                         <div className="relative z-10 flex gap-3 w-full mt-auto pt-2">
-                                            <button
-                                                onClick={() => startRound(round.key)}
-                                                className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
-                                                {completedRounds[round.key] ? "Retry Round" : "Start Round"}
-                                            </button>
-                                            {completedRounds[round.key] && (
+                                            {/* Design Round Logic */}
+                                            {round.type === 'design' ? (
                                                 <button
-                                                    onClick={() => navigate('/dashboard/interview/feedback', { state: completedRounds[round.key] })}
-                                                    className={`flex-1 px-4 py-2.5 rounded-xl bg-white border ${colors.border} ${colors.text} font-semibold hover:bg-slate-50 transition-all duration-300 flex items-center justify-center gap-2 text-sm group/btn shadow-sm`}>
-                                                    Feedback
-                                                    <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                                                    onClick={() => startDesignRound(round.key)}
+                                                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                                                >
+                                                    Start Design Round
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => startRound(round.key)}
+                                                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                                                    Start Round
                                                 </button>
                                             )}
                                         </div>
@@ -466,52 +442,6 @@ const InterviewDetails = () => {
                     </div>
                 </div>
             </main>
-
-            {/* Completed Rounds Details Popup */}
-            {showDetailsPopup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden animate-scale-up">
-                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-                            <h2 className="text-xl font-bold text-slate-900">Completed Rounds</h2>
-                            <button
-                                onClick={() => setShowDetailsPopup(false)}
-                                className="p-2 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-900 transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            {rounds.filter(r => completedRounds[r.key]).map((round) => {
-                                const details = completedRounds[round.key];
-                                const score = details.dbScore !== undefined ? details.dbScore : 0;
-
-                                return (
-                                    <div key={round.key} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm`}>
-                                                <round.icon className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-bold text-slate-900">{round.title}</h3>
-                                                <p className="text-xs text-slate-500">{new Date(details.timestamp || Date.now()).toLocaleDateString()}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className={`text-lg font-bold ${score >= 80 ? 'text-green-600' :
-                                                score >= 50 ? 'text-cyan-600' :
-                                                    'text-orange-500'
-                                                }`}>
-                                                {score}/100
-                                            </span>
-                                            <p className="text-xs text-slate-600">Score</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

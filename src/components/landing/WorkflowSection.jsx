@@ -50,7 +50,8 @@ const WorkflowSection = () => {
                         start: "top top",
                         end: "+=3000",
                         pin: true,
-                        scrub: 1,
+                        scrub: 2, // Increased from 1 for better performance
+                        invalidateOnRefresh: false,
                     }
                 });
 
@@ -119,46 +120,55 @@ const WorkflowSection = () => {
             {/* Container */}
             <div ref={containerRef} className="w-full max-w-7xl mx-auto px-6 h-full relative z-10 flex flex-col justify-center">
 
-                {steps.map((step, index) => (
-                    <div
-                        key={step.id}
-                        className={`step-card step-card-${index} w-full px-6 md:px-8 flex flex-col md:flex-row items-center gap-8 md:gap-20 
-                        md:absolute md:top-1/2 md:-translate-y-1/2 md:left-0 
-                        relative mb-24 last:mb-0`} // Responsive Positioning: Relative stack on Mobile, Absolute center on Desktop
-                    >
-                        {/* Text Content */}
-                        <div className="step-text w-full md:w-5/12 flex flex-col gap-6 order-2 md:order-1">
-                            {/* Step Indicator */}
-                            <div className={`hidden md:inline-flex items-center self-start gap-2 px-4 py-1.5 rounded-full bg-slate-900/5 border border-slate-200`}>
-                                <span className="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-wider">
-                                    {step.id === 'or' ? 'OR' : `Step 0${step.id}`}
-                                </span>
+                {steps.map((step, index) => {
+                    const bgColors = [
+                        'bg-blue-50/60',      // Light blue for step 1
+                        'bg-purple-50/60',    // Light lavender for step 2
+                        'bg-emerald-50/60'    // Light mint for step 3
+                    ];
+
+                    return (
+                        <div
+                            key={step.id}
+                            className={`step-card step-card-${index} w-full px-6 md:px-10 py-8 md:py-12 flex flex-col md:flex-row items-center gap-8 md:gap-20
+                            md:absolute md:top-1/2 md:-translate-y-1/2 md:left-0
+                            relative mb-24 last:mb-0 rounded-3xl border border-white/40 shadow-2xl backdrop-blur-2xl bg-white/40`}
+                            style={{ willChange: 'opacity, transform' }}
+                        >
+                            {/* Text Content */}
+                            <div className="step-text w-full md:w-5/12 flex flex-col gap-6 order-2 md:order-1">
+                                {/* Step Indicator */}
+                                <div className="inline-flex items-center self-start gap-2 px-5 py-2 rounded-full bg-slate-900 border-2 border-slate-900">
+                                    <span className="text-sm font-bold text-white uppercase tracking-wide">
+                                        {step.id === 'or' ? 'OR' : `Step 0${step.id}`}
+                                    </span>
+                                </div>
+
+                                {/* Title */}
+                                <h3 className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight tracking-tight">
+                                    {step.title}
+                                </h3>
+
+                                {/* Description */}
+                                <p className="text-base md:text-xl text-slate-600 leading-relaxed">
+                                    {step.description}
+                                </p>
                             </div>
 
-                            {/* Title */}
-                            <h3 className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
-                                {step.title}
-                            </h3>
-
-                            {/* Description */}
-                            <p className="text-base md:text-xl text-slate-600 leading-relaxed">
-                                {step.description}
-                            </p>
-                        </div>
-
-                        {/* Image Content */}
-                        <div className="step-image w-full md:w-7/12 order-1 md:order-2">
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[16/10]">
-                                <div className="absolute inset-0 pointer-events-none z-10" />
-                                <img
-                                    src={step.image}
-                                    alt={step.title}
-                                    className="w-full h-full object-cover object-left-top"
-                                />
+                            {/* Image Content */}
+                            <div className="step-image w-full md:w-7/12 order-1 md:order-2">
+                                <div className="relative rounded-2xl overflow-hidden shadow-lg aspect-[16/10]">
+                                    <div className="absolute inset-0 pointer-events-none z-10" />
+                                    <img
+                                        src={step.image}
+                                        alt={step.title}
+                                        className="w-full h-full object-cover object-left-top"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
 
             </div>
         </section>

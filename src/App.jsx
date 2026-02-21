@@ -2,8 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import LoginPage from './pages/LoginPage'
 import Dashboard from "./pages/Dashboard"
 import CreateInterview from "./pages/CreateInterview"
-import InterviewSession from "./pages/InterviewSession"
-import Feedback from "./pages/Feedback"
 import ProfileSettings from "./pages/ProfileSettings"
 import PreviousInterviews from "./pages/PreviousInterviews"
 import PopularInterviewsPage from "./pages/PopularInterviewsPage"
@@ -16,8 +14,13 @@ import './App.css'
 import DashboardBlack from "./pages/DashboardBlack"
 import Onboarding from "./pages/Onboarding"
 import CreditsPage from "./pages/Credits"
-import CodingInterview from "./pages/CodingInterview"
-import DevOpsCodingInterview from "./pages/DevOpsCodingInterview"
+
+// Interview Rounds
+import DesignRound from "./pages/DesignRound"
+import CodingRound from "./pages/CodingRound"
+import DebugRound from "./pages/DebugRound"
+import BehavioralRound from "./pages/BehavioralRound"
+import InterviewReport from "./pages/InterviewReport"
 
 const App = () => {
   return (
@@ -31,22 +34,21 @@ const App = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/black" element={<DashboardBlack />} />
-          <Route path="/dashboard/feedback" element={<Feedback />} />
           <Route path="/resume" element={<Resume />} />
           <Route path="/dashboard/all-previous-interviews" element={<PreviousInterviews />} />
           <Route path="/dashboard/all-popular-interviews" element={<PopularInterviewsPage />} />
           <Route path="/dashboard/interview-details/:id" element={<InterviewDetails />} />
-          <Route path="/dashboard/interview-details/:id/:roundId" element={<InterviewSession />} />
-          <Route path="/dashboard/interview" element={<InterviewSession />} />
-          <Route path="/dashboard/interview/feedback" element={<Feedback />} />
           <Route path="/create" element={<CreateInterview />} />
-          <Route path="/create/interview/:id" element={<InterviewSession />} />
-          <Route path="/create/interview/:id/feedback" element={<Feedback />} />
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/coding-interview" element={<CodingInterview />} />
-          <Route path="/devops-coding-interview" element={<DevOpsCodingInterview />} />
+
+          {/* Interview Rounds */}
+          <Route path="/design-round" element={<DesignRound />} />
+          <Route path="/coding-round" element={<CodingRound />} />
+          <Route path="/debug-round" element={<DebugRound />} />
+          <Route path="/behavioral-round" element={<BehavioralRound />} />
+          <Route path="/report" element={<InterviewReport />} />
         </Route>
       </Routes>
     </BrowserRouter>

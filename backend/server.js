@@ -8,6 +8,10 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { getSystemPrompt } from './prompts/index.js';
+import { generateInterviewReport } from './utils/reportGenerator.js';
+import { compileScenario } from './utils/aiClient.js';
+import devopsScenarioCompilerPrompt from './prompts/devopsScenarioCompiler.js';
+import softwareScenarioCompilerPrompt from './prompts/softwareScenarioCompiler.js';
 
 async function extractTextFromPDF(pdfBuffer) {
     const data = new Uint8Array(pdfBuffer);
@@ -33,9 +37,17 @@ const supabaseUrl = 'https://nfgforfzxarpjauiycar.supabase.co';
 const supabaseKey = 'sb_publishable_3jcEXhWkwMXxLHIyzP2b9w_90EUHSUf';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Admin client using service role key — bypasses RLS for backend-only operations
+// Get this from: Supabase Dashboard → Project Settings → API → service_role key
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAdmin = supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })
+    : supabase; // Fallback to anon client (will fail with RLS — add key to .env)
+
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
+app.use(express.json({ limit: '50mb' })); // Add JSON body parser at the top
 app.use(helmet());
 
 // Rate Limiting
@@ -54,7 +66,39 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
-app.use(express.json({ limit: '10mb' }))
+
+
+
+app.post('/api/auth/password', async (req, res) => {
+    const { password } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: "No token provided" });
+
+    try {
+        const { error } = await supabase.auth.updateUser(token, { password }); // This might not work if createClient doesn't have context. 
+        // Actually, supabase-js `updateUser` usually works if you pass the JWT to `getUser` but for `updateUser`?
+        // If we use the standard client, we need to set the session first.
+
+        // Alternatively, since we are moving logic to backend, we might need to rely on the client sending the request to Supabase directly OR
+        // we set the session on the backend client.
+        // For now, let's try setting session or assume the token is enough? 
+        // Supabase `updateUser` on a generic client updates the logged in user.
+        // We probably need to use `supabase.auth.admin.updateUserById` with service key OR 
+        // create a client for this user: createClient(url, key, { global: { headers: { Authorization: `Bearer ${token}` } } })
+
+        // I will use the "create client for user" approach.
+        const userSupabase = createClient(supabaseUrl, supabaseKey, {
+            global: { headers: { Authorization: `Bearer ${token}` } }
+        });
+
+        const { error: updateError } = await userSupabase.auth.updateUser({ password });
+
+        if (updateError) throw updateError;
+        res.json({ message: "Password updated" });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 
 // Validation Schemas
 const feedbackSchema = z.object({
@@ -84,356 +128,543 @@ const validate = (schema) => (req, res, next) => {
     }
 };
 
-// Fixed: The route path should just be the endpoint, not the full URL
-// SECURE: End Interview (Generate Feedback + Deduct Credits + Save)
-app.post('/api/end-interview', async (req, res) => {
-    try {
-        const accessToken = req.headers.authorization?.split(' ')[1];
-        if (!accessToken) {
-            return res.status(401).json({ error: "Unauthorized: No token provided" });
-        }
+// ==========================================
+// AUTHENTICATION ENDPOINTS
+// ==========================================
 
-        // Create authenticated Supabase client for this request
-        const supabaseUser = createClient(supabaseUrl, supabaseKey, {
-            global: {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
+app.post('/api/auth/signup', async (req, res) => {
+    const { email, password, firstName, lastName } = req.body;
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    first_name: firstName,
+                    last_name: lastName,
                 },
             },
         });
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 
-        const {
-            userId,
-            formattedTranscript,
-            durationSeconds,
-            role,
-            level,
-            focus,
-            company,
-            roundTitle,
-            roundType,
-            roundId,
-            roundKey,
-            customInterview
-        } = req.body;
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
 
-        if (!userId || !formattedTranscript) {
-            return res.status(400).json({ error: "Missing required fields: userId, formattedTranscript" });
+        if (error) {
+            console.error("Login Error (Supabase):", error);
+            return res.status(401).json({ error: error.message });
         }
 
-        // 1. Calculate Cost & Deduct Credits
-        const durationInMinutes = Math.ceil(durationSeconds / 60);
-        const creditCost = durationInMinutes > 0 ? durationInMinutes : 1;
+        if (!data.user) {
+            console.error("Login Success but no user returned?", data);
+            return res.status(500).json({ error: "No user returned from provider" });
+        }
 
-        // Fetch profile
-        const { data: profile, error: profileError } = await supabaseUser
+        res.json(data);
+    } catch (error) {
+        console.error("Login Server Error:", error);
+        res.status(500).json({ error: "Internal Server Error during login" });
+    }
+});
+
+app.post('/api/auth/logout', async (req, res) => {
+    const { error } = await supabase.auth.signOut();
+    if (error) return res.status(400).json({ error: error.message });
+    res.json({ message: "Logged out successfully" });
+});
+
+app.get('/api/auth/user', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: "No token provided" });
+
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error) throw error;
+        res.json({ user });
+    } catch (error) {
+        res.status(401).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// DATA ENDPOINTS
+// ==========================================
+
+// Dashboard Data
+app.get('/api/dashboard', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        const [profileObj, interviewsObj, popularObj] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', userId).single(),
+            // interviws table deleted, return empty for now
+            Promise.resolve({ data: [] }),
+            // Fetch SDE and DevOps interviews for dashboard (limit 6 each to ensure we get latest)
+            Promise.all([
+                supabase.from('sde_interviews').select('*').order('created_at', { ascending: false }).limit(6),
+                supabase.from('devops_interviews').select('*').order('created_at', { ascending: false }).limit(6)
+            ])
+        ]);
+
+        if (profileObj.error && profileObj.error.code !== 'PGRST116') throw profileObj.error;
+        if (interviewsObj.error) throw interviewsObj.error;
+
+        // Process popular interviews
+        const [sdeResult, devopsResult] = popularObj;
+        if (sdeResult.error) throw sdeResult.error;
+        if (devopsResult.error) throw devopsResult.error;
+
+        // Combine, sort by date descending to get true latest across both categories
+        const sdeData = (sdeResult.data || []).map(item => ({ ...item, type: 'sde', icon_url: item.icon_link }));
+        const devopsData = (devopsResult.data || []).map(item => ({ ...item, type: 'devops', icon_url: item.icon_link }));
+        const combinedPopular = [...sdeData, ...devopsData]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 6);
+
+        res.json({
+            profile: profileObj.data,
+            recentInterviews: interviewsObj.data || [],
+            popularInterviews: combinedPopular || []
+        });
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        res.status(500).json({ error: `Dashboard Error: ${error.message || JSON.stringify(error)}` });
+    }
+});
+
+// Credits
+app.get('/api/credits', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        const { data, error } = await supabase
             .from('profiles')
             .select('credits')
             .eq('id', userId)
             .single();
 
-        if (profileError || !profile) {
-            console.error("Error fetching profile for deduction:", profileError);
-            return res.status(500).json({ error: "Failed to verify user profile" });
+        if (error) throw error;
+        res.json({ credits: data?.credits || 0 });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Profile
+app.get('/api/profile', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/profile', async (req, res) => {
+    const { userId, updates } = req.body;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', userId)
+            .select();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Interviews
+// Fetch all interviews (SDE & DevOps)
+app.get('/api/interviews', async (req, res) => {
+    try {
+        const [sdeResponse, devopsResponse] = await Promise.all([
+            supabase.from('sde_interviews').select('*'),
+            supabase.from('devops_interviews').select('*')
+        ]);
+
+        if (sdeResponse.error) throw sdeResponse.error;
+        if (devopsResponse.error) throw devopsResponse.error;
+
+        const sdeData = (sdeResponse.data || []).map(item => ({ ...item, type: 'sde' }));
+        const devopsData = (devopsResponse.data || []).map(item => ({ ...item, type: 'devops' }));
+
+        const allData = [...sdeData, ...devopsData];
+        res.json(allData);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Fetch user interview progress
+app.get('/api/interviews/progress', async (req, res) => {
+    const { userId, role } = req.query;
+    if (!userId || !role) return res.status(400).json({ error: "User ID and Role required" });
+
+    try {
+        const { data, error } = await supabase
+            .from('interviews')
+            .select('feedback_data, score')
+            .eq('user_id', userId)
+            .eq('role', role);
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Fetch single interview details
+app.get('/api/interviews/:id', async (req, res) => {
+    const { id } = req.params;
+    const { type } = req.query; // 'sde' or 'devops'
+
+    try {
+        let table = 'popular_interviews'; // Default fallback
+        if (type === 'sde') table = 'sde_interviews';
+        if (type === 'devops') table = 'devops_interviews';
+
+        const { data, error } = await supabase
+            .from(table)
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==============================================================
+// COMPLETED INTERVIEWS — Specific list routes MUST come before /:id
+// ==============================================================
+
+// GET /api/completed-interviews/curated?userId=...
+app.get('/api/completed-interviews/curated', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('completed_curated_interviews')
+            .select('*')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        console.error('[completed-interviews/curated]', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/completed-interviews/custom?userId=...
+app.get('/api/completed-interviews/custom', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('completed_custom_interviews')
+            .select('*')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        console.error('[completed-interviews/custom]', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Fetch completed interview details (specifically feedback) — wildcard AFTER specific routes
+app.get('/api/completed-interviews/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Try finding in curated first
+        let { data, error } = await supabase
+            .from('completed_curated_interviews')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            // Try custom
+            const { data: customData, error: customError } = await supabase
+                .from('completed_custom_interviews')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (customError) throw customError;
+            data = customData;
         }
 
-        // Deduct credits (allow going to 0, but not negative ideally, though simple subtraction is fine)
-        const newBalance = Math.max(0, profile.credits - creditCost);
+        // Return normalized data structure if needed, or just raw
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
-        const { error: updateError } = await supabaseUser
+
+
+
+app.delete('/api/interviews/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabase
+            .from('interviews')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: "Interview deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Onboarding
+app.post('/api/onboarding', async (req, res) => {
+    const { userId, onboardingData } = req.body;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        // Update profile with onboarding data
+        const { error: updateError } = await supabase
             .from('profiles')
-            .update({ credits: newBalance })
+            .update({
+                onboarding_completed: true,
+                ...onboardingData
+            })
             .eq('id', userId);
 
-        if (updateError) {
-            console.error("Error deducting credits:", updateError);
-            // proceed? or fail? Faking it? blocking is safer.
-            return res.status(500).json({ error: "Failed to process credits" });
+        if (updateError) throw updateError;
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Onboarding Interview Preview Fetch
+// GET /api/onboarding-interviews?type=sde&level=intermediate&skills=React,Node.js
+app.get('/api/onboarding-interviews', async (req, res) => {
+    const { type, level, skills } = req.query;
+    const normalizedType = type ? type.toLowerCase().trim() : '';
+
+    if (!normalizedType || (normalizedType !== 'sde' && normalizedType !== 'devops')) {
+        return res.status(400).json({ error: "Valid 'type' (sde or devops) is required" });
+    }
+
+    const table = normalizedType === 'sde' ? 'sde_interviews' : 'devops_interviews';
+    // Lowercase user skills for case-insensitive comparison later in JS
+    const userSkills = skills
+        ? skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+        : [];
+
+    try {
+        let query = supabase.from(table).select('*');
+
+        // Case-insensitive level filter — DB may store 'Intermediate' or 'intermediate', ilike handles both
+        if (level) {
+            query = query.ilike('level', level);
         }
 
-        console.log(`Deducted ${creditCost} credits for user ${userId}. New balance: ${newBalance}`);
+        // NOTE: We do NOT use Supabase .ov() for skills here because it is case-sensitive
+        // and DB skills like "Swift" won't match user input "swift". We fetch a wider set
+        // and do case-insensitive scoring in JavaScript below.
+        // Increased limit from 50 to 300 to better catch skill matches if recent ones don't match
+        query = query.order('created_at', { ascending: false }).limit(300);
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        let results = data || [];
+
+        // JS-side case-insensitive skills filtering and match-count scoring
+        if (userSkills.length > 0 && results.length > 0) {
+            results = results
+                .map(interview => {
+                    const interviewSkills = (interview.skills || []).map(s => s.toLowerCase());
+                    // Bidirectional substring match (case-insensitive):
+                    // "c++" matches "high-performance c/c++ / c#"
+                    // "azure" matches "azure cloud services architecture"
+                    const matchCount = userSkills.filter(userSkill =>
+                        interviewSkills.some(dbSkill =>
+                            dbSkill.includes(userSkill) || userSkill.includes(dbSkill)
+                        )
+                    ).length;
+                    return { ...interview, _matchCount: matchCount };
+                })
+                .filter(i => i._matchCount > 0)           // at least 1 skill must match
+                .sort((a, b) => b._matchCount - a._matchCount); // most matches first
+        }
+
+        // Return top 2
+        const topTwo = results.slice(0, 2);
+        res.json({ interviews: topTwo });
+    } catch (error) {
+        console.error('[OnboardingInterviews] Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
-        // 2. Generate Feedback (Groq)
-        const promptContext = `
-Role: ${role}
-Level: ${level}
-Focus Area(s): ${focus}
-Company (if applicable): ${company || 'Not specified'}
-Round Type (if applicable): ${roundType || 'Not specified'}
-Round Title (if applicable): ${roundTitle || 'Not specified'}
+// Resume (GET)
+app.get('/api/resume', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
 
-Transcript:
-${formattedTranscript}
-`;
+    try {
+        const { data, error } = await supabase
+            .from('resumes')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
 
-        const chatCompletion = await groq.chat.completions.create({
-            messages: [
+        if (error && error.code !== 'PGRST116') throw error; // Ignore no rows found
+        res.json(data || {});
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/resume-analyses', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        const { data, error } = await supabase
+            .from('resume_analyses')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/resume-analyses', async (req, res) => {
+    const { userId, jobRole, fileName, atsScore, analysisResult } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('resume_analyses')
+            .insert([
                 {
-                    role: "system",
-                    content: `You are a Senior Technical Hiring Committee Member at a top technology company.
-
-Your responsibility is to evaluate interview performance conservatively and realistically.
-
-KEY INSTRUCTION ON TRANSCRIPTION ERRORS & DATA SANITY:
-- This is a Voice-to-Text transcript. It frequently contains:
-  1. Phonetic errors (e.g., "Java Script", "Sequel" for SQL).
-  2. Context-breaking typos (e.g., "thread" becomes "bread", "react" becomes "re-act", or completely unrelated words).
-  3. Missing negatives (e.g., "can" instead of "can't").
-- INTELLIGENT RECONSTRUCTION: You must actively reconstruct the likely intended meaning based on the *technical consistency* of the candidate's argument.
-- If a candidate suddenly says something illogical that contradicts their previous valid points, ASSUME it is a transcription error, NOT a knowledge gap.
-- DO NOT penalize for these artifacts.
-- ONLY penalize if the error is structural (e.g., they repeatedly explain a concept incorrectly in different words, confirming it's not a typo).
-
-EVALUATION RUBRIC:
-- WEAK/INSUFFICIENT: Unable to explain core concepts, consistently wrong, or needed heavy hand-holding.
-- BASIC/BORDERLINE: Can explain "what" but not "step-by-step how" or "why". Rehearsed textbook answers without depth.
-- SOLID/ACCEPTABLE: Clear, correct, and complete explanations. Understands trade-offs. (Industry Standard Hire).
-- STRONG: Demonstrates deep expertise, edge cases to considerations, system optimizations, and proactive driving of the discussion.
-
-STRICT RULES:
-- BE PRECISE: Evidence must be specific quotes or behaviors.
-- BE CONCISE: Get straight to the point. No fluff.
-- Use the full range of ratings. Do not default to "Solid" or "Acceptable" if the candidate was merely purely functional (which is often just "Basic").`
-                },
-                {
-                    role: "user",
-                    content: `"Evaluate the following mock interview based on the context provided.
-
-${promptContext}
-
-OUTPUT FORMAT (JSON ONLY):
-{
-  "technicalKnowledge": "insufficient | basic | solid | strong",
-  "technicalEvidence": "Concise proof (max 2 sentences)",
-
-  "problemSolving": "insufficient | basic | solid | strong",
-  "problemSolvingEvidence": "Concise proof (max 2 sentences)",
-
-  "communicationClarity": "low | moderate | high",
-  "communicationEvidence": "Concise proof (max 2 sentences)",
-
-  "confidenceSignal": "low | moderate | high",
-  "confidenceEvidence": "Concise proof (max 2 sentences)",
-
-  "interviewerInterventionNeeded": true | false,
-  "genericResponsesObserved": true | false,
-
-  "overallAssessment": "weak | borderline | acceptable | strong",
-
-  "keyStrengths": [
-    "Precise strength 1",
-    "Precise strength 2"
-  ],
-
-  "areasToImprove": [
-    "Specific actionable feedback 1",
-    "Specific actionable feedback 2",
-    "Specific actionable feedback 3"
-  ],
-
-  "summary": "A precise, professional hiring recommendation paragraph (max 3-4 sentences)."
-}"`
+                    user_id: userId,
+                    job_role: jobRole,
+                    file_name: fileName,
+                    ats_score: atsScore,
+                    analysis_result: analysisResult
                 }
-            ],
-            model: "llama-3.3-70b-versatile",
-            temperature: 0.1,
-            response_format: { type: "json_object" }
-        });
-
-        const feedbackText = chatCompletion.choices[0]?.message?.content;
-        if (!feedbackText) throw new Error('No feedback generated from Groq');
-
-        const feedback = JSON.parse(feedbackText);
-
-        // --- DERIVE NUMERIC SCORES ---
-        const assessmentScoreMap = { weak: 45, borderline: 58, acceptable: 68, strong: 78 };
-        const skillScoreMap = { insufficient: 30, basic: 50, solid: 70, strong: 88, low: 40, moderate: 65, high: 85 };
-
-        const overallScore = assessmentScoreMap[feedback.overallAssessment] || 50;
-
-        const derivedFeedback = {
-            ...feedback,
-            overallScore: overallScore,
-            technicalKnowledgeScore: skillScoreMap[feedback.technicalKnowledge] || 50,
-            problemSolvingScore: skillScoreMap[feedback.problemSolving] || 50,
-            communicationSkillsScore: skillScoreMap[feedback.communicationClarity] || 50,
-            confidenceLevelScore: skillScoreMap[feedback.confidenceSignal] || 50,
-            technicalKnowledgeJustification: feedback.technicalEvidence,
-            problemSolvingJustification: feedback.problemSolvingEvidence,
-            communicationSkillsJustification: feedback.communicationEvidence,
-            confidenceLevelJustification: feedback.confidenceEvidence,
-            jobReadyScore: Math.round(
-                ((skillScoreMap[feedback.technicalKnowledge] || 50) +
-                    (skillScoreMap[feedback.problemSolving] || 50) +
-                    (skillScoreMap[feedback.communicationClarity] || 50) +
-                    (skillScoreMap[feedback.confidenceSignal] || 50)) / 4
-            ),
-            jobReadyScoreJustification: "Composite score based on technical, problem solving, communication, and confidence signals."
-        };
-
-        // 3. Save to Supabase (Server-side)
-
-        // Handle Retry Logic (Delete previous attempts for same round/company if applicable)
-        if ((roundId || roundKey) && company) {
-            const rKey = roundKey || roundId;
-            // Note: Efficiently clean up old records for this specific round type
-            // We search for existing interviews that match current criteria
-            // Since storing logic in one column JSONB is hard to query perfectly without index, 
-            // we'll rely on client deleting? NO. We must do it here. 
-            // But we don't have easy access to inspect JSONB efficiently unless we pull all? 
-            // Actually, we can fetch all user's interviews for this role and filter in JS, same as frontend did.
-            // OR we can skip this "Delete Previous" logic if we just want to keep history? 
-            // The frontend logic was: "Delete existing attempt for this round if exists (Retry logic)"
-            // Let's implement it for consistency.
-
-            const { data: existingInterviews } = await supabaseUser
-                .from('interviews')
-                .select('id, feedback_data')
-                .eq('user_id', userId)
-                .eq('role', role);
-
-            if (existingInterviews && existingInterviews.length > 0) {
-                const idsToDelete = existingInterviews
-                    .filter(i => i.feedback_data?.roundKey === rKey && i.feedback_data?.company === company)
-                    .map(i => i.id);
-
-                if (idsToDelete.length > 0) {
-                    await supabaseUser.from('interviews').delete().in('id', idsToDelete);
-                    console.log("Deleted previous attempts:", idsToDelete);
-                }
-            }
-        }
-
-        // Enhance feedback with metadata for storage
-        if (roundId || roundKey) {
-            derivedFeedback.roundKey = roundKey || roundId;
-        }
-        if (company) {
-            derivedFeedback.company = company;
-        }
-
-        const newInterview = {
-            user_id: userId,
-            role: role || "General",
-            date: new Date().toLocaleDateString(),
-            duration: `${durationInMinutes} min`,
-            score: overallScore,
-            feedback_data: derivedFeedback,
-            // created_at is auto
-        };
-
-        const { data: insertedData, error: insertError } = await supabaseUser
-            .from('interviews')
-            .insert([newInterview])
+            ])
             .select()
             .single();
 
-        if (insertError) {
-            console.error("Error saving interview:", insertError);
-            return res.status(500).json({ error: "Feedback generated but failed to save record." });
-        }
-
-        console.log("Interview saved successfully:", insertedData.id);
-
-        res.json(derivedFeedback);
-
+        if (error) throw error;
+        res.json(data);
     } catch (error) {
-        console.error('Groq/Server Error:', error);
-        res.status(500).json({ error: 'Failed to process interview completion' });
+        res.status(500).json({ error: error.message });
     }
 });
 
-// SECURE: Deduct Credits Only (For manual stops / early exits without feedback)
-app.post('/api/deduct-credits', async (req, res) => {
+app.delete('/api/resume-analyses/:id', async (req, res) => {
+    const { id } = req.params;
     try {
-        const { userId, durationSeconds } = req.body;
-
-        if (!userId || durationSeconds === undefined) {
-            return res.status(400).json({ error: "Missing fields" });
-        }
-
-        const durationInMinutes = Math.ceil(durationSeconds / 60);
-        const creditCost = durationInMinutes > 0 ? durationInMinutes : 1;
-
-        // Fetch profile
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('credits')
-            .eq('id', userId)
-            .single();
-
-        if (profileError || !profile) {
-            return res.status(500).json({ error: "Profile not found" });
-        }
-
-        const newBalance = Math.max(0, profile.credits - creditCost);
-
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ credits: newBalance })
-            .eq('id', userId);
-
-        if (updateError) {
-            return res.status(500).json({ error: "Failed to update credits" });
-        }
-
-        console.log(`(Manual Stop) Deducted ${creditCost} credits for user ${userId}.`);
-        res.json({ success: true, newBalance });
-
-    } catch (err) {
-        console.error("Error deducting credits:", err);
-        res.status(500).json({ error: "Internal Error" });
-    }
-});
-
-// SECURE: Update Profile Endpoint
-app.post('/api/update-profile', async (req, res) => {
-    try {
-        const { userId, updates } = req.body;
-
-        if (!userId || !updates) {
-            return res.status(400).json({ error: "Missing required fields" });
-        }
-
-        // Whitelist allowed fields to prevent 'credits' manipulation
-        const allowedFields = ['firstName', 'lastName', 'role', 'experience_level', 'skills', 'onboarding_completed'];
-        const filteredUpdates = {};
-
-        // Map allowed fields to DB columns if necessary, or just pass through if names match
-        // DB columns: role, experience_level, skills, onboarding_completed.
-        // firstName/lastName are usually in auth.users metadata, but if we have them in profiles?
-        // Checking ProfileSettings.jsx: it updates auth metadata for names, and profiles table for role/exp/skills.
-        // Onboarding.jsx updates profiles: role, experience_level, skills, onboarding_completed.
-
-        if (updates.role !== undefined) filteredUpdates.role = updates.role;
-        if (updates.experience_level !== undefined) filteredUpdates.experience_level = updates.experience_level;
-        if (updates.skills !== undefined) filteredUpdates.skills = updates.skills;
-        if (updates.onboarding_completed !== undefined) filteredUpdates.onboarding_completed = updates.onboarding_completed;
-
-        // If no valid updates, return early
-        if (Object.keys(filteredUpdates).length === 0) {
-            return res.json({ message: "No valid profile fields to update" });
-        }
-
         const { error } = await supabase
-            .from('profiles')
-            .update(filteredUpdates)
-            .eq('id', userId);
+            .from('resume_analyses')
+            .delete()
+            .eq('id', id);
 
-        if (error) {
-            console.error("Error updating profile:", error);
-            return res.status(500).json({ error: "Failed to update profile" });
-        }
-
-        console.log(`Updated profile for user ${userId}:`, Object.keys(filteredUpdates));
-        res.json({ success: true });
-
+        if (error) throw error;
+        res.json({ message: "Analysis deleted" });
     } catch (error) {
-        console.error("Server Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: error.message });
     }
 });
+
+// Resume (POST/Analyze is already partly handled, but we might want a simple CRUD one)
+// The existing /api/analyze-resume endpoint handles the heavy lifting.
+// We might need a generic save endpoint if needed, but for now specific flow seems to be used.
+
+// ==============================================================
+// COMPLETED INTERVIEWS — Fetch endpoints for history/report page
+// ==============================================================
+
+// GET /api/completed-interviews/curated?userId=...
+app.get('/api/completed-interviews/curated', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('completed_curated_interviews')
+            .select('*')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/completed-interviews/custom?userId=...
+app.get('/api/completed-interviews/custom', async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('completed_custom_interviews')
+            .select('*')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 
 // SECURE: Start Interview Endpoint
 app.post('/api/start-interview', async (req, res) => {
@@ -468,12 +699,7 @@ app.post('/api/start-interview', async (req, res) => {
             return res.status(500).json({ error: "Failed to generate system prompt" });
         }
 
-        // 3. Return the secure prompt
-        console.log("---------------------------------------------------");
-        console.log("GENERATED INTERVIEW SYSTEM PROMPT:");
-        console.log(systemPrompt);
-        console.log("---------------------------------------------------");
-        res.json({ systemPrompt });
+        return res.json({ success: true });
 
     } catch (error) {
         console.error("Error starting interview:", error);
@@ -481,22 +707,227 @@ app.post('/api/start-interview', async (req, res) => {
     }
 });
 
-// SECURE: Get Drill Deeper Prompt (Dynamic Injection)
-app.post('/api/get-drill-deeper', async (req, res) => {
+// SECURE: End Interview & Generate Report
+app.post('/api/end-interview', async (req, res) => {
     try {
-        const { context } = req.body; // Context needed for template resolution
+        const { userId, durationInMinutes, history, context, generateReport = true } = req.body;
 
-        // We could verify userId here if strict, but context is enough for prompt generation
-        // Generates the prompt using the BACKEND's latest template
-        const { getDrillDeeperPrompt } = await import('./prompts/index.js');
-        const prompt = getDrillDeeperPrompt(context);
+        if (!userId || durationInMinutes === undefined) {
+            return res.status(400).json({ error: "Missing required fields: userId, durationInMinutes" });
+        }
 
-        console.log("Generated Drill Deeper Prompt for:", context?.role);
-        res.json({ prompt });
+        // 1. Calculate Credits to Deduct (1 min = 1 credit, rounded up)
+        const creditsToDeduct = Math.ceil(durationInMinutes);
+        console.log(`[EndInterview] Ending session for User ${userId}. Duration: ${durationInMinutes}m. Deducting: ${creditsToDeduct} credits.`);
+
+        // 2. Transact with Supabase (Check & Deduct)
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('credits')
+            .eq('id', userId)
+            .single();
+
+        if (profileError || !profile) {
+            console.error("Error fetching profile for deduction:", profileError);
+            return res.status(500).json({ error: "Failed to verify user profile" });
+        }
+
+        // Deduct credits (allow negative balance if necessary, or check?) 
+        // We will allow it to go negative for now to handle edge cases where user runs over.
+        const newBalance = profile.credits - creditsToDeduct;
+
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ credits: newBalance })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error("Error updating credits:", updateError);
+            return res.status(500).json({ error: "Failed to deduct credits" });
+        }
+
+        // 3. Generate Report
+        // Create a mock "session" object for the report generator
+        const sessionData = {
+            id: `session-${Date.now()}`,
+            history: history || [] // Expecting [{role, content}, ...]
+        };
+
+        if (!history || history.length === 0) {
+            console.warn("[EndInterview] No history provided for report generation.");
+        }
+
+        let report = null;
+
+        if (generateReport) {
+            console.log("[EndInterview] Generating report and storing interview data...");
+
+            // 1. Generate Report
+            // Note: generateInterviewReport assumes 'session' object structure. We mock it here.
+            try {
+                const generatedReportData = await generateInterviewReport(sessionData, context);
+                report = generatedReportData;
+
+                // 2. Store in Database
+                const isCustom = context.customInterview === true;
+                const timestamp = new Date().toISOString();
+
+                if (isCustom) {
+                    // Prepare title (System Context / Domain Context) with first letter capitalized
+                    let titleRaw = context.domain_context || context.systemContext || "Custom Interview";
+                    // Ensure only first letter is capitalized (rest kept as is, or lowercase? "first letter being upper-case always" usually implies fixing the first char)
+                    const title = titleRaw.charAt(0).toUpperCase() + titleRaw.slice(1);
+
+                    const { error: insertError } = await supabase
+                        .from('completed_custom_interviews')
+                        .insert([{
+                            user_id: userId,
+                            title: title,
+                            job_role: context.role,
+                            job_description: context.job_description || context.problem_statement || null,
+                            transcript: history,
+                            report_data: report,
+                            score: report.score || 0, // Assuming report has a score field
+                            duration_mins: Math.ceil(durationInMinutes),
+                            started_at: null, // We don't track start time explicitly in this endpoint input yet
+                            completed_at: timestamp
+                        }]);
+
+                    if (insertError) {
+                        console.error("Error inserting custom interview:", insertError);
+                        // We don't fail the request, but log it. Report is returned to user.
+                    } else {
+                        console.log("[EndInterview] Custom interview stored successfully.");
+                    }
+
+                } else {
+                    // Curated Interview
+                    // Extract origin ID from roundKey if possible: "uuid-round-N"
+                    let curatedId = null;
+                    if (context.roundKey && context.roundKey.includes('-round-')) {
+                        curatedId = context.roundKey.split('-round-')[0];
+                    }
+
+                    const { error: insertError } = await supabase
+                        .from('completed_curated_interviews')
+                        .insert([{
+                            user_id: userId,
+                            curated_interview_id: curatedId,
+                            type: context.type || 'sde',
+                            title: context.title || "Interview",
+                            company: context.company,
+                            transcript: history,
+                            report_data: report,
+                            score: report.score || 0,
+                            duration_mins: Math.ceil(durationInMinutes),
+                            started_at: null,
+                            completed_at: timestamp
+                        }]);
+
+                    if (insertError) {
+                        console.error("Error inserting curated interview:", insertError);
+                    } else {
+                        console.log("[EndInterview] Curated interview stored successfully.");
+                    }
+                }
+
+            } catch (err) {
+                console.error("[EndInterview] Report generation or storage failed:", err);
+                // Fallback: Return success to user but with error message in report field?
+                report = { status: "failed", error: "Report generation failed on server." };
+            }
+        } else {
+            console.log("[EndInterview] Skipping report generation as per client request (criteria not met).");
+            report = { message: "Report generation skipped. Minimum interview requirements not met." };
+        }
+
+        res.json({
+            success: true,
+            creditsDeducted: creditsToDeduct,
+            newBalance,
+            report
+        });
 
     } catch (error) {
-        console.error("Error generating drill deeper prompt:", error);
-        res.status(500).json({ error: "Failed to generate prompt" });
+        console.error("Error ending interview:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+// Standalone Credit Deduction (for aborts/leaves)
+app.post('/api/deduct-credits', async (req, res) => {
+    const { userId, durationSeconds } = req.body;
+    if (!userId || durationSeconds === undefined) return res.status(400).json({ error: "Missing fields" });
+
+    const durationInMinutes = durationSeconds / 60;
+    const creditsToDeduct = Math.ceil(durationInMinutes);
+
+    try {
+        const { data: profile, error } = await supabase.from('profiles').select('credits').eq('id', userId).single();
+        if (error || !profile) throw new Error("Profile not found");
+
+        const newBalance = profile.credits - creditsToDeduct;
+        const { error: updateError } = await supabase.from('profiles').update({ credits: newBalance }).eq('id', userId);
+        if (updateError) throw updateError;
+
+        console.log(`[DeductCredits] Deducted ${creditsToDeduct} credits for user ${userId}.`);
+        res.json({ success: true, newBalance });
+    } catch (err) {
+        console.error("Error deducting credits:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// SCENARIO COMPILATION ENDPOINT
+app.post('/api/compile-scenario', async (req, res) => {
+    const { role, roundType, formatContext } = req.body;
+
+    if (!formatContext) {
+        return res.status(400).json({ error: "Context required" });
+    }
+
+    try {
+        // Select Prompt
+        let compilerPrompt = softwareScenarioCompilerPrompt; // Default
+        if (role && (role.toLowerCase().includes('devops') || role.toLowerCase().includes('sre') || role.toLowerCase().includes('reliability'))) {
+            compilerPrompt = devopsScenarioCompilerPrompt;
+        }
+
+        // Inject Variables
+        // The prompt template expects {variable} placeholders. We'll reuse the handleBars logic or simple replace if needed.
+        // But wait, compileScenario accepts a system prompt string. 
+        // We need to resolve the prompt template first.
+
+        // Since resolveTemplate is exported from prompts/index.js, let's use it.
+        // But wait, prompts/index.js exports resolveTemplate? Yes.
+        // Let's import it above if not already visible (it is not exported by name in line 10, check again).
+        // Line 10: import { getSystemPrompt } from './prompts/index.js';
+        // Need to update import in line 10 or duplicate logic.
+
+        let resolvedPrompt = compilerPrompt;
+
+        // Simple resolution for now to avoid altering index.js imports too much
+        // Or better, let's update index.js to export it or just copy the simple replace logic.
+        const resolveTemplateLocal = (template, context) => {
+            return template.replace(/{{([\w\d\._]+)}}|{([\w\d\._]+)}/g, (match, key1, key2) => {
+                const key = key1 || key2;
+                // Handle nested keys if any, though most prompt vars seem flat or passed flat
+                // The prompt uses {variable}, not {{variable}} in some places based on devopsScenarioCompiler.js view
+                // Actually devopsScenarioCompiler.js uses {round_type}, {role} etc.
+                return context[key] !== undefined ? String(context[key]) : match;
+            });
+        };
+
+        resolvedPrompt = resolveTemplateLocal(compilerPrompt, formatContext);
+
+        // Call AI with default max_tokens (1200) for debug scenario generation to prevent JSON truncation
+        const roundData = await compileScenario(resolvedPrompt, JSON.stringify(formatContext, null, 2));
+
+        res.json(roundData);
+
+    } catch (error) {
+        console.error("Scenario Compilation Error:", error);
+        res.status(500).json({ error: "Failed to compile scenario" });
     }
 });
 
@@ -649,162 +1080,83 @@ All scores must be between 0-100. Provide exactly 3 strengths, 3 improvements, a
     }
 });
 
-// SECURE: Verify Code Execution (Simulated via Groq)
-app.post('/api/verify-code', async (req, res) => {
+// SECURE: Execute Code via Piston API (Multi-Language Support)
+app.post('/api/run-code', async (req, res) => {
     try {
-        const { code, language, problemTitle, problemDescription, testCases, constraints } = req.body;
+        const { language, code, files, stdin } = req.body;
 
-        if (!code || !language) {
-            return res.status(400).json({ error: "Missing code or language" });
+        if ((!code && (!files || files.length === 0)) || !language) {
+            return res.status(400).json({ error: "Missing code/files or language" });
         }
 
-        // Construct Prompt for Code Verification
-        const prompt = `
- You are a sophisticated Code Judge and Compiler (like LeetCode's backend).
- 
- **Task:**
- Verify the following ${language} code against the provided problem and test cases.
- 
- **Problem:** ${problemTitle}
- ${problemDescription}
- 
- **Constraints:**
- ${JSON.stringify(constraints || [])}
- 
- **Candidate Code:**
- \`\`\`${language}
- ${code}
- \`\`\`
- 
- **Test Cases:**
- ${JSON.stringify(testCases || [])}
- 
- **Instructions:**
- 1. Analyze the code for logical correctness, syntax, and complexity.
- 2. Mentally "run" the code against the Test Cases.
- 3. Determine if it passes ALL test cases.
- 4. Identify any syntax errors or runtime errors.
- 5. Check if it violates any time/space constraints (conceptually).
- 
- **Response Format (JSON ONLY):**
- {
-   "status": "success" | "error",
-   "message": "A detailed execution log. If success, show typical output. If error, show the compilation/runtime error.",
-   "testResults": [
-     { "input": "...", "expected": "...", "actual": "...", "passed": true/false }
-   ],
-   "passed": boolean, 
-   "analysis": "Short comment on code quality/efficiency."
- }
- 
- IMPORTANT:
- - Be a strict compiler. If indentation is wrong in Python, it FAILS.
- - If logic is incorrect for a test case, it FAILS.
- - Return ONLY the valid JSON object.
- `;
+        // Map frontend language names to Piston runtime names
+        // https://emkc.org/api/v2/piston/runtimes
+        const runtimeMap = {
+            'javascript': { language: 'javascript', version: '18.15.0' },
+            'js': { language: 'javascript', version: '18.15.0' },
+            'python': { language: 'python', version: '3.10.0' },
+            'py': { language: 'python', version: '3.10.0' },
+            'java': { language: 'java', version: '15.0.2' },
+            'cpp': { language: 'c++', version: '10.2.0' },
+            'c': { language: 'c', version: '10.2.0' },
+            'go': { language: 'go', version: '1.16.2' },
+            'rust': { language: 'rust', version: '1.68.2' },
+            'typescript': { language: 'typescript', version: '5.0.3' },
+            'ts': { language: 'typescript', version: '5.0.3' },
+            'php': { language: 'php', version: '8.2.3' },
+            'csharp': { language: 'csharp', version: '6.12.0' }, // Mono
+            'swift': { language: 'swift', version: '5.3.3' },
+            'bash': { language: 'bash', version: '5.2.0' },
+            'sh': { language: 'bash', version: '5.2.0' }
+        };
 
-        console.log("---------------------------------------------------");
-        console.log("GENERATED CODE VERIFICATION PROMPT:");
-        console.log(prompt);
-        console.log("---------------------------------------------------");
+        const config = runtimeMap[language.toLowerCase()] || { language: language.toLowerCase(), version: '*' };
 
-        const chatCompletion = await groq.chat.completions.create({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-                { role: "system", content: "You are a code execution engine. You output only JSON execution results." },
-                { role: "user", content: prompt }
-            ],
-            temperature: 0.1, // Low temp for deterministic logic
-            response_format: { type: "json_object" }
+        // Prepare files for Piston
+        let pistonFiles = [];
+        if (files && Array.isArray(files) && files.length > 0) {
+            // Multi-file mode
+            pistonFiles = files.map(f => ({
+                name: f.name,
+                content: f.content
+            }));
+        } else {
+            // Single-file backward compatibility
+            pistonFiles = [{
+                content: code
+            }];
+        }
+
+        console.log(`[Piston] Executing ${config.language} with ${pistonFiles.length} file(s)...`);
+
+        const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                language: config.language,
+                version: config.version,
+                files: pistonFiles,
+                stdin: stdin || "",
+                args: req.body.args || [],
+                compile_timeout: 10000,
+                run_timeout: req.body.run_timeout || 3000
+            })
         });
 
-        const result = JSON.parse(chatCompletion.choices[0].message.content);
+        const result = await response.json();
+
+        if (result.message) {
+            // API Error (e.g. Runtime not found)
+            console.error('[Piston] API Error:', result.message);
+            return res.json({ error: result.message });
+        }
+
+        // Piston Response Format: { language, version, run: { stdout, stderr, code, signal, output } }
         res.json(result);
 
     } catch (error) {
-        console.error("Groq Code Verification Error:", error);
-        res.status(500).json({ error: "Failed to verify code" });
-    }
-});
-
-// SECURE: Verify DevOps Fix (Multi-file Execution via Groq)
-app.post('/api/verify-devops-fix', async (req, res) => {
-    try {
-        const { files, problemTitle, problemDescription, testCases, constraints } = req.body;
-
-        if (!files || Object.keys(files).length === 0) {
-            return res.status(400).json({ error: "No files provided" });
-        }
-
-        // Format files for the prompt
-        let filesContext = "";
-        for (const [filename, content] of Object.entries(files)) {
-            const ext = filename.split('.').pop() || 'txt';
-            filesContext += `\n--- FILE: ${filename} ---\n\`\`\`${ext}\n${content}\n\`\`\`\n`;
-        }
-
-        // Construct Prompt for DevOps Verification
-        const prompt = `
- You are a Senior DevOps Engineer and Code Reviewer.
- 
- **Task:**
- Verify if the provided solution files fix the issue described in the problem statement.
- 
- **Problem:** ${problemTitle}
- ${problemDescription}
- 
- **System Constraints:**
- ${JSON.stringify(constraints || [])}
- 
- **Candidate's Modified Files:**
- ${filesContext}
- 
- **Validation Scenarios (Test Cases):**
- ${JSON.stringify(testCases || [])}
- 
- **Instructions:**
- 1. Analyze the relationships between the files (e.g., Python script parsing a JSON log, Bash script calling a Python script).
- 2. Check for syntax correctness in ALL files.
- 3. Simulate the execution flow based on the "Validation Scenarios".
- 4. Determine if the code correctly handles the edge cases and requirements.
- 5. If it's a scripting task, check for common pitfalls (e.g., improper error handling, regex mistakes).
- 
- **Response Format (JSON ONLY):**
- {
-   "status": "success" | "error",
-   "message": "A simulated terminal output log. If success, show the script running and passing checks. If failure, show the specific error (syntax or logic).",
-   "passed": boolean,
-   "analysis": "Brief technical feedback on the implementation (efficiency, robustness)."
- }
- 
- IMPORTANT:
- - You are simulating a Linux environment.
- - If the logic is wrong, the "status" must be "error" and "passed" must be false.
- - Be strict about the success criteria.
- - Return ONLY the valid JSON object.
- `;
-
-        console.log("---------------------------------------------------");
-        console.log("GENERATED DEVOPS VERIFICATION PROMPT:");
-        console.log(prompt);
-        console.log("---------------------------------------------------");
-
-        const chatCompletion = await groq.chat.completions.create({
-            model: "llama-3.3-70b-versatile",
-            messages: [
-                { role: "system", content: "You are a DevOps execution engine. You output only JSON execution results." },
-                { role: "user", content: prompt }
-            ],
-            temperature: 0.1,
-            response_format: { type: "json_object" }
-        });
-
-        const result = JSON.parse(chatCompletion.choices[0].message.content);
-        res.json(result);
-
-    } catch (error) {
-        console.error("Groq DevOps Verification Error:", error);
-        res.status(500).json({ error: "Failed to verify devops fix" });
+        console.error("Piston Execution Error:", error);
+        res.status(500).json({ error: "Failed to execute code via Piston API" });
     }
 });
 

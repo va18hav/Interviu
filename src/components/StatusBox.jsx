@@ -51,7 +51,7 @@ const StatusBox = ({ interviewState, currentQuestion, currentAnswer }) => {
                             <p className="text-base sm:text-lg font-medium text-white leading-relaxed">
                                 {interviewState === "initializing" && "Please wait while we prepare your interview..."}
                                 {interviewState === "ai-speaking" && (currentQuestion || <span className="animate-pulse text-white/50">Speaking...</span>)}
-                                {interviewState === "user-speaking" && (currentAnswer || <span className="animate-pulse text-white/50">Listening...</span>)}
+                                {interviewState === "user-speaking" && currentAnswer}
                                 {interviewState === "ending" && "Wrapping up session..."}
                                 {interviewState === "ended" && "Interview ended."}
                             </p>

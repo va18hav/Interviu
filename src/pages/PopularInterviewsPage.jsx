@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Users, Star, Clock, ChevronRight, TrendingUp, Filter } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import PopularInterviewsHero from "../components/PopularInterviewsHero";
-import { supabase } from "../supabaseClient";
 
 const PopularInterviewsPage = () => {
     const navigate = useNavigate();
@@ -24,19 +23,10 @@ const PopularInterviewsPage = () => {
     useEffect(() => {
         const fetchInterviews = async () => {
             try {
-                const [sdeResponse, devopsResponse] = await Promise.all([
-                    supabase.from('sde_interviews').select('*'),
-                    supabase.from('devops_interviews').select('*')
-                ]);
+                const response = await fetch('http://localhost:5000/api/interviews');
+                const allData = await response.json();
 
-                if (sdeResponse.error) throw sdeResponse.error;
-                if (devopsResponse.error) throw devopsResponse.error;
-
-                const sdeData = (sdeResponse.data || []).map(item => ({ ...item, type: 'sde' }));
-                const devopsData = (devopsResponse.data || []).map(item => ({ ...item, type: 'devops' }));
-
-                // Combine data
-                const allData = [...sdeData, ...devopsData];
+                if (!response.ok) throw new Error(allData.error || "Failed to fetch interviews");
 
                 if (allData.length > 0) {
                     // Normalize data: map icon_link to icon_url
@@ -117,26 +107,26 @@ const PopularInterviewsPage = () => {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate('/dashboard')}
-                            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-sm"
+                            className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all shadow-sm"
                         >
-                            <ArrowLeft className="w-6 h-6" />
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-900">Popular Interviews</h1>
-                            <p className="text-slate-500 mt-1">Explore trending interview simulations</p>
+                            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Popular Interviews</h1>
+                            <p className="text-gray-500 mt-1 font-medium">Explore trending interview simulations</p>
                         </div>
                     </div>
                     {/* Filters Row */}
                     <div className="flex flex-wrap items-center justify-end gap-3">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 text-sm">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 text-sm font-medium shadow-sm">
                             <Filter className="w-4 h-4" />
-                            <span className="font-medium">Filters:</span>
+                            <span>Filters:</span>
                         </div>
 
                         <select
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm cursor-pointer hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium cursor-pointer hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100 shadow-sm"
                         >
                             <option value="All">All Roles</option>
                             {ROLE_CATEGORIES.map(category => (
@@ -147,7 +137,7 @@ const PopularInterviewsPage = () => {
                         <select
                             value={companyFilter}
                             onChange={(e) => setCompanyFilter(e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm cursor-pointer hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium cursor-pointer hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100 shadow-sm"
                         >
                             <option value="All">All Companies</option>
                             {uniqueCompanies.map(company => (
@@ -158,7 +148,7 @@ const PopularInterviewsPage = () => {
                         <select
                             value={levelFilter}
                             onChange={(e) => setLevelFilter(e.target.value)}
-                            className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm cursor-pointer hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                            className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium cursor-pointer hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-100 shadow-sm"
                         >
                             <option value="All">All Levels</option>
                             {uniqueLevels.map(level => (
@@ -173,7 +163,7 @@ const PopularInterviewsPage = () => {
                                     setCompanyFilter('All');
                                     setLevelFilter('All');
                                 }}
-                                className="text-sm text-cyan-600 hover:text-cyan-700 hover:underline px-2"
+                                className="text-sm text-gray-500 hover:text-gray-900 font-medium px-2 transition-colors"
                             >
                                 Clear
                             </button>
@@ -183,83 +173,65 @@ const PopularInterviewsPage = () => {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredInterviews.length > 0 ? filteredInterviews.map((interview) => {
-                            const colorKey = getCompanyColor(interview.company);
-
-                            const colorClasses = {
-                                cyan: { bg: "from-cyan-100 to-cyan-200", border: "border-cyan-200", text: "text-cyan-600", accent: "from-cyan-500 to-cyan-600" },
-                                blue: { bg: "from-blue-100 to-blue-200", border: "border-blue-200", text: "text-blue-600", accent: "from-blue-500 to-blue-600" },
-                                purple: { bg: "from-purple-100 to-purple-200", border: "border-purple-200", text: "text-purple-600", accent: "from-purple-500 to-purple-600" },
-                                pink: { bg: "from-pink-100 to-pink-200", border: "border-pink-200", text: "text-pink-600", accent: "from-pink-500 to-pink-600" },
-                                green: { bg: "from-green-100 to-green-200", border: "border-green-200", text: "text-green-600", accent: "from-green-500 to-green-600" },
-                                orange: { bg: "from-orange-100 to-orange-200", border: "border-orange-200", text: "text-orange-600", accent: "from-orange-500 to-orange-600" },
-                                red: { bg: "from-red-100 to-red-200", border: "border-red-200", text: "text-red-600", accent: "from-red-500 to-red-600" }
-                            };
-                            const colors = colorClasses[colorKey] || colorClasses.cyan;
-
                             return (
                                 <div
                                     key={interview.id}
-                                    className={`relative group rounded-2xl border border ${colors.border} bg-white overflow-hidden hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col shadow-sm`}
+                                    className="relative group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col p-6 space-y-5"
                                 >
-                                    <div className={`absolute top-0 -right-40 w-[350px] h-[350px] bg-gradient-to-br ${colors.bg} rounded-full blur-[60px] opacity-60 -translate-y-1/2 translate-x-1/2`} />
-                                    <div className="p-6 space-y-4 flex-1">
-                                        {/* Icon */}
-                                        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colors.bg} border ${colors.border} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                                            <img src={interview.icon_url} alt="" className="w-10 h-10 object-contain" />
-                                        </div>
-
-                                        {/* Header */}
-                                        <div>
-                                            <h4 className="text-lg font-semibold text-slate-900 group-hover:text-cyan-600 transition-colors mb-1">
-                                                {interview.role}
-                                            </h4>
-                                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                <span className={`px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs text-slate-600 font-medium`}>
-                                                    {interview.company}
-                                                </span>
-                                                <span>•</span>
-                                                <span>{interview.level}</span>
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-4">
+                                            {/* Icon */}
+                                            <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                                                <img src={interview.icon_url} alt="" className="w-8 h-8 object-contain" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-lg font-bold text-gray-900 group-hover:text-black transition-colors line-clamp-1">
+                                                    {interview.role}
+                                                </h4>
+                                                <div className="flex items-center gap-2 text-sm text-gray-500 mt-1 font-medium">
+                                                    <span>{interview.company}</span>
+                                                    <span className="text-gray-300">•</span>
+                                                    <span>{interview.level}</span>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        {/* Stats */}
-                                        <div className="flex items-center gap-4 pt-2 border-t border-slate-100">
-                                            <div className="flex items-center gap-1">
-                                                <Users className="w-4 h-4 text-slate-400" />
-                                                <span className="text-sm text-slate-600">1.2k</span>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                                <span className="text-sm text-slate-600">4.8</span>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Clock className="w-4 h-4 text-slate-400" />
-                                                <span className="text-sm text-slate-600">{interview.total_duration}</span>
-                                            </div>
+                                    {/* Stats */}
+                                    <div className="flex items-center gap-4 py-4 border-t border-gray-50 mt-auto">
+                                        <div className="flex items-center gap-1.5">
+                                            <Users className="w-4 h-4 text-gray-400" />
+                                            <span className="text-sm text-gray-600 font-medium">1.2k</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                            <span className="text-sm text-gray-600 font-medium">4.8</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 ml-auto">
+                                            <Clock className="w-4 h-4 text-gray-400" />
+                                            <span className="text-sm text-gray-600 font-medium">{interview.total_duration}</span>
                                         </div>
                                     </div>
 
                                     {/* Action Button */}
-                                    <div className="p-4 pt-0">
-                                        <button
-                                            onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
-                                            className="w-full py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-cyan-700 hover:border-cyan-200 transition-all text-sm font-semibold flex items-center justify-center gap-2">
-                                            View More
-                                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
+                                        className="w-full py-2.5 rounded-xl bg-gray-50 text-gray-900 border border-gray-100 hover:bg-gray-100 font-semibold text-sm transition-all flex items-center justify-center gap-2 group-hover:border-gray-200">
+                                        View Details
+                                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
+                                    </button>
                                 </div>
                             );
                         }) : (
-                            <div className="col-span-full py-12 flex flex-col items-center justify-center text-slate-500">
-                                <TrendingUp className="w-10 h-10 mb-4 opacity-50" />
-                                <p className="text-lg font-medium">No interviews found</p>
-                                <p className="text-sm">Try adjusting your filters</p>
+                            <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-500">
+                                <TrendingUp className="w-10 h-10 mb-4 opacity-50 text-gray-400" />
+                                <p className="text-lg font-bold text-gray-900">No interviews found</p>
+                                <p className="text-sm font-medium mt-1">Try adjusting your filters</p>
                             </div>
                         )}
                     </div>

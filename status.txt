@@ -1,0 +1,193 @@
+﻿ M .env
+ M backend/.gitignore
+ M backend/package.json
+ M backend/prompts/dataAnalystPrompts.js
+ M backend/prompts/devopsPropmpts.js
+ M backend/prompts/index.js
+ M backend/prompts/softwarePrompts.js
+ M backend/server.js
+ M index.html
+ M src/App.css
+ M src/App.jsx
+ M src/components/Navbar.jsx
+ M src/components/PopularInterviewsHero.jsx
+ M src/components/ProtectedRoute.jsx
+ M src/components/StatusBox.jsx
+ M src/components/landing/ComparisonSection.jsx
+ M src/components/landing/FAQSection.jsx
+ M src/components/landing/FeaturesSection.jsx
+ M src/components/landing/HeroSection.jsx
+ M src/components/landing/InteractiveGridBackground.jsx
+ M src/components/landing/WorkflowSection.jsx
+ M src/index.css
+ M src/main.jsx
+ M src/pages/CodingInterview.jsx
+ M src/pages/CreateInterview.jsx
+ M src/pages/Credits.jsx
+ M src/pages/Dashboard.jsx
+ M src/pages/DevOpsCodingInterview.jsx
+ M src/pages/InterviewDetails.jsx
+ M src/pages/InterviewSession.jsx
+ M src/pages/LandingPage.jsx
+ M src/pages/LoginPage.jsx
+ M src/pages/PopularInterviewsPage.jsx
+ M src/pages/PreviousInterviews.jsx
+ M src/pages/ProfileSettings.jsx
+ M src/pages/Resume.jsx
+?? agent/
+?? all_uris.txt
+?? backend/check_dispatch_client.js
+?? backend/completed_interviews.sql
+?? backend/debug_agent.js
+?? backend/debug_agent_cjs.js
+?? backend/debug_agent_v2.js
+?? backend/debug_prompts.js
+?? backend/debug_sdk.js
+?? backend/debug_supabase_fetch.js
+?? backend/dummy_completed_interviews.sql
+?? backend/list_voices.cjs
+?? backend/list_voices.js
+?? backend/polyfills.js
+?? backend/probe_schema.js
+?? backend/prompts/customDevopsPrompts.js
+?? backend/prompts/customSoftwarePrompts.js
+?? backend/prompts/devopsFeedbackPrompt.js
+?? backend/prompts/devopsPrompts.js
+?? backend/prompts/devopsScenarioCompiler.js
+?? backend/prompts/devopsScenarios.js
+?? backend/prompts/softwareFeedbackPrompt.js
+?? backend/prompts/softwareScenarioCompiler.js
+?? backend/prompts/test-prompt-gen.js
+?? backend/prompts/test_routing.js
+?? backend/test-deepgram-full.js
+?? backend/test-deepgram.js
+?? backend/test-segmentation.js
+?? backend/test-tts-capabilities.js
+?? backend/test-tts-debug.js
+?? backend/test_anthropic_simple.js
+?? backend/test_backend.js
+?? backend/test_backend_simple.js
+?? backend/test_compiler.js
+?? backend/test_pdf.js
+?? backend/test_pdf_2.js
+?? backend/test_piston_direct.js
+?? backend/utils/
+?? backend/verify_caching.js
+?? backend/verify_design_injection.js
+?? backend/verify_devops_prompts.js
+?? backend/verify_gemini.js
+?? backend/verify_injection.js
+?? backend/verify_refined.js
+?? backend/websocket-server.js
+?? build_log.txt
+?? generate_sql.py
+?? interview-agent/
+?? livekit-agent/
+?? livekit-experiment/
+?? livekit-experimental-agent/
+?? livekit-experimental-frontend/
+?? popular_interviews_seed.sql
+?? recover.cjs
+?? recover_vscode.js
+?? recovery_log.json
+?? src/LiveKitInterviewTest.jsx
+?? src/LiveKitInterviewUI.jsx
+?? src/assets/images/UI/
+?? src/assets/images/behavioral-round.png
+?? src/assets/images/coding-round.png
+?? src/assets/images/companybanner.png
+?? src/assets/images/configureBanner.png
+?? src/assets/images/dashboardBanner.png
+?? src/assets/images/design-round.png
+?? src/assets/images/fulllogo.png
+?? src/assets/images/hero.png
+?? src/assets/images/heroai.png
+?? src/assets/images/herocode.png
+?? src/assets/images/herofeatures.png
+?? src/assets/images/landingbot.png
+?? src/assets/images/loop.png
+?? src/assets/images/newbot.png
+?? src/assets/images/newcompany.png
+?? src/assets/images/techbanner1.png
+?? src/components/CodeEditorWindow.jsx
+?? src/components/ComponentConfigPanel.jsx
+?? src/components/ConnectionConfigPanel.jsx
+?? src/components/CustomInterviewBanner.jsx
+?? src/components/DashboardHeroBanner.jsx
+?? src/components/DesignCanvasWindow.jsx
+?? src/components/FloatingConnectionConfig.jsx
+?? src/components/Footer.jsx
+?? src/components/MonacoEditorWindow.jsx
+?? src/components/RecentActivity.jsx
+?? src/components/SimulationPanel.jsx
+?? src/components/SystemDesignCanvas.jsx
+?? src/components/blocks/
+?? src/components/landing/AmbientVoiceWaves.jsx
+?? src/components/landing/CompanyShowcase.jsx
+?? src/components/landing/FeaturesShowcase.jsx
+?? src/components/landing/FinalCTA.jsx
+?? src/components/landing/HowItWorks.jsx
+?? src/components/landing/NewHeroSection.jsx
+?? src/components/landing/PulseWave.jsx
+?? src/components/landing/RealismProof.jsx
+?? src/components/landing/RoleFocus.jsx
+?? src/components/landing/SocialProof.jsx
+?? src/components/landing/TeamsSection.jsx
+?? src/components/landing/UISnapshots.jsx
+?? src/components/landing/VideoTextSection.jsx
+?? src/components/ui/
+?? src/context/
+?? src/lib/
+?? src/livekit-test.css
+?? src/pages/BehavioralRound.jsx
+?? src/pages/CodingRound.jsx
+?? src/pages/DebugRound.jsx
+?? src/pages/DesignRound.jsx
+?? src/pages/InterviewReport.jsx
+?? src/pages/InterviewSessionLiveKit.jsx
+?? src/pages/InterviewSessionStatic.jsx
+?? src/pages/LiveKitInterview.jsx
+?? src/pages/LiveKitInterviewSession.jsx
+?? src/pages/StoredInterview.jsx
+?? src/pages/TechInterviews.js
+?? src/pages/TestCodeUI.jsx
+?? src/pages/TestDesignUI.jsx
+?? src/pages/TestInterview.jsx
+?? src/pages/popularInterviews.js
+?? src/pages/popularInterviews.json
+?? src/services/
+?? src/utils/ArchitectureEngine.js
+?? src/utils/CodeChangeTracker.js
+?? src/utils/DesignChangeTracker.js
+?? src/utils/DesignIcons.js
+?? src/utils/DesignIcons.jsx
+?? src/utils/DesignLinter.js
+?? src/utils/ExportUtils.js
+?? src/utils/designComponentSchema.js
+?? src/utils/generate_schema_text.mjs
+?? src/utils/generate_schema_text.py
+?? src/utils/interviewConstants.js
+?? src/utils/prompts.js
+?? src/utils/prompts/
+?? src/utils/seedInterviews.js
+?? src/utils/summaryGenerator.js
+?? src/utils/test-tracker.js
+?? src/utils/update_prompts.py
+?? src/utils/verify-batch.js
+?? status.txt
+?? supabase_amazon_seed.sql
+?? supabase_apple_seed.sql
+?? supabase_google_seed.sql
+?? supabase_google_v2_seed.sql
+?? supabase_meta_seed.sql
+?? supabase_microsoft_seed.sql
+?? supabase_nvidia_seed.sql
+?? supabase_setup.sql
+?? temp_schema_output.txt
+?? test_design_logic.js
+?? test_rest.js
+?? test_uris.cjs
+?? verification_results.txt
+?? verify_caching.js
+?? verify_gemini.js
+?? verify_refinements.js

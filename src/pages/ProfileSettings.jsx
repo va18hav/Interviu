@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient";
+
 import { User, Mail, Save, ArrowLeft, Loader2, Shield, Lock, Briefcase, GraduationCap, Code } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { sanitizeInput } from "../utils/sanitize";
@@ -31,24 +31,20 @@ const ProfileSettings = () => {
     async function getProfile() {
         try {
             setLoading(true);
-            const { data: { user } } = await supabase.auth.getUser();
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
 
-            if (!user) {
+            if (!userCreds?.id) {
                 navigate("/login");
                 return;
             }
 
-            // Fetch profile data from 'profiles' table
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role, experience_level, skills')
-                .eq('id', user.id)
-                .single();
+            const response = await fetch(`http://localhost:5000/api/profile?userId=${userCreds.id}`);
+            const profile = await response.json();
 
             setFormData({
-                firstName: user.user_metadata.first_name || "",
-                lastName: user.user_metadata.last_name || "",
-                email: user.email,
+                firstName: userCreds.firstName || "",
+                lastName: userCreds.lastName || "",
+                email: userCreds.email,
                 role: profile?.role || "",
                 experience_level: profile?.experience_level || "",
                 skills: profile?.skills || ""
@@ -66,24 +62,15 @@ const ProfileSettings = () => {
         setMessage(null);
 
         try {
-            // 1. Update Auth Metadata (Frontend - Secure by GoTrue limits)
-            const { error: authError } = await supabase.auth.updateUser({
-                data: {
-                    first_name: sanitizeInput(formData.firstName),
-                    last_name: sanitizeInput(formData.lastName),
-                },
-            });
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+            if (!userCreds?.id) throw new Error("User not found");
 
-            if (authError) throw authError;
-
-            // 2. Update Profiles Table (Backend - Secure 'credits')
-            const { data: { user } } = await supabase.auth.getUser();
-
-            const response = await fetch('http://localhost:5000/api/update-profile', {
-                method: 'POST',
+            // Update Backend
+            const response = await fetch('http://localhost:5000/api/profile', {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userId: user.id,
+                    userId: userCreds.id,
                     updates: {
                         role: sanitizeInput(formData.role),
                         experience_level: sanitizeInput(formData.experience_level),
@@ -93,6 +80,11 @@ const ProfileSettings = () => {
             });
 
             if (!response.ok) throw new Error("Failed to update profile details");
+
+            // Note: We are not updating First/Last name on backend auth in this step as it requires Auth Admin.
+            // But we can update local storage to reflect changes immediately in UI
+            const updatedCreds = { ...userCreds, firstName: formData.firstName, lastName: formData.lastName };
+            localStorage.setItem("userCredentials", JSON.stringify(updatedCreds));
 
             setMessage({ type: "success", text: "Profile updated successfully!" });
         } catch (error) {
@@ -118,11 +110,23 @@ const ProfileSettings = () => {
         setMessage(null);
 
         try {
-            const { error } = await supabase.auth.updateUser({
-                password: passwordData.newPassword,
+            const token = localStorage.getItem("authToken");
+            const response = await fetch('http://localhost:5000/api/auth/password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    password: passwordData.newPassword
+                })
             });
 
-            if (error) throw error;
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to update password");
+            }
+
             setMessage({ type: "success", text: "Password updated successfully!" });
             setPasswordData({ newPassword: "", confirmPassword: "" });
         } catch (error) {

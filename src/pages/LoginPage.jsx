@@ -2,7 +2,6 @@ import React from "react"
 import { useNavigate } from "react-router-dom";
 import { Sparkles, User, Mail, ArrowRight, Shield, Zap, Award, Lock } from 'lucide-react';
 import logo from "../assets/images/logo.png"
-import { supabase } from "../supabaseClient"
 import { sanitizeInput } from "../utils/sanitize";
 
 const LoginPage = () => {
@@ -28,17 +27,9 @@ const LoginPage = () => {
     };
 
     const handleGoogleLogin = async () => {
-        setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-            });
-            if (error) throw error;
-        } catch (error) {
-            console.error("Google Auth Error:", error.message);
-            setErrors(prev => ({ ...prev, auth: error.message }));
-            setLoading(false);
-        }
+        alert("Google Login is temporarily unavailable during the system upgrade. Please use Email/Password.");
+        // To implement Google Auth without client SDK, we would need a backend endpoint that redirects to Supabase OAuth URL
+        // and handles the callback. For this migration, we are prioritizing the removal of client-side credentials.
     };
 
     const validateEmail = (email) => {
@@ -68,45 +59,47 @@ const LoginPage = () => {
 
         if (!hasErrors) {
             try {
-                let data, error;
+                let endpoint = isSignUp ? 'http://localhost:5000/api/auth/signup' : 'http://localhost:5000/api/auth/login';
+                const payload = isSignUp ? {
+                    email: formData.email,
+                    password: formData.password,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName
+                } : {
+                    email: formData.email,
+                    password: formData.password
+                };
 
-                if (isSignUp) {
-                    // --- SIGN UP ---
-                    const result = await supabase.auth.signUp({
-                        email: sanitizeInput(formData.email),
-                        password: formData.password,
-                        options: {
-                            data: {
-                                first_name: sanitizeInput(formData.firstName),
-                                last_name: sanitizeInput(formData.lastName),
-                            },
-                        },
-                    });
-                    data = result.data;
-                    error = result.error;
-                } else {
-                    // --- SIGN IN ---
-                    const result = await supabase.auth.signInWithPassword({
-                        email: sanitizeInput(formData.email),
-                        password: formData.password,
-                    });
-                    data = result.data;
-                    error = result.error;
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Authentication failed");
                 }
-
-                if (error) throw error;
 
                 console.log("Auth successful:", data);
 
-                // TEMPORARY: Keep saving to localStorage so the rest of your app keeps working!
-                // We will remove this later when we update Dashboard to use Supabase directly.
-                const userMeta = data.user.user_metadata || {};
+                // Store User Data & Token
+                const user = data.user;
+                const session = data.session;
+
+                const userMeta = user?.user_metadata || {};
                 const safeUser = {
+                    id: user.id, // Important for API calls
                     firstName: userMeta.first_name || "User",
                     lastName: userMeta.last_name || "",
-                    email: data.user.email
+                    email: user.email
                 };
+
                 localStorage.setItem("userCredentials", JSON.stringify(safeUser));
+                if (session) {
+                    localStorage.setItem("authToken", session.access_token);
+                }
 
                 navigate('/dashboard');
 

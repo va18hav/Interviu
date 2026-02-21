@@ -1,470 +1,638 @@
-import React from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Upload, Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Clock, FileText, Lasso } from 'lucide-react'
+import {
+  Upload, Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Clock,
+  FileText, Lasso, Cpu, Activity, User, AlertTriangle, Layers, Monitor, Server,
+  Shield, CheckCircle, X, Loader2, Play
+} from 'lucide-react'
 import logo from "../assets/images/logo.png"
 import Navbar from "../components/Navbar"
 import { sanitizeInput } from "../utils/sanitize"
+import {
+  ROUND_TYPES, ROLES, EXPERIENCE_LEVELS, DOMAIN_FOCUS, SYSTEM_CONTEXT_SUGGESTIONS,
+  TECH_STACKS, PRODUCTION_MATURITY, YEARS_OF_EXPERIENCE, CANDIDATE_STRENGTHS,
+  CANDIDATE_WEAKNESSES, FAILURE_INTENSITY, AMBIGUITY_LEVEL, INTERVIEW_STRICTNESS,
+  ROUND_SPECIFIC_CONFIG
+} from "../utils/interviewConstants"
 
-const TECH_ROLES = [
-  "AI Ethics Researcher",
-  "AI Research Scientist",
-  "Android Developer",
-  "Application Security Engineer",
-  "AR/VR Developer",
-  "Artificial Intelligence Engineer",
-  "Automation Engineer",
-  "Backend Developer",
-  "Big Data Engineer",
-  "Bioinformatics Scientist",
-  "Blockchain Developer",
-  "Business Analyst",
-  "Business Intelligence Analyst",
-  "Business Intelligence Developer",
-  "Business Systems Analyst",
-  "Chief Information Officer (CIO)",
-  "Chief Technology Officer (CTO)",
-  "Cloud Architect",
-  "Cloud Consultant",
-  "Cloud Engineer",
-  "Cloud Security Engineer",
-  "Computer Vision Engineer",
-  "Cybersecurity Analyst",
-  "Cybersecurity Consultant",
-  "Cybersecurity Engineer",
-  "Data Analyst",
-  "Data Architect",
-  "Data Engineer",
-  "Data Privacy Officer",
-  "Data Scientist",
-  "Data Warehouse Architect",
-  "Database Administrator (DBA)",
-  "Database Developer",
-  "DevOps Engineer",
-  "DevSecOps Engineer",
-  "Digital Marketing Specialist",
-  "Director of Engineering",
-  "E-commerce Specialist",
-  "Embedded Software Engineer",
-  "Embedded Systems Engineer",
-  "Enterprise Architect",
-  "ERP Consultant",
-  "Frontend Developer",
-  "Full Stack Developer",
-  "Game Designer",
-  "Game Developer",
-  "Geospatial Developer",
-  "Growth Hacker",
-  "Hardware Engineer",
-  "Help Desk Support",
-  "Information Security Analyst",
-  "Information Security Manager",
-  "iOS Developer",
-  "IT Auditor",
-  "IT Consultant",
-  "IT Director",
-  "IT Manager",
-  "IT Project Manager",
-  "IT Support Specialist",
-  "Java Developer",
-  "Junior Software Engineer",
-  "Lead Software Engineer",
-  "Linux Administrator",
-  "Machine Learning Engineer",
-  "Machine Learning Ops (MLOps) Engineer",
-  "Mainframe Developer",
-  "Mobile App Developer",
-  "Mobile Developer (Android)",
-  "Mobile Developer (iOS)",
-  "Multimedia Artist/Animator",
-  "Natural Language Processing Engineer",
-  "Network Administrator",
-  "Network Architect",
-  "Network Engineer",
-  "Network Security Engineer",
-  "Penetration Tester",
-  "Platform Engineer",
-  "Principal Software Engineer",
-  "Product Designer",
-  "Product Manager",
-  "Product Owner",
-  "Python Developer",
-  "QA Automation Engineer",
-  "QA Engineer",
-  "Quality Assurance Analyst",
-  "Quantum Computing Researcher",
-  "React Developer",
-  "Release Engineer",
-  "Robotics Engineer",
-  "Robotics Software Engineer",
-  "Sales Engineer",
-  "Salesforce Administrator",
-  "Salesforce Developer",
-  "Scrum Master",
-  "Security Analyst",
-  "Security Architect",
-  "Senior Software Engineer",
-  "SEO Specialist",
-  "Site Reliability Engineer (SRE)",
-  "Software Architect",
-  "Software Development Engineer in Test (SDET)",
-  "Software Engineer",
-  "Solutions Architect",
-  "Staff Software Engineer",
-  "System Administrator",
-  "Systems Analyst",
-  "Technical Lead",
-  "Technical Program Manager",
-  "Technical Recruiter",
-  "Technical Support Engineer",
-  "Technical Writer",
-  "Telecommunications Engineer",
-  "UI Designer",
-  "UI/UX Designer",
-  "UX Designer",
-  "UX Researcher",
-  "Video Game Producer",
-  "Virtual Reality Developer",
-  "VoIP Engineer",
-  "Web Administrator",
-  "Web Designer",
-  "Web Developer",
-  "WordPress Developer"
-];
 
 const CreateInterview = () => {
-  // Navigaton
-
-  const location = useLocation()
   const navigate = useNavigate()
-  // Form data
-  const [formData, setFormData] = React.useState({
-    role: "",
-    level: "",
-    type: "",
-    focus: "",
-    length: "",
-    description: ""
 
+  // -------------------------------------------------------------------------
+  // State
+  // -------------------------------------------------------------------------
+  const [formData, setFormData] = useState({
+    roundType: "coding",
+    role: "sde",
+    level: "",
+    domainFocus: "",
+    systemContext: "",
+    techStack: [],
+    customTechStack: "",
+    productionMaturity: "",
+    roundSpecific: {},
+    failureIntensity: "realistic",
+    ambiguityLevel: "moderate",
+    interviewStrictness: "neutral",
+    yearsOfExperience: "",
+    candidateStrengths: [],
+    candidateWeaknesses: [],
+    jobDescription: ""
   })
 
-  // Dropdown states
-  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [isCompiling, setIsCompiling] = useState(false);
 
-  // Handle text / select / textarea changes
-  function handleChange(e) {
+
+  // -------------------------------------------------------------------------
+  // Handlers
+  // -------------------------------------------------------------------------
+  const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-
-    }))
-
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  // Handle role selection
-  const handleRoleSelect = (role) => {
-    setFormData(prev => ({ ...prev, role: role }));
-    setIsDropdownOpen(false);
-    setSearchTerm("");
-  };
+  const handleMultiSelect = (field, value) => {
+    setFormData(prev => {
+      const current = prev[field] || []
+      const updated = current.includes(value)
+        ? current.filter(item => item !== value)
+        : [...current, value]
+      return { ...prev, [field]: updated }
+    })
+  }
 
-  // Filter roles
-  const filteredRoles = TECH_ROLES.filter(role =>
-    role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Close dropdown when clicking outside
-  const dropdownRef = React.useRef(null);
-  React.useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+  const handleRoundSpecificChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      roundSpecific: {
+        ...prev.roundSpecific,
+        [field]: value
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
+    }))
+  }
 
+  const handleRoundSpecificMultiSelect = (field, value) => {
+    setFormData(prev => {
+      const current = prev.roundSpecific[field] || []
+      const updated = current.includes(value)
+        ? current.filter(item => item !== value)
+        : [...current, value]
+      return {
+        ...prev,
+        roundSpecific: {
+          ...prev.roundSpecific,
+          [field]: updated
+        }
+      }
+    })
+  }
 
-  // Handle form submit
-  function handleGenerate(e) {
+  // -------------------------------------------------------------------------
+  // Submit
+  // -------------------------------------------------------------------------
+  const handleGenerate = async (e) => {
     e.preventDefault()
-
     sessionStorage.removeItem("interviewEnded")
 
-    // Common state object
-    const interviewState = {
-      role: sanitizeInput(formData.role),
-      level: sanitizeInput(formData.level),
-      type: sanitizeInput(formData.type),
-      focus: sanitizeInput(formData.focus),
-      length: "15 min",
-      description: sanitizeInput(formData.description),
-      customInterview: true
-    };
+    const getRoundSpecific = (key) => formData.roundSpecific?.[key] || []
+    const formatVal = (val) => Array.isArray(val) ? val.join(', ') : (val || '')
+    const techStackStr = [
+      ...formData.techStack,
+      ...(formData.customTechStack ? [formData.customTechStack] : [])
+    ].join(', ')
 
-    if (formData.type === 'coding') {
-      navigate("/coding-interview", { state: interviewState });
-    } else {
-      navigate("/create/interview/1", { state: interviewState });
+    const isDevops = formData.role === 'devops'
+    const roleLabel = isDevops ? 'Site Reliability Engineer' : 'Software Engineer'
+    const yearsLabel = (formData.yearsOfExperience || '').replace(/_/g, '-') || '5+'
+
+    // Build the full interviewState with every custom prompt template variable
+    const interviewState = {
+      customInterview: true,
+      roundType: formData.roundType,
+      type: formData.roundType,
+      role: roleLabel,
+      rawRole: formData.role,
+      firstName: 'Candidate',
+      length: '45 min',
+      level: formData.level,
+      years_experience: yearsLabel,
+      domain_focus: formData.domainFocus,
+      system_context: formData.systemContext,
+      tech_stack: techStackStr,
+      production_maturity: formData.productionMaturity,
+      failure_intensity: formData.failureIntensity,
+      ambiguity_level: formData.ambiguityLevel,
+      interview_strictness: formData.interviewStrictness,
+      candidate_strengths: formatVal(formData.candidateStrengths),
+      candidate_weaknesses: formatVal(formData.candidateWeaknesses),
+      job_description: formData.jobDescription || '',
+      production_context: formData.productionMaturity,
+      stress_conditions: `Intensity: ${formData.failureIntensity}`,
+      // SDE Coding
+      implementation_domain: formatVal(getRoundSpecific('implementationDomain')),
+      system_interaction: formatVal(getRoundSpecific('systemInteraction')),
+      constraints_emphasis: formatVal(getRoundSpecific('constraintsEmphasis')),
+      failure_environment: formatVal(getRoundSpecific('failureEnvironment')),
+      data_interaction_type: formatVal(getRoundSpecific('dataInteractionType')),
+      // DevOps Coding
+      automation_type: formatVal(getRoundSpecific('automationType')),
+      infra_environment: formatVal(getRoundSpecific('infraEnvironment')),
+      safety_expectations: formatVal(getRoundSpecific('safetyExpectations')),
+      operational_constraints: formatVal(getRoundSpecific('operationalConstraints')),
+      // Design
+      platform_type: formatVal(getRoundSpecific('platformType')),
+      deployment_model: formatVal(getRoundSpecific('deploymentModel')),
+      operational_expectations: formatVal(getRoundSpecific('operationalExpectations')),
+      design_focus: formatVal(getRoundSpecific('designFocus')),
+      failure_modeling: formatVal(getRoundSpecific('failureModeling')),
+      system_type: formatVal(getRoundSpecific('systemType')),
+      scale_expectation: formatVal(getRoundSpecific('scaleExpectation')),
+      data_profile: formatVal(getRoundSpecific('dataProfile')),
+      // Debug
+      failure_surface: formatVal(getRoundSpecific('failureSurface')),
+      observability: formatVal(getRoundSpecific('observability')),
+      dependency_environment: formatVal(getRoundSpecific('dependencyEnvironment')),
+      failure_impact: formatVal(getRoundSpecific('failureImpact')),
+      incident_type: formatVal(getRoundSpecific('incidentType')),
+      infra_layer: formatVal(getRoundSpecific('infraLayer')),
+      signals_available: formatVal(getRoundSpecific('signalsAvailable')),
+      impact_scope: formatVal(getRoundSpecific('impactScope')),
+      // Behavioral
+      operational_exposure: formatVal(getRoundSpecific('operationalExposure')),
+      leadership_scope: formatVal(getRoundSpecific('leadershipScope')),
+      scenario_emphasis: formatVal(getRoundSpecific('scenarioEmphasis')),
+      experience_domain: formatVal(getRoundSpecific('experienceDomain')),
+      leadership_exposure: formatVal(getRoundSpecific('leadershipExposure')),
+      raw_state: formData,
+    }
+
+    const isDebug = formData.roundType === 'debug'
+
+    try {
+      if (isDebug) {
+        // Debug rounds — call the lightweight compiler and show spinner
+        setIsCompiling(true)
+
+        const compilerContext = {
+          level: formData.level,
+          domain_focus: formData.domainFocus,
+          system_context: formData.systemContext,
+          tech_stack: techStackStr,
+          failure_surface: interviewState.failure_surface || interviewState.incident_type || 'service logic bug',
+          dependency_environment: interviewState.dependency_environment || interviewState.infra_layer || 'multi-service',
+          failure_impact: interviewState.failure_impact || interviewState.impact_scope || 'user failures',
+          incident_type: interviewState.incident_type || 'deployment failure',
+          infra_layer: interviewState.infra_layer || 'Kubernetes',
+          signals_available: interviewState.signals_available || 'logs',
+          impact_scope: interviewState.impact_scope || 'single service',
+          production_maturity: formData.productionMaturity,
+          years_experience: yearsLabel,
+          candidate_weaknesses: formatVal(formData.candidateWeaknesses),
+        }
+
+        const response = await fetch('http://localhost:5000/api/compile-scenario', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: formData.role,
+            roundType: formData.roundType,
+            formatContext: compilerContext
+          })
+        })
+
+        if (!response.ok) throw new Error(`Compilation failed: ${response.statusText}`)
+
+        const problemData = await response.json()
+
+        const problemObj = {
+          title: problemData.title || 'Debug Challenge',
+          statement: problemData.statement || '',
+          files: problemData.files || {},
+          language: Object.keys(problemData.files || {}).find(f => !f.endsWith('.txt'))?.split('.').pop() || 'python'
+        }
+
+        navigate('/debug-round', {
+          state: {
+            ...interviewState,
+            roundProblemData: problemObj,
+            problem: problemObj
+          }
+        })
+      } else {
+        // Non-debug rounds — navigate directly, no compiler call
+        if (formData.roundType === 'coding') {
+          navigate('/coding-round', { state: interviewState })
+        } else if (formData.roundType === 'design') {
+          navigate('/design-round', { state: interviewState })
+        } else {
+          navigate('/behavioral-round', { state: interviewState })
+        }
+      }
+    } catch (error) {
+      console.error('Error starting simulation:', error)
+      alert('Failed to compile debug scenario. Please try again.')
+    } finally {
+      setIsCompiling(false)
     }
   }
 
-  // Simple derived state
-  const canGenerate = formData.role.trim() !== "" && formData.level.trim() !== "" && formData.type.trim() !== "" && formData.focus.trim() !== ""
+  // Validation
+  // Validation
+  // Check if any round specific field is empty if it exists
+  const areRoundSpecificsValid = () => {
+    const config = ROUND_SPECIFIC_CONFIG[formData.roundType]?.[formData.role]
+    if (!config) return true // No specifics needed
+
+    // Check if each key in config has a corresponding value in formData.roundSpecific
+    return Object.keys(config).every(key => {
+      const val = formData.roundSpecific[key]
+      return val && val.length > 0
+    })
+  }
+
+  const canGenerate =
+    formData.role &&
+    formData.level &&
+    formData.domainFocus &&
+    formData.productionMaturity &&
+    formData.systemContext &&
+    formData.techStack.length > 0 &&
+    formData.failureIntensity &&
+    formData.ambiguityLevel &&
+    formData.interviewStrictness &&
+    formData.yearsOfExperience &&
+    formData.candidateStrengths.length > 0 &&
+    areRoundSpecificsValid()
+
+  // -------------------------------------------------------------------------
+  // Render Helpers
+  // -------------------------------------------------------------------------
+
+  const SectionHeader = ({ icon: Icon, title, description }) => (
+    <div className="flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
+      <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
+        <Icon className="w-5 h-5 text-cyan-600" />
+      </div>
+      <div>
+        <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+    </div>
+  )
+
+  const Label = ({ children, required }) => (
+    <label className="block text-sm font-semibold text-gray-700 mb-2">
+      {children}
+      {required && <span className="text-red-500 ml-1">*</span>}
+    </label>
+  )
+
+  const Select = ({ name, value, onChange, options, placeholder = "Select..." }) => (
+    <div className="relative">
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-cyan-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-colors"
+      >
+        <option value="">{placeholder}</option>
+        {options.map(opt => (
+          <option key={opt.id || opt} value={opt.id || opt}>
+            {opt.label || opt}
+          </option>
+        ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+        </svg>
+      </div>
+    </div>
+  )
+
+  const CardSelect = ({ options, value, onChange, name }) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => handleChange({ target: { name, value: opt.id } })}
+          className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${value === opt.id
+            ? 'border-cyan-500 bg-cyan-50/50 text-cyan-700 shadow-sm'
+            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+        >
+          <span className="font-semibold">{opt.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+
+  const MultiSelectChips = ({ options, selected, onToggle, labelFn = (o) => o }) => (
+    <div className="flex flex-wrap gap-2">
+      {options.map(opt => {
+        const val = typeof opt === 'string' ? opt : opt.id
+        const label = labelFn(opt)
+        const isSelected = selected.includes(val)
+        return (
+          <button
+            key={val}
+            type="button"
+            onClick={() => onToggle(val)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected
+              ? 'bg-cyan-100 text-cyan-700 ring-1 ring-cyan-500/20'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+          >
+            {label}
+            {isSelected && <CheckCircle className="w-3 h-3 ml-2 inline-block" />}
+          </button>
+        )
+      })}
+    </div>
+  )
+
+  // -------------------------------------------------------------------------
+  // Render Sections
+  // -------------------------------------------------------------------------
+
+  const renderRoundSpecifics = () => {
+    const config = ROUND_SPECIFIC_CONFIG[formData.roundType]?.[formData.role]
+    if (!config) return null
+
+    // Helper to format key 'implementationDomain' -> 'Implementation Domain'
+    const formatLabel = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+
+    return (
+      <div className="space-y-6 mt-8 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+        <SectionHeader
+          icon={Layers}
+          title={`${ROLES.find(r => r.id === formData.role)?.label} ${ROUND_TYPES.find(r => r.id === formData.roundType)?.label} Specifics`}
+          description="Fine-tune the scenario details."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(config).map(([key, options]) => (
+            <div key={key} className="space-y-2">
+              <Label required>{formatLabel(key)}</Label>
+              <Select
+                name={key}
+                value={formData.roundSpecific[key] || ""}
+                onChange={(e) => handleRoundSpecificChange(key, e.target.value)}
+                options={options.map(o => ({ id: o, label: o }))}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white flex items-center justify-center px-5">
-        <div className="w-full max-w-7xl">
-          {/* Main Card - Two Column Layout */}
-          <div className="rounded-3xl border border-gray-100 bg-white shadow-xl overflow-hidden mt-5">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
-              {/* Left Column - Feature Card (2 columns) */}
-              <div className="lg:col-span-2 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-10 flex flex-col justify-start relative overflow-hidden border-r border-slate-100">
-                {/* Decorative gradient orbs */}
-                <div className="absolute top-0 left-0 w-70 h-70 bg-cyan-500/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-0 w-70 h-70 bg-blue-500/5 rounded-full blur-3xl" />
+      <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="max-w-5xl mx-auto">
 
-                <div className="relative z-10 space-y-8">
-                  <div>
-                    <h2 className="text-3xl font-bold text-black mb-3">
-                      Practice Like
-                      <br />
-                      <span className="text-cyan-400">A Pro</span>
-                    </h2>
-                    <p className="text-black text-sm leading-relaxed">
-                      Get personalized AI interviews that adapt to your experience level and focus areas
-                    </p>
-                  </div>
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">
+              Design Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">Perfect Interview</span>
+            </h1>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Configure every aspect of your mock interview simulation. From system context to failure modes, make it as real as it gets.
+            </p>
+          </div>
 
-                  <div className="space-y-4">
-                    {/* Feature 1 */}
-                    <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/15 to-blue-500/15 border border-cyan-500/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        <Brain className="w-6 h-6 text-cyan-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-black font-semibold mb-1">AI-Powered Questions</h3>
-                        <p className="text-slate-500 text-sm">Dynamic questions based on your profile</p>
-                      </div>
-                    </div>
+          <form onSubmit={handleGenerate} className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
 
-                    {/* Feature 2 */}
-                    <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/15 border border-blue-500/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        <Zap className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-black font-semibold mb-1">Real-time Feedback</h3>
-                        <p className="text-slate-500 text-sm">Instant analysis of your responses</p>
-                      </div>
-                    </div>
-
-                    {/* Feature 3 */}
-                    <div className="flex items-start gap-4 group">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/15 to-pink-500/15 border border-purple-500/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        <TrendingUp className="w-6 h-6 text-purple-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-black font-semibold mb-1">Track Progress</h3>
-                        <p className="text-slate-500 text-sm">Monitor improvement over time</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  {/* <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-800/50">
-                  <div>
-                    <div className="text-2xl font-bold text-cyan-400">10K+</div>
-                    <div className="text-xs text-slate-500">Interviews Completed</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-blue-400">95%</div>
-                    <div className="text-xs text-slate-500">Success Rate</div>
-                  </div>
-                </div> */}
-                </div>
-              </div>
-
-              {/* Right Column - Form (3 columns) */}
-              <div className="lg:col-span-3 p-10">
-                <div className="space-y-5">
-                  <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-black mb-2">Interview Configuration</h2>
-                    <p className="text-slate-900 text-sm">Customize your practice session</p>
-                  </div>
-
-                  {/* Job Role Dropdown */}
-                  <div className="space-y-2.5 relative" ref={dropdownRef}>
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                      <Briefcase className="w-4 h-4 text-slate-500" />
-                      Job Role
-                      <span className="text-red-400 text-xs">*</span>
-                    </label>
-
-                    <div
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:outline-none cursor-pointer hover:border-slate-300 flex items-center justify-between"
-                    >
-                      <span className={formData.role ? "text-black" : "text-slate-900"}>
-                        {formData.role || "Select a role..."}
-                      </span>
-                      <svg className={`w-4 h-4 text-slate-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-
-                    {isDropdownOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden max-h-80 flex flex-col">
-                        <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
-                          <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search roles..."
-                            autoFocus
-                            className="w-full rounded-lg bg-slate-50 border-none px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                        <div className="overflow-y-auto max-h-60">
-                          {filteredRoles.length > 0 ? (
-                            filteredRoles.map((role) => (
-                              <button
-                                key={role}
-                                onClick={() => handleRoleSelect(role)}
-                                className="w-full text-left px-4 py-2.5 text-sm text-black hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
-                              >
-                                {role}
-                              </button>
-                            ))
-                          ) : (
-                            <div className="px-4 py-3 text-sm text-slate-500 text-center">
-                              No roles found matching "{searchTerm}"
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Experience Level */}
-                  <div className="space-y-2.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-black">
-                      <Target className="w-4 h-4 text-slate-500" />
-                      Experience Level
-                      <span className="text-red-400 text-xs">*</span>
-                    </label>
-                    <select
-                      name="level"
-                      value={formData.level}
-                      onChange={handleChange}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all appearance-none cursor-pointer hover:border-slate-300"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0.75rem center',
-                        backgroundSize: '1.25rem'
-                      }}
-                    >
-                      <option value="" className="bg-white">Select level</option>
-                      <option value="intermediate" className="bg-white">Intermediate</option>
-                      <option value="senior" className="bg-white">Senior</option>
-                    </select>
-                  </div>
-
-                  {/* Round Type */}
-                  <div className="space-y-2.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-black">
-                      <Lasso className="w-4 h-4 text-slate-500" />
-                      Round Type
-                      <span className="text-red-400 text-xs">*</span>
-                    </label>
-                    <select
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all appearance-none cursor-pointer hover:border-slate-300"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0.75rem center',
-                        backgroundSize: '1.25rem'
-                      }}
-                    >
-                      <option value="" className="bg-white">Select round type</option>
-                      <option value="coding" className="bg-white">Coding Round</option>
-                      <option value="system_design" className="bg-white">System Design</option>
-                      <option value="behavioral" className="bg-white">Behavioral</option>
-                    </select>
-                  </div>
-
-                  {/* Focus Areas */}
-                  <div className="space-y-2.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-black">
-                      <Code className="w-4 h-4 text-slate-500" />
-                      Focus Areas / Tech Stack
-                      <span className="text-red-400 text-xs">*</span>
-                    </label>
-                    <textarea
-                      name="focus"
-                      value={formData.focus}
-                      onChange={handleChange}
-                      rows={3}
-                      placeholder="React, TypeScript, System Design, Node.js, AWS..."
-                      className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-300"
-                    />
-                  </div>
-
-                  {/* Target Job Description */}
-                  <div className="space-y-2.5">
-                    <label className="flex items-center gap-2 text-sm font-medium text-black">
-                      <FileText className="w-4 h-4 text-slate-500" />
-                      Target Job Description
-                      <span className="text-slate-500 text-xs">(Optional)</span>
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows={4}
-                      placeholder="Paste the job description you're preparing for to get more tailored questions..."
-                      className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all hover:border-slate-300"
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="pt-4">
-                    <button
-                      onClick={handleGenerate}
-                      disabled={!canGenerate}
-                      className="w-full group relative px-8 py-4 rounded-xl font-semibold text-base overflow-hidden transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 disabled:shadow-none"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-500 via-gray-500 to-gray-500 transition-all duration-300 group-hover:scale-105 group-disabled:group-hover:scale-100" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-400 via-gray-400 to-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <span className="relative text-white flex items-center justify-center gap-3">
-
-                        Start Interview
-                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                      </span>
-                    </button>
-                  </div>
+            {/* 1. TOP LEVEL: Round Type & Role */}
+            <div className="p-8 border-b border-slate-100 bg-white">
+              <div className="grid grid-cols-1 gap-8">
+                <div>
+                  <Label required>Round Type</Label>
+                  <CardSelect
+                    options={ROUND_TYPES}
+                    value={formData.roundType}
+                    name="roundType"
+                  />
                 </div>
               </div>
             </div>
 
-          </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12">
+
+              {/* LEFT COL: Core Settings */}
+              <div className="lg:col-span-8 p-8 border-r border-slate-100">
+
+                {/* Role & Level */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <Label required>Target Role</Label>
+                    <Select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      options={ROLES}
+                    />
+                  </div>
+                  <div>
+                    <Label required>Level</Label>
+                    <Select
+                      name="level"
+                      value={formData.level}
+                      onChange={handleChange}
+                      options={EXPERIENCE_LEVELS}
+                    />
+                  </div>
+                </div>
+
+                {/* Core Context */}
+                <SectionHeader icon={Cpu} title="Core Context" description="Define the environment and tech stack." />
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label required>Domain Focus</Label>
+                      <Select
+                        name="domainFocus"
+                        value={formData.domainFocus}
+                        onChange={handleChange}
+                        options={DOMAIN_FOCUS.map(d => ({ id: d, label: d }))}
+                      />
+                    </div>
+                    <div>
+                      <Label required>Production Maturity</Label>
+                      <Select
+                        name="productionMaturity"
+                        value={formData.productionMaturity}
+                        onChange={handleChange}
+                        options={PRODUCTION_MATURITY}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label required>System Context</Label>
+                    <div className="mb-2">
+                      <input
+                        type="text"
+                        name="systemContext"
+                        value={formData.systemContext}
+                        onChange={handleChange}
+                        placeholder="e.g. High-throughput payment gateway..."
+                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {SYSTEM_CONTEXT_SUGGESTIONS.map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setFormData(p => ({ ...p, systemContext: s }))}
+                          className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md hover:bg-cyan-50 hover:text-cyan-600 transition-colors"
+                        >
+                          + {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label required>Tech Stack</Label>
+                    <MultiSelectChips
+                      options={TECH_STACKS}
+                      selected={formData.techStack}
+                      onToggle={(val) => handleMultiSelect('techStack', val)}
+                    />
+                    <input
+                      type="text"
+                      name="customTechStack"
+                      value={formData.customTechStack}
+                      onChange={handleChange}
+                      placeholder="Other (e.g. Temporal, Raft, eBPF...)"
+                      className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Dynamic Round Inputs */}
+                {renderRoundSpecifics()}
+
+              </div>
+
+              {/* RIGHT COL: Signals & Meta */}
+              <div className="lg:col-span-4 bg-slate-50/50 p-8">
+
+                <SectionHeader icon={Activity} title="Realism & Signals" description="Tune the difficulty and evaluation." />
+
+                <div className="space-y-6">
+
+                  <div>
+                    <Label required>Failure Intensity</Label>
+                    <Select
+                      name="failureIntensity"
+                      value={formData.failureIntensity}
+                      onChange={handleChange}
+                      options={FAILURE_INTENSITY}
+                    />
+                  </div>
+
+                  <div>
+                    <Label required>Ambiguity Level</Label>
+                    <Select
+                      name="ambiguityLevel"
+                      value={formData.ambiguityLevel}
+                      onChange={handleChange}
+                      options={AMBIGUITY_LEVEL}
+                    />
+                  </div>
+
+                  <div>
+                    <Label required>Interviewer Persona</Label>
+                    <Select
+                      name="interviewStrictness"
+                      value={formData.interviewStrictness}
+                      onChange={handleChange}
+                      options={INTERVIEW_STRICTNESS}
+                    />
+                  </div>
+
+                  <hr className="border-gray-200 my-6" />
+
+                  <SectionHeader icon={User} title="Candidate Profile" description="Help us calibrate." />
+
+                  <div>
+                    <Label required>Years of Experience</Label>
+                    <Select
+                      name="yearsOfExperience"
+                      value={formData.yearsOfExperience}
+                      onChange={handleChange}
+                      options={YEARS_OF_EXPERIENCE}
+                    />
+                  </div>
+
+                  <div>
+                    <Label required>Your Strengths</Label>
+                    <MultiSelectChips
+                      options={CANDIDATE_STRENGTHS}
+                      selected={formData.candidateStrengths}
+                      onToggle={(val) => handleMultiSelect('candidateStrengths', val)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Job Description (Optional)</Label>
+                    <textarea
+                      name="jobDescription"
+                      value={formData.jobDescription}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder="Paste the job description here to tailor the interview context..."
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none resize-none"
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="p-8 border-t border-slate-100 bg-white flex justify-end items-center gap-4 sticky bottom-0 z-10">
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="px-6 py-3 text-slate-600 font-medium hover:text-slate-900 transition-colors"
+                disabled={isCompiling}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!canGenerate || isCompiling}
+                className="group relative px-8 py-3 rounded-xl font-bold text-white overflow-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 transition-all duration-300 group-hover:scale-105" />
+                <span className="relative flex items-center gap-2">
+                  {isCompiling ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Initializing Simulation...
+                    </>
+                  ) : (
+                    <>
+                      Start Simulation
+                      <Play className="w-5 h-5" />
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+
+          </form>
         </div>
       </main>
     </>
-
   )
 }
 

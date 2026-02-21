@@ -27,7 +27,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import ResumeHero from '../components/ResumeHero';
-import { supabase } from '../supabaseClient';
 import { sanitizeInput } from '../utils/sanitize';
 
 const TECH_ROLES = [
@@ -175,21 +174,19 @@ const Resume = () => {
     async function getProfileAndResumes() {
         try {
             setLoading(true);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUser(user);
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+
+            if (userCreds?.id) {
+                setUser(userCreds);
 
                 // Fetch past resumes
-                const { data, error } = await supabase
-                    .from('resume_analyses')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
+                const response = await fetch(`http://localhost:5000/api/resume-analyses?userId=${userCreds.id}`);
+                const data = await response.json();
 
-                if (error) {
-                    console.error('Error fetching resumes:', error);
-                } else {
+                if (response.ok) {
                     setPastResumes(data || []);
+                } else {
+                    console.error('Error fetching resumes:', data.error);
                 }
             }
         } catch (error) {
@@ -282,26 +279,27 @@ const Resume = () => {
             setAnalysisResult(analysis);
             setIsAnalyzing(false);
 
-            // Save to Supabase
-            if (user) {
+            // Save to Backend
+            if (user?.id) {
                 try {
-                    const { data, error } = await supabase
-                        .from('resume_analyses')
-                        .insert([
-                            {
-                                user_id: user.id,
-                                job_role: jobRole,
-                                file_name: resume.name,
-                                ats_score: analysis.atsScore,
-                                analysis_result: analysis
-                            }
-                        ])
-                        .select();
+                    const saveResponse = await fetch('http://localhost:5000/api/resume-analyses', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user.id,
+                            jobRole: jobRole,
+                            fileName: resume.name,
+                            atsScore: analysis.atsScore,
+                            analysisResult: analysis
+                        })
+                    });
 
-                    if (error) {
-                        console.error('Error saving analysis:', error);
-                    } else if (data) {
-                        setPastResumes([data[0], ...pastResumes]);
+                    const savedData = await saveResponse.json();
+
+                    if (!saveResponse.ok) {
+                        console.error('Error saving analysis:', savedData.error);
+                    } else {
+                        setPastResumes([savedData, ...pastResumes]);
                     }
                 } catch (err) {
                     console.error('Error saving to DB:', err);
@@ -324,13 +322,13 @@ const Resume = () => {
         if (!confirm("Are you sure you want to delete this analysis?")) return;
 
         try {
-            const { error } = await supabase
-                .from('resume_analyses')
-                .delete()
-                .eq('id', id);
+            const response = await fetch(`http://localhost:5000/api/resume-analyses/${id}`, {
+                method: 'DELETE'
+            });
 
-            if (error) {
-                console.error("Error deleting analysis:", error);
+            if (!response.ok) {
+                const data = await response.json();
+                console.error("Error deleting analysis:", data.error);
                 alert("Failed to delete analysis.");
             } else {
                 setPastResumes(prev => prev.filter(item => item.id !== id));

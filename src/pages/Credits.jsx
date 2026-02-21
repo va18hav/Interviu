@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from "../supabaseClient";
 import Navbar from "../components/Navbar";
 import { Zap, CreditCard, Clock, Check, ChevronRight, Shield } from 'lucide-react';
 
@@ -10,14 +9,13 @@ const CreditsPage = () => {
     useEffect(() => {
         const fetchCredits = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data } = await supabase
-                        .from('profiles')
-                        .select('credits')
-                        .eq('id', user.id)
-                        .single();
-                    if (data) setCredits(data.credits);
+                const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+                if (userCreds?.id) {
+                    const response = await fetch(`http://localhost:5000/api/credits?userId=${userCreds.id}`);
+                    const data = await response.json();
+                    if (response.ok) {
+                        setCredits(data.credits);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching credits:", error);
@@ -159,8 +157,8 @@ const CreditsPage = () => {
                                             <td className="px-6 py-4 text-slate-500">{item.date}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.type === 'Purchase' || item.type === 'Bonus'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-slate-100 text-slate-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-slate-100 text-slate-800'
                                                     }`}>
                                                     {item.type}
                                                 </span>

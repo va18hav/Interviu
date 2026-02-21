@@ -2,11 +2,11 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoute = () => {
-    // Check if user credentials exist in local storage
-    // You might want to enhance this with actual token validation later
+    // Check for user credentials and auth token
     const userCredentials = JSON.parse(localStorage.getItem("userCredentials"));
+    const authToken = localStorage.getItem("authToken");
 
-    if (!userCredentials) {
+    if (!userCredentials || !authToken) {
         // If not authenticated, redirect to login page
         return <Navigate to="/login" replace />;
     }
