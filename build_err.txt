@@ -1,0 +1,28 @@
+[36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 1802 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                                       [39m[1m[2m    0.59 kB[22m[1m[22m[2m │ gzip:   0.34 kB[22m
+[2mdist/[22m[32massets/apple-jyQv0Zs5.png                        [39m[1m[2m    5.77 kB[22m[1m[22m
+[2mdist/[22m[32massets/netflix-CQ_YIC6b.png                      [39m[1m[2m    5.88 kB[22m[1m[22m
+[2mdist/[22m[32massets/google-Bp_336oh.png                       [39m[1m[2m   20.87 kB[22m[1m[22m
+[2mdist/[22m[32massets/meta-B2FREPuy.png                         [39m[1m[2m   26.29 kB[22m[1m[22m
+[2mdist/[22m[32massets/amazon-S2h6LbQd.png                       [39m[1m[2m   26.55 kB[22m[1m[22m
+[2mdist/[22m[32massets/techbanner-BZTNDokQ.png                   [39m[1m[2m  514.66 kB[22m[1m[22m
+[2mdist/[22m[32massets/resumebanner-tvBtzsCl.png                 [39m[1m[2m  551.68 kB[22m[1m[22m
+[2mdist/[22m[32massets/bot-nPTBw-wq.png                          [39m[1m[2m  688.88 kB[22m[1m[22m
+[2mdist/[22m[32massets/company-specific-interviews-CU-ESy6U.png  [39m[1m[2m2,101.93 kB[22m[1m[22m
+[2mdist/[22m[32massets/logo-B_orPwzg.png                         [39m[1m[2m2,138.78 kB[22m[1m[22m
+[2mdist/[22m[32massets/interview-D1vN__wo.png                    [39m[1m[2m2,295.86 kB[22m[1m[22m
+[2mdist/[22m[32massets/report-BL75XKAG.png                       [39m[1m[2m2,369.07 kB[22m[1m[22m
+[2mdist/[22m[32massets/custom-interviews-wAlovV3U.png            [39m[1m[2m2,375.78 kB[22m[1m[22m
+[2mdist/[22m[32massets/designround-JPQ-I3b-.png                  [39m[1m[2m2,434.15 kB[22m[1m[22m
+[2mdist/[22m[32massets/debuground-DfzHpULT.png                   [39m[1m[2m2,435.35 kB[22m[1m[22m
+[2mdist/[22m[32massets/codinground-Cr1ZZMhz.png                  [39m[1m[2m2,508.65 kB[22m[1m[22m
+[2mdist/[22m[32massets/newbot-DMNd_YvC.png                       [39m[1m[2m2,560.22 kB[22m[1m[22m
+[2mdist/[22m[35massets/vendor-DDGTF8rc.css                       [39m[1m[2m    3.62 kB[22m[1m[22m[2m │ gzip:   0.99 kB[22m
+[2mdist/[22m[35massets/index-Cjp87mX4.css                        [39m[1m[2m  138.62 kB[22m[1m[22m[2m │ gzip:  18.75 kB[22m
+[2mdist/[22m[36massets/index-BXwwQ9v5.js                         [39m[1m[2m  388.54 kB[22m[1m[22m[2m │ gzip:  90.87 kB[22m
+[2mdist/[22m[36massets/vendor-CRSUrf4t.js                        [39m[1m[2m  934.14 kB[22m[1m[22m[2m │ gzip: 270.22 kB[22m
+[32m✓ built in 4.66s[39m
