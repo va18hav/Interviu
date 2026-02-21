@@ -192,10 +192,10 @@ const Navbar = ({ credits: propCredits }) => {
                             <Link to="/dashboard" className="flex items-center gap-6 group">
                                 <div className="flex items-center justify-center relative">
                                     {/* <div className="absolute inset-0 bg-cyan-500/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div> */}
-                                    <img src={logo} alt="Logo" className="w-10 h-12 relative z-10" />
+                                    <img src={logo} alt="Logo" className="w-12 h-14 relative z-10" />
                                 </div>
                                 <div className="flex flex-col  -ml-4">
-                                    <h1 className="text-xl font-extrabold text-black leading-none">Inter<span class="text-[#111827]">v</span><span class="text-[#64748B]">i</span><span class="text-[#2F6F73]">u</span></h1>
+                                    <h1 className="text-xl font-extrabold text-black leading-none">Intervi<span className="text-cyan-500">u</span></h1>
                                     <p className="text-xs text-gray-500">Interview Better</p>
                                 </div>
                             </Link>
