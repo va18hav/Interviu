@@ -1,8 +1,6 @@
 import React from 'react'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import techbanner from '../assets/images/techbanner.png'
-import dashboardBanner from '../assets/images/newcompany.png'
 import bot from "../assets/images/techbanner1.png"
 
 

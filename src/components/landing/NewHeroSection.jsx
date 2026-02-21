@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Award, Mic, Target, Pen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import heroImage from '../../assets/images/landingbot.png';
-import heroImage2 from '../../assets/images/heroai.png';
-import herocode from '../../assets/images/herocode.png';
-import herofeatures from '../../assets/images/herofeatures.png';
 import logo from '../../assets/images/logo.png';
 
 const NewHeroSection = () => {

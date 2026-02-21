@@ -1,5 +1,4 @@
 import React from 'react'
-import configureBanner from '../assets/images/configureBanner.png'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight } from 'lucide-react'
 import bot from "../assets/images/newbot.png"
