@@ -127,17 +127,17 @@ const SlideWelcome = ({ onNext, onSkip }) => (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[500px] h-[300px] bg-gradient-to-b from-cyan-50 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
 
         {/* Logo hero */}
-        <div className="relative mb-6 animate-fade-in-up">
+        <div className="relative mb-4 animate-fade-in-up">
             <img
                 src={fullLogo}
                 alt="Interviu"
-                className="h-12 md:h-20 object-contain mx-auto"
+                className="h-12 md:h-30 object-contain mx-auto"
             />
             {/* Subtle glow behind logo */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="w-48 h-20 rounded-full bg-cyan-400/15 blur-3xl" />
             </div>
-            <span className="text-2xl md:text-3xl font-bold text-slate-900 leading-relaxed block mt-2">Interv<span className="text-slate-500 font-bold">iu</span></span>
+            <span className="text-2xl md:text-3xl font-extrabold text-black leading-relaxed block mt-2">Intervi<span className="text-cyan-500 font-bold">u</span></span>
         </div>
 
         <div className="space-y-3 max-w-sm px-2 animate-fade-in-up" style={{ animationDelay: '100ms' }}>

@@ -12,9 +12,8 @@ const InterviewReport = () => {
     const location = useLocation();
     const [loading, setLoading] = useState(true);
     const [dynamicReport, setDynamicReport] = useState(null);
-    const ws = useRef(null);
 
-    const { sessionId, triggeredByEndButton, reportData: pastReportData, isPastInterview, completedAt } = location.state || {};
+    const { sessionId, triggeredByEndButton, reportData: pastReportData, isPastInterview, completedAt, endInterviewParams } = location.state || {};
 
     // Initial Placeholder / Default Structure
     const defaultData = {
@@ -54,61 +53,53 @@ const InterviewReport = () => {
     const reportData = isPastInterview && pastReportData ? pastReportData : (dynamicReport || defaultData);
 
     useEffect(() => {
-        // If this is a past interview with pre-loaded data, skip WebSocket entirely
-        if (isPastInterview) {
+        // If this is a past interview with pre-loaded data, skip generation
+        if (isPastInterview && pastReportData) {
             setLoading(false);
             return;
         }
 
-        if (!sessionId) {
-            setLoading(false);
-            return;
-        }
+        if (triggeredByEndButton && endInterviewParams) {
+            const generateAndFetchReport = async () => {
+                try {
+                    console.log("[Report] Calling API for end-interview and report generation...");
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(endInterviewParams)
+                    });
 
-        console.log(`[Report] Connecting for session: ${sessionId}`);
-        ws.current = new WebSocket(import.meta.env.VITE_WS_URL);
+                    const data = await response.json();
+                    if (data.success && data.report) {
+                        setDynamicReport(data.report);
 
-        ws.current.onopen = () => {
-            console.log('[Report] WebSocket Connected');
-            // Reconnect to existing session
-            ws.current.send(JSON.stringify({
-                type: 'reconnect',
-                payload: { sessionId }
-            }));
-
-            // Trigger report generation if we just ended the round
-            if (triggeredByEndButton) {
-                ws.current.send(JSON.stringify({
-                    type: 'generate_report'
-                }));
-            }
-        };
-
-        ws.current.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data);
-                console.log(`[Report] Received ${msg.type}`);
-
-                if (msg.type === 'report_generated') {
-                    setDynamicReport(msg.payload);
-                    setLoading(false);
-                } else if (msg.type === 'error') {
-                    console.error('[Report] Server Error:', msg.payload.message);
+                        // Clear the trigger and store data in history state 
+                        // so a page refresh renders instantly and doesn't double-charge
+                        navigate(location.pathname, {
+                            replace: true,
+                            state: {
+                                ...location.state,
+                                triggeredByEndButton: false,
+                                reportData: data.report,
+                                isPastInterview: true
+                            }
+                        });
+                    } else {
+                        console.error('[Report] Server Error:', data.error);
+                    }
+                } catch (err) {
+                    console.error('[Report] Fetch Error:', err);
+                } finally {
                     setLoading(false);
                 }
-            } catch (err) {
-                console.error('[Report] Parse Error:', err);
-            }
-        };
+            };
+            generateAndFetchReport();
+            return;
+        }
 
-        ws.current.onclose = () => {
-            console.log('[Report] WebSocket Disconnected');
-        };
-
-        return () => {
-            if (ws.current) ws.current.close();
-        };
-    }, [sessionId, triggeredByEndButton, isPastInterview]);
+        // Fallback catch-all
+        setLoading(false);
+    }, [sessionId, triggeredByEndButton, isPastInterview, endInterviewParams, navigate, location.pathname, pastReportData]);
 
     // Helper for Status Colors
     const getStatusColor = (status) => {

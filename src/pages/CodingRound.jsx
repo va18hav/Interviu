@@ -800,48 +800,39 @@ ${formatList(critical_requirements)}
                 }
             };
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: userCreds.id,
-                    durationInMinutes,
-                    generateReport,
-                    history: [],
-                    context: contextData
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                if (generateReport) {
-                    navigate('/report', {
-                        state: {
-                            ...location.state,
-                            // Pass session info for WebSocket connection in Report page
-                            sessionId: location.state?.sessionId || `session-${Date.now()}`,
-                            // If sessionId wasn't in location.state, we might have an issue connecting to the *same* session? 
-                            // Actually, InterviewReport uses sessionId to reconnect. 
-                            // CodingRound doesn't seem to store sessionId in state explicitly? 
-                            // It uses `ws.current` but doesn't seem to put sessionId in `location.state`.
-                            // I need to ensure sessionId is passed. 
-                            // CodingRound has `const [sessionId, setSessionId] = useState(null);`
-                            // I should pass THAT.
-                            triggeredByEndButton: true,
-                            creditsDeducted: data.creditsDeducted,
-                            newBalance: data.newBalance
+            if (generateReport) {
+                // Navigate instantly, InterviewReport will handle the API call
+                navigate('/report', {
+                    state: {
+                        ...location.state,
+                        sessionId: sessionId || `session-${Date.now()}`,
+                        triggeredByEndButton: true,
+                        endInterviewParams: {
+                            userId: userCreds.id,
+                            durationInMinutes,
+                            generateReport: true,
+                            sessionId: sessionId || `session-${Date.now()}`,
+                            history: [],
+                            context: contextData
                         }
-                    });
-                } else {
-                    navigate('/dashboard'); // Not eligible
-                }
+                    }
+                });
             } else {
-                console.error("Failed to end interview:", data.error);
-                alert("Error ending interview: " + data.error);
-                navigate('/dashboard'); // Fallback
+                // No report, just deduct credits in background and navigate
+                fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userCreds.id,
+                        durationInMinutes,
+                        generateReport: false,
+                        sessionId: sessionId || `session-${Date.now()}`,
+                        history: [],
+                        context: contextData
+                    }),
+                }).catch(console.error); // Fire and forget
+
+                navigate('/dashboard');
             }
 
         } catch (error) {

@@ -17,8 +17,8 @@ if (!process.env.SPEECH_KEY || !process.env.SPEECH_REGION) {
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const sessions = new Map(); // sessionId -> session
 const wsToSessionId = new Map(); // ws -> sessionId
+export const sessions = new Map(); // sessionId -> session
 
 export function setupWebSocket(server) {
     const wss = new WebSocketServer({ server });

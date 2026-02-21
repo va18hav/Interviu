@@ -121,12 +121,12 @@ const LoginPage = () => {
                     <div className="p-8 md:p-10 space-y-8">
                         <div className="flex flex-col items-center justify-center text-center">
                             <div className="flex flex-col items-center justify-center text-center">
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center mb-2">
                                     <div className="relative">
-                                        <div className="absolute inset-0 bg-cyan-500/20 blur-lg rounded-full" />
-                                        <img src={logo} alt="Logo" className="w-12 h-12 relative z-10" />
+                                        <div className="absolute inset-0 bg-cyan-500/8 blur-lg rounded-full" />
+                                        <img src={logo} alt="Logo" className="w-14 h-16 relative z-10" />
                                     </div>
-                                    <h1 className="text-3xl font-extrabold text-slate-900">Inter<span className="text-cyan-600">viu</span></h1>
+                                    <h1 className="text-3xl font-extrabold text-black">Intervi<span className="text-cyan-500">u</span></h1>
                                 </div>
                                 <p className="text-sm text-slate-500 font-medium">Practice Smarter, Interview Better</p>
                             </div>

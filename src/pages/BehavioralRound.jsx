@@ -371,7 +371,7 @@ const BehavioralRound = () => {
             const durationInMinutes = elapsedTime / 60;
 
             // Check if 15 minutes required for report
-            const MIN_REPORT_DURATION_SECONDS = 900; // 15 minutes
+            const MIN_REPORT_DURATION_SECONDS = 120; // 2 minutes
             const generateReport = elapsedTime >= MIN_REPORT_DURATION_SECONDS;
 
             const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
@@ -390,35 +390,38 @@ const BehavioralRound = () => {
                 return;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: userCreds.id,
-                    durationInMinutes,
-                    generateReport: generateReport,
-                    history: [],
-                    context: location.state
-                }),
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                if (generateReport) {
-                    navigate('/report', {
-                        state: {
-                            ...location.state,
+            if (generateReport) {
+                // Navigate instantly, InterviewReport will handle the API call
+                navigate('/report', {
+                    state: {
+                        ...location.state,
+                        sessionId,
+                        triggeredByEndButton: true,
+                        endInterviewParams: {
+                            userId: userCreds.id,
+                            durationInMinutes,
+                            generateReport: true,
                             sessionId,
-                            triggeredByEndButton: true,
-                            creditsDeducted: data.creditsDeducted,
-                            newBalance: data.newBalance
+                            history: [],
+                            context: location.state
                         }
-                    });
-                } else {
-                    navigate('/dashboard');
-                }
+                    }
+                });
             } else {
-                console.error("Failed to end interview:", data.error);
+                // No report, just deduct credits in background and navigate
+                fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userCreds.id,
+                        durationInMinutes,
+                        generateReport: false,
+                        sessionId,
+                        history: [],
+                        context: location.state
+                    }),
+                }).catch(console.error); // Fire and forget
+
                 navigate('/dashboard');
             }
 

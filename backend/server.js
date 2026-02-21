@@ -28,7 +28,7 @@ async function extractTextFromPDF(pdfBuffer) {
 }
 
 import http from 'http';
-import { setupWebSocket } from './websocketHandler.js';
+import { setupWebSocket, sessions } from './websocketHandler.js';
 
 dotenv.config()
 const app = express()
@@ -789,7 +789,7 @@ app.post('/api/start-interview', async (req, res) => {
 // SECURE: End Interview & Generate Report
 app.post('/api/end-interview', async (req, res) => {
     try {
-        const { userId, durationInMinutes, history, context, generateReport = true } = req.body;
+        const { userId, durationInMinutes, history, context, generateReport = true, sessionId } = req.body;
 
         if (!userId || durationInMinutes === undefined) {
             return res.status(400).json({ error: "Missing required fields: userId, durationInMinutes" });
@@ -826,20 +826,25 @@ app.post('/api/end-interview', async (req, res) => {
         }
 
         // 3. Generate Report
-        // Create a mock "session" object for the report generator
-        const sessionData = {
-            id: `session-${Date.now()}`,
-            history: history || [] // Expecting [{role, content}, ...]
+        // Fetch the real session from the WebSocket server if available
+        let sessionData = {
+            id: sessionId || `session-${Date.now()}`,
+            history: history || [],
+            context: context
         };
 
-        if (!history || history.length === 0) {
-            console.warn("[EndInterview] No history provided for report generation.");
+        const activeWsSession = sessionId ? sessions.get(sessionId) : null;
+        if (activeWsSession) {
+            console.log(`[EndInterview] Found active WebSocket session for ${sessionId}, using real history.`);
+            sessionData = activeWsSession; // Pass the whole real session
+        } else if (!history || history.length === 0) {
+            console.warn("[EndInterview] No history provided and no active WS session found for report generation.");
         }
 
         let report = null;
 
         if (generateReport) {
-            console.log("[EndInterview] Generating report and storing interview data...");
+            console.log(`[EndInterview] Generating report and storing interview data for ${sessionId}...`);
 
             // 1. Generate Report
             // Note: generateInterviewReport assumes 'session' object structure. We mock it here.
