@@ -1,6 +1,6 @@
 import { softwareCodingRoundPrompt, softwareBehavioralRoundPrompt, softwareDebugRoundPrompt, softwareDesignRoundPrompt } from './softwarePrompts.js';
 import { dataAnalystCodingRoundPrompt, dataAnalystNonCodingRoundPrompt } from './dataAnalystPrompts.js';
-import { devopsCodingRoundPrompt, devopsDebugRoundPrompt, devopsDesignRoundPrompt, devopsBehavioralRoundPrompt } from './devopsPropmpts.js';
+import { devopsCodingRoundPrompt, devopsDebugRoundPrompt, devopsDesignRoundPrompt, devopsBehavioralRoundPrompt } from './devopsPrompts.js';
 import {
     customSoftwareCodingRoundPrompt,
     customSoftwareDebugRoundPrompt,

@@ -11,7 +11,7 @@
 -- Set your user ID once for easy substitution
 DO $$
 DECLARE
-    user_id UUID := 'YOUR_USER_ID'; -- <- Replace this
+    user_id UUID := '5b26bed1-dcf4-4e22-bfd1-5ee784e9deef'; -- <- Replace this
 BEGIN
 
 -- ============================================================
