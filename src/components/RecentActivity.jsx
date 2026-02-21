@@ -97,7 +97,7 @@ const RecentActivity = () => {
 
                 {/* Footer Link */}
                 <button
-                    onClick={() => navigate('/previous-interviews')}
+                    onClick={() => navigate('/dashboard/all-previous-interviews')}
                     className="w-full py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
                 >
                     View Full History →
