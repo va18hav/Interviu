@@ -869,7 +869,7 @@ app.post('/api/end-interview', async (req, res) => {
                             title: title,
                             job_role: context.role,
                             job_description: context.job_description || context.problem_statement || null,
-                            transcript: history,
+                            transcript: sessionData.history,
                             report_data: report,
                             score: report.score || 0, // Assuming report has a score field
                             duration_mins: Math.ceil(durationInMinutes),
@@ -900,7 +900,7 @@ app.post('/api/end-interview', async (req, res) => {
                             type: context.type || 'sde',
                             title: context.title || "Interview",
                             company: context.company,
-                            transcript: history,
+                            transcript: sessionData.history,
                             report_data: report,
                             score: report.score || 0,
                             duration_mins: Math.ceil(durationInMinutes),
