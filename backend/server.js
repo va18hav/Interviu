@@ -50,17 +50,6 @@ const supabaseAdmin = supabaseServiceKey
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-app.use(express.json({ limit: '50mb' })); // Add JSON body parser at the top
-app.use(helmet());
-
-// Rate Limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: 'Too many requests from this IP, please try again later.'
-});
 const corsOptions = {
     origin: ['https://intervyu-virid.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -68,10 +57,22 @@ const corsOptions = {
     credentials: true
 };
 
-// Handle preflight OPTIONS requests BEFORE rate limiter
+// CORS must run FIRST — before helmet, body parser, and rate limiter
+// Otherwise helmet strips Access-Control-Allow-Origin from preflight responses
 app.options('*', cors(corsOptions));
-
 app.use(cors(corsOptions));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many requests from this IP, please try again later.'
+});
 app.use('/api', limiter);
 
 
