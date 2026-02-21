@@ -59,7 +59,7 @@ const corsOptions = {
 
 // CORS must run FIRST — before helmet, body parser, and rate limiter
 // Otherwise helmet strips Access-Control-Allow-Origin from preflight responses
-app.options('*', cors(corsOptions));
+app.options('/{*splat}', cors(corsOptions));
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
