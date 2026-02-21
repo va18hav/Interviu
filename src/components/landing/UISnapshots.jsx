@@ -2,7 +2,7 @@ import React from 'react';
 import { Terminal, Layout, Mic, Clock, Share2, Activity, Code, MousePointer2 } from 'lucide-react';
 import codingRound from '../../assets/images/UI/codinground.png';
 import designRound from '../../assets/images/UI/designround.png';
-import behavioralRound from '../../assets/images/UI/Interview.png';
+import behavioralRound from '../../assets/images/UI/interview.png';
 
 const UISnapshots = () => {
     return (
