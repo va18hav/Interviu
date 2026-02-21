@@ -26,7 +26,9 @@ const RecentActivity = () => {
                         tags: item.score >= 8 ? ["STRONG TECHNICAL"] : ["NEEDS IMPROVEMENT"],
                         tagColors: item.score >= 8 ? ["text-green-600 bg-green-50"] : ["text-yellow-600 bg-yellow-50"],
                         time: new Date(item.completed_at).toLocaleDateString(),
-                        rawDate: new Date(item.completed_at)
+                        rawDate: new Date(item.completed_at),
+                        reportData: item.report_data,
+                        originalItem: item
                     }));
                     setActivities(formattedData);
                 }
@@ -69,7 +71,16 @@ const RecentActivity = () => {
                         activities.map((activity) => (
                             <div
                                 key={activity.id}
-                                onClick={() => navigate(`/dashboard/feedback`, { state: { interviewId: activity.id, type: 'curated' } })}
+                                onClick={() => navigate(`/report`, {
+                                    state: {
+                                        isPastInterview: true,
+                                        reportData: activity.reportData,
+                                        completedAt: activity.originalItem.completed_at,
+                                        type: activity.originalItem.type,
+                                        role: activity.originalItem.job_role || activity.originalItem.title || 'Candidate',
+                                        firstName: 'Candidate'
+                                    }
+                                })}
                                 className="group p-4 rounded-xl bg-gray-50/50 border border-gray-100 hover:bg-white hover:shadow-sm transition-all duration-200 cursor-pointer"
                             >
                                 <div className="flex items-start justify-between gap-4">

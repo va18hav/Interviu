@@ -149,6 +149,30 @@ const InterviewReport = () => {
         );
     }
 
+    if (reportData?.status === 'failed' || reportData?.error) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+                <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-rose-100 shadow-xl space-y-6">
+                    <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertTriangle className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Report Generation Failed</h2>
+                        <p className="text-slate-500 mt-2">
+                            {reportData.error || "There was an issue generating your comprehensive feedback report. Please try again later or contact support."}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
+                    >
+                        Return to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100">
             {/* Header / Actions */}
@@ -159,7 +183,7 @@ const InterviewReport = () => {
                     </button>
                     <div>
                         <h1 className="text-xl font-bold tracking-tight text-slate-900">Interview Report</h1>
-                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{reportData.roundInsight.type}</p>
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{reportData?.roundInsight?.type || "Interview Round"}</p>
                     </div>
                 </div>
                 <div className="flex gap-3">

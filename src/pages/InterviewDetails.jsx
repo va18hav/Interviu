@@ -13,7 +13,6 @@ const InterviewDetails = () => {
     const [loading, setLoading] = useState(true);
 
     const [completedRounds, setCompletedRounds] = useState({});
-    const [progress, setProgress] = useState(0);
     const [currentScore, setCurrentScore] = useState(0);
     const [showDetailsPopup, setShowDetailsPopup] = useState(false);
     const [ttsProvider, setTtsProvider] = useState('google-cloud'); // Default to Google Cloud
@@ -23,6 +22,7 @@ const InterviewDetails = () => {
         const fetchInterviewDetails = async () => {
             try {
                 if (!id) return;
+                setCompletedRounds({});
 
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}?type=${type || 'sde'}`);
                 const data = await response.json();
@@ -40,6 +40,23 @@ const InterviewDetails = () => {
                     ...data,
                     icon_url: data.icon_link
                 });
+
+                // Fetch completed interviews for progress tracking
+                const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+                if (userCreds?.id) {
+                    const progressRes = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}&interviewId=${id}`);
+                    if (progressRes.ok) {
+                        const progressData = await progressRes.json();
+                        const completedMap = {};
+                        progressData.forEach(item => {
+                            if (item.round_id && !completedMap[item.round_id]) {
+                                // First match is the latest because API returns ordered by completed_at desc
+                                completedMap[item.round_id] = item;
+                            }
+                        });
+                        setCompletedRounds(completedMap);
+                    }
+                }
             } catch (err) {
                 console.error("Error fetching interview details:", err);
             } finally {
@@ -66,6 +83,14 @@ const InterviewDetails = () => {
         };
         return colors[company] || 'cyan';
     };
+
+    // Calculate progress dynamically
+    const progress = React.useMemo(() => {
+        if (!interview || !interview.rounds || interview.rounds.length === 0) return 0;
+        const totalRounds = interview.rounds.length;
+        const completedCount = Object.keys(completedRounds).length;
+        return Math.round((completedCount / totalRounds) * 100);
+    }, [interview, completedRounds]);
 
     if (loading) {
         return (
@@ -119,8 +144,6 @@ const InterviewDetails = () => {
     }
 
     const rounds = roundsList.length > 0 ? roundsList : [];
-
-
 
     // Official Design Round Launcher
     async function startDesignRound(index, provider = ttsProvider) {
@@ -350,6 +373,23 @@ const InterviewDetails = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full md:w-64 space-y-2 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-100 shadow-sm mt-4 md:mt-0">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="font-semibold text-slate-700">Interview Progress</span>
+                                <span className="text-slate-900 font-bold">{progress}%</span>
+                            </div>
+                            <div className="w-full h-2.5 bg-slate-200/60 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full bg-gradient-to-r ${colors.accent} transition-all duration-1000 ease-out`}
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium md:text-right">
+                                {Object.keys(completedRounds).length} of {rounds.length} rounds completed
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -392,51 +432,90 @@ const InterviewDetails = () => {
                                 Interview Rounds ({rounds.length})
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {rounds.map((round) => (
-                                    <div key={round.id} className="relative group p-4 rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-300 flex flex-col h-full shadow-sm">
-                                        <div className={`absolute top-0 right-0 w-[100px] h-[100px] bg-gradient-to-br ${colors.bg} rounded-full blur-[40px] opacity-50`} />
+                                {rounds.map((round) => {
+                                    const completionData = completedRounds[round.roundId];
+                                    return (
+                                        <div key={round.id} className="relative group p-4 rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-300 flex flex-col h-full shadow-sm">
+                                            <div className={`absolute top-0 right-0 w-[100px] h-[100px] bg-gradient-to-br ${colors.bg} rounded-full blur-[40px] opacity-50`} />
 
-                                        <div className="relative z-10 flex flex-col items-start gap-2 flex-grow">
-                                            <div className="w-full flex items-start justify-between mb-4">
-                                                <div className="flex flex-col items-start gap-1">
-                                                    <span className="text-sm font-bold text-slate-800 capitalize whitespace-nowrap">
-                                                        {round.type} Round
-                                                    </span>
-                                                    <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                                                        <Clock className="w-3.5 h-3.5" />
-                                                        {round.duration}
-                                                    </span>
-                                                </div>
+                                            <div className="relative z-10 flex flex-col items-start gap-2 flex-grow">
+                                                <div className="w-full flex items-start justify-between mb-4">
+                                                    <div className="flex flex-col items-start gap-1">
+                                                        <span className="text-sm font-bold text-slate-800 capitalize whitespace-nowrap">
+                                                            {round.type} Round
+                                                        </span>
+                                                        <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                                            <Clock className="w-3.5 h-3.5" />
+                                                            {round.duration}
+                                                        </span>
+                                                    </div>
 
-                                                <div className={`w-10 h-10 rounded-lg ${colors.iconBg} border border-slate-200 flex items-center justify-center ${colors.iconText} transition-all`}>
-                                                    <round.icon className="w-5 h-5" />
+                                                    <div className="flex items-center gap-3">
+                                                        {completionData ? (
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Score</span>
+                                                                <span className={`text-lg font-black ${completionData.score >= 7 ? 'text-green-600' : 'text-slate-900'}`}>
+                                                                    {completionData.score}/10
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className={`w-10 h-10 rounded-lg ${colors.iconBg} border border-slate-200 flex items-center justify-center ${colors.iconText} transition-all`}>
+                                                                <round.icon className="w-5 h-5" />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                                <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">{round.title}</h3>
+                                                <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                                                    {round.desc}
+                                                </p>
                                             </div>
-                                            <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">{round.title}</h3>
-                                            <p className="text-sm text-slate-500 leading-relaxed mb-4">
-                                                {round.desc}
-                                            </p>
 
+                                            <div className="relative z-10 flex gap-3 w-full mt-auto pt-2">
+                                                {completionData ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => navigate('/report', {
+                                                                state: {
+                                                                    isPastInterview: true,
+                                                                    reportData: completionData.report_data,
+                                                                    completedAt: completionData.completed_at,
+                                                                    type: round.type,
+                                                                    role: interview.role,
+                                                                    firstName: 'Candidate'
+                                                                }
+                                                            })}
+                                                            className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold hover:bg-slate-50 hover:border-slate-300 transition-all text-sm flex items-center justify-center gap-1.5 shadow-sm"
+                                                        >
+                                                            View Report
+                                                        </button>
+                                                        <button
+                                                            onClick={round.type === 'design' ? () => startDesignRound(round.key) : () => startRound(round.key)}
+                                                            className="flex-1 px-3 py-2.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 hover:shadow-md transition-all text-sm flex items-center justify-center gap-1.5"
+                                                        >
+                                                            Retry
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    round.type === 'design' ? (
+                                                        <button
+                                                            onClick={() => startDesignRound(round.key)}
+                                                            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                                                        >
+                                                            Start Design Round
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => startRound(round.key)}
+                                                            className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                                                            Start Round
+                                                        </button>
+                                                    )
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="relative z-10 flex gap-3 w-full mt-auto pt-2">
-                                            {/* Design Round Logic */}
-                                            {round.type === 'design' ? (
-                                                <button
-                                                    onClick={() => startDesignRound(round.key)}
-                                                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
-                                                >
-                                                    Start Design Round
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => startRound(round.key)}
-                                                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
-                                                    Start Round
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

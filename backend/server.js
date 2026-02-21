@@ -447,15 +447,20 @@ app.get('/api/interviews/:id', async (req, res) => {
 
 // GET /api/completed-interviews/curated?userId=...
 app.get('/api/completed-interviews/curated', async (req, res) => {
-    const { userId } = req.query;
+    const { userId, interviewId } = req.query;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
     try {
-        const { data, error } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('completed_curated_interviews')
             .select('*')
-            .eq('user_id', userId)
-            .order('completed_at', { ascending: false });
+            .eq('user_id', userId);
+
+        if (interviewId) {
+            query = query.eq('curated_interview_id', interviewId);
+        }
+
+        const { data, error } = await query.order('completed_at', { ascending: false });
 
         if (error) throw error;
         res.json(data || []);
@@ -701,48 +706,6 @@ app.delete('/api/resume-analyses/:id', async (req, res) => {
 // The existing /api/analyze-resume endpoint handles the heavy lifting.
 // We might need a generic save endpoint if needed, but for now specific flow seems to be used.
 
-// ==============================================================
-// COMPLETED INTERVIEWS — Fetch endpoints for history/report page
-// ==============================================================
-
-// GET /api/completed-interviews/curated?userId=...
-app.get('/api/completed-interviews/curated', async (req, res) => {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: 'userId is required' });
-
-    try {
-        const { data, error } = await supabaseAdmin
-            .from('completed_curated_interviews')
-            .select('*')
-            .eq('user_id', userId)
-            .order('completed_at', { ascending: false });
-
-        if (error) throw error;
-        res.json(data || []);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// GET /api/completed-interviews/custom?userId=...
-app.get('/api/completed-interviews/custom', async (req, res) => {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: 'userId is required' });
-
-    try {
-        const { data, error } = await supabaseAdmin
-            .from('completed_custom_interviews')
-            .select('*')
-            .eq('user_id', userId)
-            .order('completed_at', { ascending: false });
-
-        if (error) throw error;
-        res.json(data || []);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 
 
 // SECURE: Start Interview Endpoint
@@ -862,7 +825,7 @@ app.post('/api/end-interview', async (req, res) => {
                     // Ensure only first letter is capitalized (rest kept as is, or lowercase? "first letter being upper-case always" usually implies fixing the first char)
                     const title = titleRaw.charAt(0).toUpperCase() + titleRaw.slice(1);
 
-                    const { error: insertError } = await supabase
+                    const { error: insertError } = await supabaseAdmin
                         .from('completed_custom_interviews')
                         .insert([{
                             user_id: userId,
@@ -871,7 +834,7 @@ app.post('/api/end-interview', async (req, res) => {
                             job_description: context.job_description || context.problem_statement || null,
                             transcript: sessionData.history,
                             report_data: report,
-                            score: report.score || 0, // Assuming report has a score field
+                            score: report.confidence || 0, // Assuming report has a score field
                             duration_mins: Math.ceil(durationInMinutes),
                             started_at: null, // We don't track start time explicitly in this endpoint input yet
                             completed_at: timestamp
@@ -892,17 +855,18 @@ app.post('/api/end-interview', async (req, res) => {
                         curatedId = context.roundKey.split('-round-')[0];
                     }
 
-                    const { error: insertError } = await supabase
+                    const { error: insertError } = await supabaseAdmin
                         .from('completed_curated_interviews')
                         .insert([{
                             user_id: userId,
+                            round_id: context.roundId,
                             curated_interview_id: curatedId,
                             type: context.type || 'sde',
                             title: context.title || "Interview",
                             company: context.company,
                             transcript: sessionData.history,
                             report_data: report,
-                            score: report.score || 0,
+                            score: report.verdict.confidence || 0,
                             duration_mins: Math.ceil(durationInMinutes),
                             started_at: null,
                             completed_at: timestamp

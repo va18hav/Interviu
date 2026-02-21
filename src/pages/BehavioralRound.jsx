@@ -371,7 +371,7 @@ const BehavioralRound = () => {
             const durationInMinutes = elapsedTime / 60;
 
             // Check if 15 minutes required for report
-            const MIN_REPORT_DURATION_SECONDS = 120; // 2 minutes
+            const MIN_REPORT_DURATION_SECONDS = 10; // 15 minutes
             const generateReport = elapsedTime >= MIN_REPORT_DURATION_SECONDS;
 
             const userCreds = JSON.parse(localStorage.getItem("userCredentials"));

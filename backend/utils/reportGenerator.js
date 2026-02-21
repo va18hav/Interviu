@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { softwareFeedbackPrompt } from '../prompts/softwareFeedbackPrompt.js';
 import { devopsFeedbackPrompt } from '../prompts/devopsFeedbackPrompt.js';
 import { resolveTemplate } from '../prompts/index.js';
+import { jsonrepair } from 'jsonrepair';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -53,8 +54,8 @@ export async function generateInterviewReport(session, context) {
         console.log(`[ReportGenerator] Sending to Claude...`);
 
         const response = await anthropic.messages.create({
-            model: "claude-sonnet-4-6",
-            max_tokens: 1800,
+            model: "claude-opus-4-6",
+            max_tokens: 3000,
             temperature: 0.1,
             messages: [
                 { role: "user", content: finalPrompt }
@@ -63,14 +64,30 @@ export async function generateInterviewReport(session, context) {
 
         const reportText = response.content[0].text;
 
-        // Extract JSON from response (sometimes Claude adds markdown blocks)
-        const jsonMatch = reportText.match(/\{[\s\S]*\}/);
+        // Sanitize and parse JSON
+        let cleanText = reportText;
+
+        // 1. Remove Markdown Code Blocks (if present)
+        const jsonMatch = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
-            const reportData = JSON.parse(jsonMatch[0]);
-            return reportData;
+            cleanText = jsonMatch[1];
+        } else {
+            // If no code blocks, try to find the starting brace
+            const firstCurly = cleanText.indexOf('{');
+            if (firstCurly !== -1) {
+                cleanText = cleanText.substring(firstCurly);
+            }
         }
 
-        throw new Error("Failed to parse JSON from Claude response");
+        try {
+            // Use jsonrepair to fix common errors (including missing closing braces from truncation)
+            const repaired = jsonrepair(cleanText);
+            return JSON.parse(repaired);
+        } catch (parseError) {
+            console.error("[ReportGenerator] JSON Repair/Parse Error:", parseError);
+            console.error("[ReportGenerator] Sanitize Content Snippet:", cleanText.substring(0, 500) + "...");
+            throw new Error("Failed to parse JSON from Claude response");
+        }
 
     } catch (error) {
         console.error("[ReportGenerator] Error generating report:", error);
