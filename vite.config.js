@@ -6,12 +6,21 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            return 'vendor';
+            if (id.includes('microsoft-cognitiveservices') || id.includes('azure')) {
+              return 'azure-sdk';
+            }
+            if (id.includes('pdfjs-dist')) {
+              return 'pdfjs';
+            }
+            if (id.includes('three') || id.includes('fiber')) {
+              return 'threejs';
+            }
+            return 'vendor'; // everything else into a generic vendor chunk
           }
         }
       }
