@@ -202,13 +202,16 @@ app.get('/api/auth/user', async (req, res) => {
 // ==========================================
 
 // Step 1: Redirect browser to Google via Supabase
+// After auth, Supabase sends tokens directly to the frontend via hash fragment (implicit flow)
 app.get('/api/auth/google', async (req, res) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     try {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/auth/callback`,
-                skipBrowserRedirect: true, // Don't let Supabase redirect - we will
+                // Supabase implicit flow delivers #access_token directly to this URL
+                redirectTo: `${frontendUrl}/auth/callback`,
+                skipBrowserRedirect: true,
             }
         });
 
@@ -217,7 +220,6 @@ app.get('/api/auth/google', async (req, res) => {
             return res.status(500).json({ error: 'Failed to initiate Google login' });
         }
 
-        // Redirect user's browser to the Google OAuth consent screen
         res.redirect(data.url);
     } catch (err) {
         console.error('[OAuth] Google redirect error:', err);
