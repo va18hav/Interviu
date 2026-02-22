@@ -1,27 +1,44 @@
-import React from "react";
-import { Link, useLocation, useNavigate, } from "react-router-dom"
-import { Sparkles, Plus, Clock, TrendingUp, Award, Target, ChevronRight, Calendar, Star, Users, Code, Briefcase, Brain, Loader2, Trash, Signal, Layers } from 'lucide-react';
-import logo from "../assets/images/logo.png"
-import bot from "../assets/images/bot.png"
-
-import Navbar from "../components/Navbar"
-import CustomInterviewBanner from "../components/CustomInterviewBanner"
-import DashboardHeroBanner from "../components/DashboardHeroBanner"
-import ResumeHero from "../components/ResumeHero";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Sparkles,
+  Plus,
+  Clock,
+  TrendingUp,
+  Award,
+  Target,
+  ChevronRight,
+  Calendar,
+  Star,
+  Users,
+  Code,
+  Briefcase,
+  Brain,
+  Loader2,
+  Trash,
+  Signal,
+  Layers,
+  ArrowRight,
+  History,
+  Sparkle
+} from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
+import Navbar from "../components/Navbar";
+import CustomInterviewBanner from "../components/CustomInterviewBanner";
+import DashboardHeroBanner from "../components/DashboardHeroBanner";
 import RecentActivity from "../components/RecentActivity";
-
 import Onboarding from "./Onboarding";
 
 const InterviewDashboard = () => {
-  const navigate = useNavigate()
-  const [loading, setLoading] = React.useState(true)
-  const [userCredentials, setUserCredentials] = React.useState(null);
-  const [pastInterviews, setPastInterviews] = React.useState([]);
-  const [popularInterviews, setPopularInterviews] = React.useState([]);
-  const [showOnboarding, setShowOnboarding] = React.useState(false);
-  const [credits, setCredits] = React.useState(0); // New state for credits
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [userCredentials, setUserCredentials] = useState(null);
+  const [pastInterviews, setPastInterviews] = useState([]);
+  const [popularInterviews, setPopularInterviews] = useState([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [credits, setCredits] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getProfileAndInterviews();
   }, []);
 
@@ -34,7 +51,6 @@ const InterviewDashboard = () => {
         return;
       }
 
-      // Set user details for display if not already set correctly from localStorage (though dashboard usually relies on this state)
       setUserCredentials(storedUser);
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/dashboard?userId=${storedUser.id}`);
@@ -52,7 +68,6 @@ const InterviewDashboard = () => {
         setPastInterviews(customData || []);
       }
 
-      // Handle onboarding
       if (data.profile && !data.profile.onboarding_completed) {
         setTimeout(() => {
           setShowOnboarding(true);
@@ -66,12 +81,11 @@ const InterviewDashboard = () => {
     }
   }
 
-  async function deleteinterview(id) {
+  async function deleteInterview(id) {
     if (!confirm("Are you sure you want to delete this interview record?")) return;
 
     try {
       setPastInterviews(prev => prev.filter(i => i.id !== id));
-
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${id}`, {
         method: 'DELETE'
       });
@@ -80,175 +94,243 @@ const InterviewDashboard = () => {
         const data = await response.json();
         throw new Error(data.error || "Failed to delete interview");
       }
-
     } catch (error) {
       console.error("Error deleting:", error.message);
       getProfileAndInterviews();
     }
   }
 
-
-  // Helper for company colors since they are not in the data
-  const getCompanyColor = (company) => {
-    const colors = {
-      'Google': 'cyan',
-      'Amazon': 'blue',
-      'Meta': 'purple',
-      'Netflix': 'red',
-      'Microsoft': 'green',
-      'Apple': 'cyan',
-      'Nvidia': 'green'
-    };
-    return colors[company] || 'cyan';
-  };
+  const SectionTitle = ({ icon: Icon, title, subtitle, actionLabel, onAction }) => (
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div className="space-y-1">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+            <Icon className="w-4 h-4 text-indigo-600" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
+        </div>
+        <p className="text-slate-500 font-medium">{subtitle}</p>
+      </div>
+      {actionLabel && (
+        <button
+          onClick={onAction}
+          className="group flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-700 transition-colors"
+        >
+          {actionLabel}
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </button>
+      )}
+    </div>
+  );
 
   const getScoreColor = (score) => {
-    if (score >= 80) return "text-green-400";
-    if (score >= 60) return "text-cyan-400";
-    return "text-yellow-400";
+    if (score >= 80) return "emerald";
+    if (score >= 60) return "amber";
+    return "rose";
   };
 
-  const getScoreBg = (score) => {
-    if (score >= 80) return "bg-green-500/10 border-green-500/20";
-    if (score >= 60) return "bg-cyan-500/10 border-cyan-500/20";
-    return "bg-yellow-500/10 border-yellow-500/20";
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white relative">
-      <div className={`transition-all duration-500 ${showOnboarding ? 'blur-md pointer-events-none brightness-50' : ''}`}>
-        {/* Header */}
-        <Navbar />
+    <div className="min-h-screen bg-[#FDFDFF] font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      <Navbar />
 
-        {/* Main Content */}
-        {loading ? <div className="min-h-screen bg-white flex items-center justify-center">
-          <Loader2 className="w-10 h-10 text-cyan-500 animate-spin" />
-        </div> : <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+      <div className={`transition-all duration-700 ${showOnboarding ? 'blur-xl scale-[0.98] pointer-events-none' : ''}`}>
 
-          {/* Popular Interviews Section */}
-          <section className="space-y-6">
-            {/* Banner and Recent Activity Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <DashboardHeroBanner firstName={userCredentials?.firstName || "User"} />
-              </div>
-              <div className="lg:col-span-1">
-                <RecentActivity />
-              </div>
+        {/* Integrated Command Center Hero */}
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-6 md:py-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+          >
+            <div className="lg:col-span-8 h-full">
+              <DashboardHeroBanner firstName={userCredentials?.firstName || "Candidate"} />
             </div>
-
-            <div className="flex items-center gap-2">
-              <p className="text-slate-900 text-sm mt-1">Latest Interviews</p>
-              <TrendingUp className="w-6 h-6 text-cyan-400" />
+            <div className="lg:col-span-4 h-full">
+              <RecentActivity />
             </div>
+          </motion.div>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {popularInterviews.map((interview, index) => {
-                return (
-                  <div
-                    key={interview.id}
-                    className="relative group rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer p-6 space-y-5"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                          <img src={interview.icon_url} alt="" className="w-8 h-8 object-contain" />
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-bold text-gray-900 group-hover:text-black transition-colors">
-                            {interview.company} {interview.role}
-                          </h4>
-                          <p className="text-sm text-gray-500 font-medium">{interview.level}</p>
-                        </div>
-                      </div>
+        <main className="max-w-[1440px] mx-auto px-4 md:px-8 pb-32 space-y-24">
+
+          {/* Tailored Simulations */}
+          <section>
+            <SectionTitle
+              icon={Sparkles}
+              title="Tailored Simulations"
+              subtitle="High-fidelity environments calibrated to your profile."
+              actionLabel="Explore All Library"
+              onAction={() => navigate('/dashboard/all-popular-interviews')}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {popularInterviews.slice(0, 6).map((interview, index) => (
+                <motion.div
+                  key={interview.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
+                  className="group relative bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  <div className="relative flex items-start justify-between mb-8">
+                    <div className="w-16 h-16 rounded-[1.25rem] bg-slate-50 border border-slate-100 flex items-center justify-center p-3 shadow-sm group-hover:bg-white group-hover:scale-110 transition-all duration-500">
+                      <img src={interview.icon_url} alt="" className="w-full h-full object-contain" />
                     </div>
-
-                    <div className="flex items-center gap-4 py-2 border-t border-gray-50 mt-2">
-                      <div className="flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-cyan-500" />
-                        <span className="text-sm text-gray-600 font-medium">{interview.rounds?.length || 0} Rounds</span>
-                      </div>
-                      {/* <div className="flex items-center gap-1.5">
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm text-gray-600 font-medium">4.8</span>
-                      </div> */}
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-600 font-medium">{interview.total_duration} minutes</span>
-                      </div>
+                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors ${(() => {
+                      const l = (interview.level || '').toLowerCase();
+                      if (l.includes('entry') || l.includes('l3')) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                      if (l.includes('senior') || l.includes('l5')) return 'bg-amber-50 text-amber-600 border-amber-100';
+                      if (l.includes('staff') || l.includes('lead')) return 'bg-rose-50 text-rose-600 border-rose-100';
+                      return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+                    })()}`}>
+                      {interview.level}
                     </div>
-
-                    <button
-                      onClick={() => navigate(`/dashboard/interview-details/${interview.id}`)}
-                      className="w-full py-2.5 rounded-xl bg-gray-50 text-gray-900 border border-gray-100 hover:bg-gray-100 font-semibold text-sm transition-all flex items-center justify-center gap-2 group-hover:border-gray-200">
-                      View Details
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-1 transition-transform" />
-                    </button>
                   </div>
-                );
-              })}
+
+                  <div className="space-y-2 mb-8">
+                    <h3 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                      {interview.company} {interview.role}
+                    </h3>
+                    <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                      <div className="flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>{interview.rounds?.length || 0} Modules</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{interview.total_duration}m Session</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                    <span className="text-[10px] font-black text-slate-400 group-hover:text-indigo-600 uppercase tracking-widest transition-colors">View Details</span>
+                    <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white transition-all duration-500">
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </section>
 
-          <CustomInterviewBanner firstName={userCredentials?.firstName || "User"} />
+          {/* Simulation Blueprint Callout */}
+          <div className="relative rounded-[3rem] overflow-hidden">
+            <CustomInterviewBanner firstName={userCredentials?.firstName || "Candidate"} />
+          </div>
 
-          {/* Past Interviews Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pastInterviews.length > 0 ? (
-              pastInterviews.slice(0, 6).map((interview) => (
-                <div key={interview.id} className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-lg line-clamp-2" title={interview.title}>{interview.title}</h3>
-                        <p className="text-sm text-slate-500 mt-1">{interview.job_role} • {new Date(interview.completed_at).toLocaleDateString()}</p>
+          {/* Performance Chronicle (Past Interviews) */}
+          <section>
+            <SectionTitle
+              icon={History}
+              title="Performance Chronicle"
+              subtitle="Historical data from your previous simulations."
+              actionLabel="View Full History"
+              onAction={() => navigate('/dashboard/history')}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {pastInterviews.length > 0 ? (
+                pastInterviews.slice(0, 6).map((interview, index) => {
+                  const scoreColor = getScoreColor(interview.score);
+                  const date = new Date(interview.completed_at);
+
+                  return (
+                    <motion.div
+                      key={interview.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      className="group relative bg-white border border-slate-100 rounded-[2.5rem] p-8 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 flex flex-col justify-between"
+                    >
+                      <div className="flex items-start justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                          <div className="flex flex-col items-center justify-center w-12 py-2 rounded-2xl bg-slate-50 border border-slate-100 shrink-0">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{date.toLocaleString('default', { month: 'short' })}</span>
+                            <span className="text-xl font-black text-slate-900 leading-none">{date.getDate()}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-black text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{interview.title}</h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{interview.job_role}</p>
+                          </div>
+                        </div>
+
+                        <div className={`p-3 rounded-2xl border-2 flex flex-col items-center justify-center shrink-0 ${scoreColor === 'emerald' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                          scoreColor === 'amber' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                            'bg-rose-50 border-rose-100 text-rose-600'
+                          }`}>
+                          <span className="text-[8px] font-black uppercase tracking-tighter opacity-60">Score</span>
+                          <span className="text-lg font-black leading-none">{interview.score}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded-md shrink-0">
-                        <Star className="w-3.5 h-3.5 text-green-600 fill-green-600" />
-                        <span className="font-bold text-green-700 text-sm">{interview.score}</span>
+
+                      <div className="flex items-center gap-3 pt-6 border-t border-slate-50">
+                        <button
+                          onClick={() => navigate('/report', {
+                            state: {
+                              reportData: interview.report_data,
+                              role: interview.job_role,
+                              type: interview.title,
+                              isPastInterview: true,
+                              completedAt: interview.completed_at,
+                            }
+                          })}
+                          className="flex-1 py-3 px-6 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-200 transition-all duration-300"
+                        >
+                          Audit Analysis
+                        </button>
+                        <button
+                          onClick={() => deleteInterview(interview.id)}
+                          className="w-12 h-12 rounded-2xl border border-slate-100 text-slate-300 hover:text-red-500 hover:bg-red-50 hover:border-red-100 flex items-center justify-center transition-all"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
                       </div>
-                    </div>
+                    </motion.div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full py-20 rounded-[3rem] border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="w-16 h-16 rounded-[2rem] bg-white border border-slate-100 flex items-center justify-center text-slate-300 italic">
+                    ...
                   </div>
-
-                  <div className="flex gap-3 mt-4 pt-4 border-t border-slate-100 items-center justify-between">
-                    <button
-                      onClick={() => navigate('/report', {
-                        state: {
-                          reportData: interview.report_data,
-                          role: interview.job_role,
-                          type: interview.title,
-                          isPastInterview: true,
-                          completedAt: interview.completed_at,
-                        }
-                      })}
-                      className="px-6 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors w-fit shadow-sm"
-                    >
-                      View Report
-                    </button>
-                    <button
-                      onClick={() => deleteinterview(interview.id)}
-                      className="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                      title="Delete Interview"
-                    >
-                      <Trash className="w-4 h-4" />
-                    </button>
+                  <div>
+                    <p className="text-slate-900 font-black">No simulations on record.</p>
+                    <p className="text-slate-500 font-medium text-sm">Architect your first simulation to begin your chronicle.</p>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-10 rounded-2xl border border-slate-200 bg-slate-50">
-                <p className="text-slate-700 mb-2">No past custom interviews yet.</p>
-                <p className="text-sm text-slate-600">Create your first interview to get started!</p>
-              </div>
-            )}
-          </div>
-        </main>}
+              )}
+            </div>
+          </section>
+        </main>
       </div>
 
       {/* Onboarding Pop-up Overlay */}
-      {showOnboarding && (
-        <Onboarding onComplete={() => setShowOnboarding(false)} />
-      )}
+      <AnimatePresence>
+        {showOnboarding && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/20 backdrop-blur-sm"
+          >
+            <Onboarding onComplete={() => setShowOnboarding(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

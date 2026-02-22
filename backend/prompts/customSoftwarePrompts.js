@@ -697,6 +697,10 @@ Title: {{problem_title}}
 Incident briefing:
 {{problem_statement}}
 
+Relevant Files:
+{{files}}
+ 
+
 The candidate will work in a live code editor containing the buggy files described above.
 
 The bug is already embedded in the code files.

@@ -285,36 +285,69 @@ app.get('/api/dashboard', async (req, res) => {
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
-        const [profileObj, interviewsObj, popularObj] = await Promise.all([
-            supabase.from('profiles').select('*').eq('id', userId).single(),
-            // interviws table deleted, return empty for now
-            Promise.resolve({ data: [] }),
-            // Fetch SDE and DevOps interviews for dashboard (limit 6 each to ensure we get latest)
-            Promise.all([
-                supabase.from('sde_interviews').select('*').order('created_at', { ascending: false }).limit(6),
-                supabase.from('devops_interviews').select('*').order('created_at', { ascending: false }).limit(6)
-            ])
-        ]);
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
 
-        if (profileObj.error && profileObj.error.code !== 'PGRST116') throw profileObj.error;
-        if (interviewsObj.error) throw interviewsObj.error;
+        if (profileError && profileError.code !== 'PGRST116') throw profileError;
 
-        // Process popular interviews
-        const [sdeResult, devopsResult] = popularObj;
-        if (sdeResult.error) throw sdeResult.error;
-        if (devopsResult.error) throw devopsResult.error;
+        // Fetch Recent Completed Activity
+        // Promise.resolve({ data: [] }) as interviews table was deleted
+        const interviewsObj = { data: [] };
 
-        // Combine, sort by date descending to get true latest across both categories
-        const sdeData = (sdeResult.data || []).map(item => ({ ...item, type: 'sde', icon_url: item.icon_link }));
-        const devopsData = (devopsResult.data || []).map(item => ({ ...item, type: 'devops', icon_url: item.icon_link }));
-        const combinedPopular = [...sdeData, ...devopsData]
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 6);
+        // Tailored "Popular" Interviews Logic
+        let tailoredInterviews = [];
+        if (profile) {
+            const role = profile.role || 'SDE'; // Standardized from role_preference
+            const normalizedType = role.toLowerCase().includes('devops') ? 'devops' : 'sde';
+            const table = normalizedType === 'sde' ? 'sde_interviews' : 'devops_interviews';
+
+            // Mapping for level
+            const levelMap = { 'Junior': 'entry', 'Mid-Level': 'intermediate', 'Senior': 'senior' };
+            const level = levelMap[profile.experience_level] || profile.experience_level;
+
+            const userSkills = profile.skills
+                ? profile.skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+                : [];
+
+            let query = supabase.from(table).select('*');
+            if (level) {
+                query = query.ilike('level', level);
+            }
+
+            const { data: candidates, error: fetchError } = await query
+                .order('created_at', { ascending: false })
+                .limit(50); // Get a good sample to score
+
+            if (fetchError) throw fetchError;
+
+            // Score and filter
+            let results = candidates || [];
+            if (userSkills.length > 0) {
+                results = results.map(interview => {
+                    const interviewSkills = (interview.skills || []).map(s => s.toLowerCase());
+                    const matchCount = userSkills.filter(userSkill =>
+                        interviewSkills.some(dbSkill =>
+                            dbSkill.includes(userSkill) || userSkill.includes(dbSkill)
+                        )
+                    ).length;
+                    return { ...interview, _matchCount: matchCount };
+                }).sort((a, b) => (b._matchCount || 0) - (a._matchCount || 0));
+            }
+
+            tailoredInterviews = results.slice(0, 3).map(item => ({
+                ...item,
+                type: normalizedType,
+                icon_url: item.icon_link
+            }));
+        }
 
         res.json({
-            profile: profileObj.data,
+            profile: profile,
             recentInterviews: interviewsObj.data || [],
-            popularInterviews: combinedPopular || []
+            popularInterviews: tailoredInterviews
         });
     } catch (error) {
         console.error("Dashboard error:", error);
@@ -651,11 +684,11 @@ app.post('/api/onboarding', async (req, res) => {
         // Update profile with onboarding data
         const { error: updateError } = await supabase
             .from('profiles')
-            .update({
+            .upsert({
+                id: userId,
                 onboarding_completed: true,
                 ...onboardingData
-            })
-            .eq('id', userId);
+            });
 
         if (updateError) throw updateError;
         res.json({ success: true });

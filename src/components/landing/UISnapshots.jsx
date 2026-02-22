@@ -1,151 +1,153 @@
 import React from 'react';
-import { Terminal, Layout, Mic, Clock, Share2, Activity, Code, MousePointer2 } from 'lucide-react';
+import { Terminal, Layout, Mic, Clock, Share2, Activity, Code, MousePointer2, ChevronRight, Layers, Bot, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 import codingRound from '../../assets/images/UI/codinground.png';
 import designRound from '../../assets/images/UI/designround.png';
 import behavioralRound from '../../assets/images/UI/interview.png';
 
 const UISnapshots = () => {
+    const snapshots = [
+        {
+            id: 'coding',
+            tag: 'Execution Sandbox',
+            tagIcon: <Terminal />,
+            title: 'Technical Assessment',
+            description: 'A full IDE with multi-language support. The AI evaluates not just the solution, but your algorithmic efficiency and edge case handling.',
+            features: ['VS Code Style Interface', 'Language-Aware Evaluation', 'Real-time Complexity Analysis'],
+            image: codingRound,
+            color: 'blue'
+        },
+        {
+            id: 'design',
+            tag: 'Architecture Canvas',
+            tagIcon: <Layers />,
+            title: 'System Design',
+            description: 'An interactive canvas to architect distributed systems. Defend your choices on scaling, sharding, and latency against expert-level critique.',
+            features: ['Live Infrastructure Review', 'Node-Based Logic', 'Failure Mode Scenarios'],
+            image: designRound,
+            color: 'indigo'
+        },
+        {
+            id: 'behavioral',
+            tag: 'Natural Dialogue',
+            tagIcon: <Mic />,
+            title: 'Executive Behavioral',
+            description: 'Voice-based leadership simulations. The AI probes your narratives for senior-level hiring signals and leadership principles.',
+            features: ['STAR Method Probing', 'Acoustic Tone Analysis', 'Leadership Alignment'],
+            image: behavioralRound,
+            color: 'slate'
+        }
+    ];
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.3
+            }
+        }
+    };
+
+    const sectionVariants = {
+        hidden: { opacity: 0, y: 40 },
+        visible: { opacity: 1, y: 0, transition: { duration: 1, ease: "easeOut" } }
+    };
+
     return (
-        <section className="bg-white py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="bg-white py-32 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6">
 
                 {/* Section Header */}
-                <div className="text-center mb-16">
-                    <div className="inline-block px-3 py-1 mb-4 text-xs font-bold tracking-widest text-gray-500 uppercase bg-gray-50 rounded-full border border-gray-100">
-                        Interview Types
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-tight tracking-tight">
-                        Practice Every Interview
-                        <br />
-                        <span className="bg-gradient-to-r from-gray-900 via-gray-600 to-gray-900 bg-clip-text text-transparent">
-                            You'll Actually Face
+                <div className="max-w-3xl mb-32">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6"
+                    >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Technical Evaluation Suites</span>
+                    </motion.div>
+
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-950 mb-6 leading-tight tracking-tighter">
+                        Calibrated for the <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
+                            Entire Hiring Loop.
                         </span>
                     </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed font-medium">
-                        Coding. System Design. Behavioral. All in one place.
+                    <p className="text-lg text-slate-500 max-w-2xl leading-relaxed font-medium">
+                        Standardized interview formats reimagined with adaptive AI to ensure your preparation matches the rigor of top-tier organizations.
                     </p>
                 </div>
 
-                <div className="space-y-24">
-
-                    {/* 1. Coding Round - Text Left, Image Right */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center group">
-                        <div className="lg:col-span-5 lg:pr-8">
-                            <div className="h-full rounded-2xl overflow-hidden bg-white hover:shadow-md transition-all duration-300 p-8 flex flex-col justify-center relative">
-                                {/* Subtle differentiator - Code pattern */}
-                                <div className="space-y-6 relative z-10">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium w-fit">
-                                        <Clock className="w-3 h-3" />
-                                        Timed Environment
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="space-y-40"
+                >
+                    {snapshots.map((snap, idx) => (
+                        <motion.div
+                            key={snap.id}
+                            variants={sectionVariants}
+                            className={`grid grid-cols-1 lg:grid-cols-12 gap-16 items-center ${idx % 2 !== 0 ? 'lg:flex-row-reverse' : ''
+                                }`}
+                        >
+                            <div className={`lg:col-span-5 space-y-8 ${idx % 2 !== 0 ? 'lg:order-2' : ''}`}>
+                                <div className="space-y-6">
+                                    <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                                        {React.cloneElement(snap.tagIcon, { className: "w-3.5 h-3.5" })}
+                                        <span>{snap.tag}</span>
                                     </div>
 
-                                    <div>
-                                        <h3 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-                                            Real-time Coding
-                                        </h3>
-                                        <p className="text-base text-gray-600 leading-relaxed">
-                                            Full IDE with syntax highlighting and multi-language support. The AI adapts questions to your code quality and edge case handling.
-                                        </p>
-                                    </div>
+                                    <h3 className="text-3xl md:text-4xl font-black text-slate-950 tracking-tight">
+                                        {snap.title}
+                                    </h3>
 
-                                    <div className="flex flex-wrap gap-2 pt-2">
-                                        <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium rounded">VS Code Style</span>
-                                        <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium rounded">Execution Sandbox</span>
-                                    </div>
+                                    <p className="text-base text-slate-500 font-medium leading-relaxed">
+                                        {snap.description}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {snap.features.map((feature, fIdx) => (
+                                        <div key={fIdx} className="flex items-center gap-3 text-slate-900">
+                                            <div className="w-1 h-1 rounded-full bg-indigo-600" />
+                                            <span className="text-[11px] font-black uppercase tracking-widest">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="pt-4">
+                                    <button className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-[0.2em] group">
+                                        View Documentation
+                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                        <div className="lg:col-span-7 relative">
-                            {/* Editor specific glow */}
-                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
-                            <div className="relative rounded-xl overflow-hidden transform group-hover:scale-[1.01] transition duration-500">
-                                <div className="absolute top-0 w-full h-8 flex items-center px-4">
-                                    <div className="flex gap-1.5">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-red-500/20"></div>
-                                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20"></div>
-                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500/20"></div>
-                                    </div>
-                                </div>
-                                <img src={codingRound} alt="Real-time coding round interface" className="w-full h-auto pt-8" />
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* 2. Design Round - Text Left, Image Right */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center group">
-                        <div className="lg:col-span-5 lg:pr-8">
-                            <div className="h-full rounded-2xl overflow-hidden bg-white hover:shadow-md transition-all duration-300 p-8 flex flex-col justify-center relative">
-                                {/* Subtle differentiator - Grid pattern */}
-                                <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
-
-                                <div className="space-y-6 relative z-10">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-purple-50 text-purple-700 text-xs font-medium w-fit">
-                                        <Share2 className="w-3 h-3" />
-                                        Whiteboard + Traffic Simulation
+                            <div className={`lg:col-span-7 relative group ${idx % 2 !== 0 ? 'lg:order-1' : ''}`}>
+                                <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500/5 to-blue-500/5 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition duration-1000" />
+                                <div className="relative rounded-2xl border border-slate-100 bg-white shadow-2xl p-2 group-hover:shadow-indigo-500/10 transition-all duration-700 overflow-hidden">
+                                    <div className="absolute top-0 w-full h-10 flex items-center px-6">
+                                        <div className="flex gap-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        <h3 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-                                            System Design
-                                        </h3>
-                                        <p className="text-base text-gray-600 leading-relaxed">
-                                            Drag-and-drop architecture canvas. Defend your choices on scaling, database sharding, and caching strategies against AI critique.
-                                        </p>
-                                    </div>
-
-                                    <div className="flex flex-wrap gap-2 pt-2">
-                                        <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium rounded">Interactive Nodes</span>
-                                        <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium rounded">Architecture Review</span>
-                                    </div>
+                                    <img
+                                        src={snap.image}
+                                        alt={snap.title}
+                                        className="w-full h-auto rounded-xl mt-8 transform group-hover:scale-[1.02] transition-transform duration-1000"
+                                    />
                                 </div>
                             </div>
-                        </div>
-                        <div className="lg:col-span-7 relative">
-                            {/* Design specific glow */}
-                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
-                            <div className="relative rounded-xl overflow-hidden shadow-xl border border-gray-100/50 transform group-hover:scale-[1.01] transition duration-500 bg-white">
-                                <img src={designRound} alt="AI design simulations interface" className="w-full h-auto" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 3. Behavioral Round - Text Left, Image Right */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center group">
-                        <div className="lg:col-span-5 lg:pr-8">
-                            <div className="h-full rounded-2xl overflow-hidden bg-white hover:shadow-md transition-all duration-300 p-8 flex flex-col justify-center relative">
-                                {/* Subtle differentiator - Waveform hint */}
-                                <div className="space-y-6 relative z-10">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-orange-50 text-orange-700 text-xs font-medium w-fit">
-                                        <Activity className="w-3 h-3" />
-                                        Live Voice Latency &lt; 200ms
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-                                            Behavioral
-                                        </h3>
-                                        <p className="text-base text-gray-600 leading-relaxed">
-                                            Natural voice conversations about leadership and conflict. The AI probes your STAR stories for depth and authenticity.
-                                        </p>
-                                    </div>
-
-                                    <div className="flex flex-wrap gap-2 pt-2">
-                                        <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium rounded">Real-time STT</span>
-                                        <span className="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-600 text-xs font-medium rounded">Tone Analysis</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="lg:col-span-7 relative">
-                            {/* Voice specific glow */}
-                            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/5 to-rose-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
-                            <div className="relative rounded-xl overflow-hidden shadow-xl border border-gray-100 transform group-hover:scale-[1.01] transition duration-500 bg-white">
-                                <img src={behavioralRound} alt="Immersive voice interview interface" className="w-full h-auto" />
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+                        </motion.div>
+                    ))}
+                </motion.div>
             </div>
         </section>
     );

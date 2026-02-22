@@ -1,39 +1,83 @@
 import React from 'react'
-import { ArrowRight, ChevronRight } from 'lucide-react'
+import { ChevronRight, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import bot from "../assets/images/techbanner1.png"
 
-
-const PopularInterviewsBanner = ({ firstName }) => {
+const DashboardHeroBanner = ({ firstName }) => {
     const navigate = useNavigate()
+
     return (
-        <div className='relative flex items-center gap-0 rounded-3xl overflow-hidden bg-white border border-gray-300 shadow-sm group hover:shadow-md transition-all duration-300 h-full'>
-            {/* Subtle Textured Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50"></div>
-
-            <div className="relative flex flex-col items-start z-10 px-8 py-6 md:px-12 space-y-5 w-full">
-
-                <h1 className='font-sans text-4xl lg:text-5xl xl:text-6xl text-gray-900 font-extrabold tracking-tighter leading-tighter'>
-                    Hi <span className='bg-gradient-to-r from-gray-900 to-gray-300 bg-clip-text text-transparent'>{firstName},</span>
-                </h1>
-
-                <p className='text-lg lg:text-xl text-gray-500 max-w-md tracking-tight leading-relaxed font-medium'>
-                    Choose from the most popular and realistic company simulations.
-                </p>
-
-                <button
-                    onClick={() => navigate('/dashboard/all-popular-interviews')}
-                    className="mt-4 px-8 py-3.5 rounded-2xl bg-black text-white font-semibold text-sm hover:bg-gray-800 transition-all shadow-sm flex items-center gap-2 group">
-                    Explore All
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                </button>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className='relative flex items-center justify-between rounded-[2.5rem] overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl h-full group'
+        >
+            {/* Cinematic Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-0 right-0 w-[50%] h-full bg-gradient-to-l from-indigo-600/20 to-transparent opacity-50 blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[100px]" />
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+                <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-10" />
             </div>
 
-            {/* <img src={bot} alt="" className="hidden md:block absolute md:bottom-[-20%] lg:bottom-[-25%] xl:bottom-[10%] right-[2%] w-60 lg:w-100 object-contain drop-shadow-xl group-hover:scale-105 transition-transform duration-500" /> */}
-            <img src={bot} alt="" className="hidden md:block w-60 lg:w-70 xl:w-90 object-contain drop-shadow-xl group-hover:scale-105 transition-transform duration-500" />
+            <div className="relative flex flex-col items-start z-10 px-8 py-10 md:px-12 space-y-6 w-full md:max-w-[65%]">
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"
+                >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.15em]">Interactive Simulations</span>
+                </motion.div>
 
-        </div >
+                <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className='font-sans text-4xl lg:text-5xl text-white font-black tracking-tighter leading-tight'
+                >
+                    Hi <span className='text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400'>{firstName},</span>
+                </motion.h1>
+
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className='text-base text-slate-400 max-w-sm font-medium leading-relaxed'
+                >
+                    Choose from the most popular and realistic company simulations to start your preparation.
+                </motion.p>
+
+                <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/dashboard/all-popular-interviews')}
+                    className="px-8 py-3.5 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center gap-2.5 group"
+                >
+                    Explore All
+                    <ChevronRight className="w-4 h-4 text-indigo-300 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="hidden md:block absolute right-0 top-0 bottom-0 w-[40%] z-0"
+            >
+                <img
+                    src={bot}
+                    alt=""
+                    className="w-full h-full object-contain object-right drop-shadow-[0_0_40px_rgba(79,70,229,0.2)] group-hover:scale-105 transition-transform duration-1000"
+                />
+            </motion.div>
+        </motion.div>
     )
 }
 
-export default PopularInterviewsBanner
+export default DashboardHeroBanner

@@ -38,7 +38,22 @@ export const resolveTemplate = (template, context) => {
 
 export const getSystemPrompt = (context) => {
     console.log("getSystemPrompt Context:", context);
-    const { role, roundType, type } = context; // destructure type too
+
+    // Create a local context to avoid mutating the original
+    const templateContext = { ...context };
+
+    // Format files into a readable string if they exist as an object
+    // This prevents [object Object] in the final prompt
+    const filesObj = templateContext.files || templateContext.initial_files;
+    if (filesObj && typeof filesObj === 'object') {
+        let filesStr = '';
+        for (const [filename, content] of Object.entries(filesObj)) {
+            filesStr += `\n--- File: ${filename} ---\n${content}\n`;
+        }
+        templateContext.files = filesStr;
+    }
+
+    const { role, roundType, type } = templateContext;
 
     const effectiveRoundType = (roundType || type || '').toLowerCase();
 
@@ -73,12 +88,12 @@ export const getSystemPrompt = (context) => {
                 customPrompt = customSoftwareCodingRoundPrompt;
             }
         }
-        return resolveTemplate(customPrompt, context);
+        return resolveTemplate(customPrompt, templateContext);
     }
 
     // 1. Data Analyst
     if (role && role.toLowerCase().includes('data analyst')) {
-        return resolveTemplate(dataAnalystCodingRoundPrompt, context);
+        return resolveTemplate(dataAnalystCodingRoundPrompt, templateContext);
     }
 
     // 2. DevOps / SRE
@@ -94,7 +109,7 @@ export const getSystemPrompt = (context) => {
         } else if (effectiveRoundType.includes('debug') || effectiveRoundType.includes('debugging')) {
             devopsSelectedPrompt = devopsDebugRoundPrompt;
         }
-        return resolveTemplate(devopsSelectedPrompt, context);
+        return resolveTemplate(devopsSelectedPrompt, templateContext);
     }
 
     // 3. General Software Engineering (Default)
@@ -113,7 +128,7 @@ export const getSystemPrompt = (context) => {
         selectedPrompt = softwareDesignRoundPrompt;
     }
 
-    return resolveTemplate(selectedPrompt, context);
+    return resolveTemplate(selectedPrompt, templateContext);
 };
 
 // Junior prompt export removed as per requirements

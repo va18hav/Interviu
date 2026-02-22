@@ -1,10 +1,12 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     CheckCircle2, XCircle, AlertTriangle, ArrowRight,
     BarChart3, Code, Zap, BrainCircuit, Target,
     ChevronRight, ShieldAlert, Award, TrendingUp,
-    AlertOctagon, Check, Download, Share2, Loader2, Sparkles, User
+    AlertOctagon, Check, Download, Share2, Loader2, Sparkles, User,
+    FileText, Activity, Layers, Briefcase, Calendar, Info
 } from 'lucide-react';
 
 const InterviewReport = () => {
@@ -113,38 +115,62 @@ const InterviewReport = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-                <div className="relative mb-12">
-                    <div className="absolute inset-0 bg-blue-100 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-                    <div className="relative bg-white p-8 rounded-3xl border border-blue-50 shadow-xl">
-                        <Sparkles className="w-16 h-16 text-blue-600 animate-bounce mx-auto" />
-                    </div>
-                </div>
-                <div className="max-w-md space-y-4">
-                    <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Generating Your Report</h2>
-                    <p className="text-slate-500 text-lg leading-relaxed">
-                        Claude is analyzing your performance, reasoning signals, and architectural decisions to build a comprehensive feedback report.
-                    </p>
-                    <div className="flex items-center justify-center gap-2 pt-8">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                    </div>
-                </div>
-
-                {/* Micro-insights while loading */}
-                <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full">
-                    {[
-                        { icon: <BrainCircuit className="w-5 h-5" />, text: "Analyzing Reasoning Signals" },
-                        { icon: <Target className="w-5 h-5" />, text: "Calibrating Level Fit" },
-                        { icon: <ShieldAlert className="w-5 h-5" />, text: "Detecting Failure Patterns" }
-                    ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 150}ms` }}>
-                            <div className="text-blue-600">{item.icon}</div>
-                            <span className="text-sm font-medium text-slate-600">{item.text}</span>
+            <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 text-center font-inter">
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="max-w-md w-full space-y-12"
+                >
+                    <div className="relative inline-flex items-center justify-center">
+                        <div className="absolute inset-0 bg-indigo-500/5 rounded-full blur-3xl scale-150 animate-pulse" />
+                        <div className="relative w-20 h-20 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 flex items-center justify-center">
+                            <Activity className="w-10 h-10 text-indigo-600 animate-pulse" />
                         </div>
-                    ))}
-                </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Quantifying Performance</h2>
+                        <p className="text-slate-500 font-medium leading-relaxed">
+                            Our analytical engine is synthesizing your session data, reasoning signals, and architectural decisions into an executive technical dossier.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: "0%" }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                className="h-full bg-indigo-600"
+                            />
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <span>Scanning Transcript</span>
+                            <span>Mapping Competencies</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-left">
+                        {[
+                            { icon: <BrainCircuit className="w-4 h-4" />, label: "Signals" },
+                            { icon: <ShieldAlert className="w-4 h-4" />, label: "Risks" },
+                            { icon: <Target className="w-4 h-4" />, label: "Level" },
+                            { icon: <Layers className="w-4 h-4" />, label: "Structure" }
+                        ].map((item, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.2 }}
+                                className="flex items-center gap-2 p-3 rounded-xl bg-white border border-slate-100/50 shadow-sm"
+                            >
+                                <span className="text-indigo-600">{item.icon}</span>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{item.label}</span>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
             </div>
         );
     }
@@ -174,266 +200,307 @@ const InterviewReport = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100">
-            {/* Header / Actions */}
-            <div className="max-w-7xl mx-auto sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <XCircle className="w-6 h-6 text-gray-400" />
-                    </button>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Interview Report</h1>
-                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{reportData?.roundInsight?.type || "Interview Round"}</p>
+        <div className="min-h-screen bg-[#F8F9FA] text-slate-900 font-inter selection:bg-indigo-100">
+            {/* Professional Header / Navigation */}
+            <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4">
+                <div className="max-w-6xl mx-auto flex justify-between items-center">
+                    <div className="flex items-center gap-6">
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl hover:bg-slate-100 transition-all text-slate-500 hover:text-slate-900"
+                        >
+                            <ArrowRight className="w-5 h-5 rotate-180" />
+                        </button>
+                        <div className="h-8 w-[1px] bg-slate-200 hidden sm:block" />
+                        <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-indigo-600" />
+                                <h1 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">Technical Dossier</h1>
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {sessionId || 'Internal-System-ID'}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                        <Share2 className="w-4 h-4" /> Share
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors shadow-sm">
-                        <Download className="w-4 h-4" /> Export PDF
-                    </button>
+
+                    <div className="flex gap-4">
+                        <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest">
+                            <Share2 className="w-3.5 h-3.5" /> Share
+                        </button>
+                        <button className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-slate-900 rounded-xl hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase tracking-widest">
+                            <Download className="w-3.5 h-3.5" /> Export PDF
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
+            <main className="max-w-6xl mx-auto px-6 py-12 space-y-12">
 
-                {/* 1. Hiring Readiness Snapshot */}
-                <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Hiring Verdict</h2>
-                            <p className="text-slate-500 mt-1">Snapshot of candidate readiness</p>
-                        </div>
-                        <div className="text-right">
-                            <span className="inline-flex items-center px-4 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                {reportData.verdict.signal}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Signal Card */}
-                        <div className="p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between group hover:border-blue-200 transition-all">
-                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Verdict</span>
-                            <div className="mt-2 text-2xl font-bold text-slate-900">{reportData.verdict.signal}</div>
-                            <div className="h-1 w-full bg-gray-100 rounded-full mt-4 overflow-hidden">
-                                <div className="h-full bg-blue-600 w-[75%] rounded-full"></div>
+                {/* 1. Executive Identification & Verdict Snapshot */}
+                <motion.section
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                >
+                    {/* Identification */}
+                    <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm border-b-[4px] border-b-indigo-600">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-8">
+                            <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0">
+                                <User className="w-10 h-10 text-white" />
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{reportData.candidateName}</h2>
+                                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                            <Briefcase className="w-3.5 h-3.5" /> {reportData.role}
+                                        </span>
+                                        <div className="w-1 h-1 bg-slate-300 rounded-full" />
+                                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                            <Calendar className="w-3.5 h-3.5" /> {reportData.date}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium text-slate-600 leading-relaxed italic">
+                                    "{reportData.verdict.summary}"
+                                </div>
                             </div>
                         </div>
-
-                        {/* Confidence */}
-                        <div className="p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between hover:border-blue-200 transition-all">
-                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Confidence</span>
-                            <div className="mt-2 text-2xl font-bold text-slate-900">{reportData.verdict.confidence}/10</div>
-                        </div>
-
-                        {/* Level */}
-                        <div className="p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between hover:border-blue-200 transition-all">
-                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Level Fit</span>
-                            <div className="mt-2 text-2xl font-bold text-slate-900">{reportData.verdict.level}</div>
-                        </div>
-
-                        {/* Risk */}
-                        <div className="p-6 rounded-2xl bg-white border border-gray-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between hover:border-blue-200 transition-all">
-                            <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Risk Profile</span>
-                            <div className="mt-2 text-2xl font-bold text-amber-600">{reportData.verdict.risk}</div>
-                        </div>
                     </div>
 
-                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 text-lg font-medium text-slate-700 leading-relaxed">
-                        "{reportData.verdict.summary}"
-                    </div>
-                </section>
-
-                <hr className="border-gray-100" />
-
-                {/* 2. Decision Explanation */}
-                <section className="space-y-8">
-                    <h3 className="text-xl font-bold text-slate-900">Decision Logic</h3>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div>
-                            <h4 className="flex items-center gap-2 font-semibold text-emerald-700 mb-4">
-                                <CheckCircle2 className="w-5 h-5" /> What Worked
-                            </h4>
-                            <ul className="space-y-3">
-                                {reportData.decision.worked.map((item, i) => (
-                                    <li key={i} className="text-slate-600 text-sm leading-relaxed">{item}</li>
-                                ))}
-                            </ul>
+                    {/* Hiring Verdict Box */}
+                    <div className="bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm flex flex-col justify-between items-center text-center">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Recommendation</span>
+                        <div className="py-6">
+                            <div className={`text-4xl font-black uppercase tracking-tight ${reportData.verdict.signal.toLowerCase().includes('hire') ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                {reportData.verdict.signal}
+                            </div>
+                            <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">Hiring Signal Output</div>
                         </div>
-                        <div>
-                            <h4 className="flex items-center gap-2 font-semibold text-rose-700 mb-4">
-                                <XCircle className="w-5 h-5" /> What Blocked
-                            </h4>
-                            <ul className="space-y-3">
-                                {reportData.decision.blocked.map((item, i) => (
-                                    <li key={i} className="text-slate-600 text-sm leading-relaxed">{item}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="flex items-center gap-2 font-semibold text-blue-700 mb-4">
-                                <TrendingUp className="w-5 h-5" /> Pivot Point
-                            </h4>
-                            <ul className="space-y-3">
-                                {reportData.decision.change.map((item, i) => (
-                                    <li key={i} className="text-slate-600 text-sm leading-relaxed">{item}</li>
-                                ))}
-                            </ul>
+                        <div className="w-full h-[2px] bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(reportData.verdict.confidence / 10) * 100}%` }}
+                                transition={{ duration: 1.5, ease: "circOut" }}
+                                className="h-full bg-indigo-600"
+                            />
                         </div>
                     </div>
-                </section>
+                </motion.section>
 
-                <hr className="border-gray-100" />
+                {/* 2. Calibration & Risk Matrix */}
+                <motion.section
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                >
+                    {[
+                        { label: "Confidence", value: `${reportData.verdict.confidence}/10`, icon: <Target className="w-4 h-4" /> },
+                        { label: "Level Calibration", value: reportData.verdict.level, icon: <Layers className="w-4 h-4" /> },
+                        { label: "Risk Assessment", value: reportData.verdict.risk, icon: <ShieldAlert className="w-4 h-4" />, highlight: true }
+                    ].map((item, i) => (
+                        <div key={i} className="bg-white p-6 sm:p-8 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
+                                <p className={`text-xl font-black uppercase tracking-tight ${item.highlight && item.value.toLowerCase() !== 'low' ? 'text-amber-600' : 'text-slate-900'}`}>
+                                    {item.value}
+                                </p>
+                            </div>
+                            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
+                                {item.icon}
+                            </div>
+                        </div>
+                    ))}
+                </motion.section>
 
-                {/* 3. Technical Judgment Profile */}
-                <section className="space-y-8">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-slate-900">Engineering Judgment</h3>
-                        <span className="text-sm text-slate-400">Core Signals</span>
+                {/* 3. Logical Breakdown (The "Analytical" view) */}
+                <section className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <Activity className="w-5 h-5 text-indigo-600" />
+                        <h3 className="text-lg font-black uppercase tracking-widest text-slate-900">Logical Evidence</h3>
                     </div>
-
-                    <div className="grid gap-4">
-                        {reportData.technicalProfile.map((trait, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                                <div className="space-y-1">
-                                    <div className="font-semibold text-slate-900">{trait.name}</div>
-                                    <div className="text-sm text-slate-500">{trait.desc}</div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {[
+                            { title: "Strengths (Worked)", data: reportData.decision.worked, color: "emerald", icon: <CheckCircle2 className="w-5 h-5" /> },
+                            { title: "Blockers (Risks)", data: reportData.decision.blocked, color: "rose", icon: <XCircle className="w-5 h-5" /> },
+                            { title: "Strategic Pivots", data: reportData.decision.change, color: "indigo", icon: <TrendingUp className="w-5 h-5" /> }
+                        ].map((col, i) => (
+                            <div key={i} className="space-y-6">
+                                <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+                                    <span className={`text-${col.color}-600`}>{col.icon}</span>
+                                    <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900">{col.title}</h4>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(trait.status)}`}>
-                                    {trait.status}
-                                </span>
+                                <ul className="space-y-4">
+                                    {col.data.map((item, idx) => (
+                                        <li key={idx} className="flex gap-4 group">
+                                            <span className={`w-1.5 h-1.5 rounded-full bg-${col.color}-500 mt-2 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity`} />
+                                            <p className="text-sm font-medium text-slate-600 leading-relaxed">{item}</p>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                <hr className="border-gray-100" />
-
-                {/* 4. Round Insight (Single) */}
-                <section className="space-y-8">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-slate-900">{reportData.roundInsight.type} Insight</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(reportData.roundInsight.score)}`}>
-                            {reportData.roundInsight.score} Performance
-                        </span>
+                {/* 4. Technical Judgment Grid */}
+                <section className="space-y-8 bg-slate-900 rounded-[2.5rem] p-8 sm:p-12 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] pointer-events-none" />
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12 border-b border-white/10">
+                        <div className="space-y-1">
+                            <h3 className="text-2xl font-black uppercase tracking-tight">Technical Calibration</h3>
+                            <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Engineering Judgment & Core Signals</p>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Analytical Pass Complete</span>
+                        </div>
                     </div>
 
-                    <div className="p-6 rounded-2xl bg-white border border-gray-100 shadow-sm space-y-6">
-                        <p className="text-slate-600 leading-relaxed italic border-l-4 border-blue-500 pl-4 py-1 bg-slate-50 rounded-r-lg">
-                            "{reportData.roundInsight.summary}"
-                        </p>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            {reportData.roundInsight.breakdown.map((item, i) => (
-                                <div key={i} className="space-y-2">
+                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12">
+                        {reportData.technicalProfile.map((trait, i) => (
+                            <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex flex-col justify-between group">
+                                <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="font-semibold text-slate-700 text-sm">{item.category}</span>
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStatusColor(item.status)}`}>
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-white group-hover:text-indigo-400 transition-colors">{trait.name}</h4>
+                                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${trait.status.toLowerCase() === 'strong' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                            trait.status.toLowerCase() === 'developing' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                                'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                            }`}>
+                                            {trait.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-medium leading-relaxed">{trait.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* 5. Round Specific Insights */}
+                <section className="bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-12 shadow-sm space-y-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-8 border-b border-slate-100">
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-black uppercase tracking-widest text-slate-900">{reportData.roundInsight.type} Insight</h3>
+                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Deep-dive Performance Metrics</p>
+                        </div>
+                        <div className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.1em] border ${getStatusColor(reportData.roundInsight.score)}`}>
+                            {reportData.roundInsight.score} Performance
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div className="space-y-6">
+                            <p className="text-base font-medium text-slate-700 leading-relaxed italic border-l-4 border-indigo-600 pl-6 py-2">
+                                "{reportData.roundInsight.summary}"
+                            </p>
+                        </div>
+                        <div className="grid gap-6">
+                            {reportData.roundInsight.breakdown.map((item, i) => (
+                                <div key={i} className="space-y-3 p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:border-indigo-100 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-black uppercase tracking-widest text-slate-900">{item.category}</span>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${getStatusColor(item.status)}`}>
                                             {item.status}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-slate-500 leading-snug">{item.text}</p>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed">{item.text}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </section>
 
-                {/* 5. Failure Pattern Detection (Hero Section) */}
-                <section className="rounded-3xl bg-slate-900 text-white p-8 md:p-12 space-y-8 overflow-hidden relative">
-                    <div className="absolute -top-10 hidden md:block right-0 p-12 opacity-10 pointer-events-none">
-                        <ShieldAlert className="w-64 h-64 text-white" />
-                    </div>
-
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-2 bg-white/10 rounded-lg">
-                                <AlertOctagon className="w-6 h-6 text-rose-400" />
-                            </div>
-                            <h3 className="text-2xl font-bold">Detected Failure Patterns</h3>
+                {/* 6. Failure Patterns & Readiness */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    {/* Failure Patterns */}
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="flex items-center gap-3">
+                            <AlertOctagon className="w-5 h-5 text-rose-600" />
+                            <h3 className="text-lg font-black uppercase tracking-widest text-slate-900">Detected Failure Patterns</h3>
                         </div>
-
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid gap-4">
                             {reportData.failurePatterns.map((pattern, i) => (
-                                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
-                                    <div className="font-semibold text-rose-300 mb-2">{pattern.title}</div>
-                                    <div className="text-sm text-slate-300 leading-relaxed">{pattern.desc}</div>
+                                <div key={i} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm border-l-[4px] border-l-rose-500 hover:shadow-lg hover:shadow-rose-500/5 transition-all">
+                                    <h4 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-2">{pattern.title}</h4>
+                                    <p className="text-sm text-slate-500 font-medium leading-relaxed">{pattern.desc}</p>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </section>
 
-                {/* 6. Interview Readiness Map */}
-                <section className="grid md:grid-cols-2 gap-12 pt-8">
-                    <div>
-                        <h3 className="flex items-center gap-2 text-lg font-bold text-emerald-900 mb-6">
-                            <Target className="w-5 h-5 text-emerald-600" /> Ready For
-                        </h3>
-                        <ul className="space-y-4">
-                            {reportData.readinessMap.ready.map((item, i) => (
-                                <li key={i} className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 text-emerald-900 font-medium text-sm">
-                                    <Check className="w-5 h-5 text-emerald-600" /> {item}
-                                </li>
-                            ))}
-                        </ul>
+                    {/* Readiness Map */}
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3">
+                            <Target className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-black uppercase tracking-widest text-slate-900">Readiness Map</h3>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="space-y-4">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Qualified For</p>
+                                <div className="space-y-2">
+                                    {reportData.readinessMap.ready.map((item, i) => (
+                                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 text-emerald-800 font-bold ml-2">
+                                            <Check className="w-3.5 h-3.5" />
+                                            <span className="text-[11px] uppercase tracking-wide">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-4 border-t border-slate-200 pt-6">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600">Requires Calibration</p>
+                                <div className="space-y-2">
+                                    {reportData.readinessMap.needsWork.map((item, i) => (
+                                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 text-slate-600 font-bold ml-2">
+                                            <Info className="w-3.5 h-3.5 text-amber-500" />
+                                            <span className="text-[11px] uppercase tracking-wide">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="flex items-center gap-2 text-lg font-bold text-slate-900 mb-6">
-                            <Zap className="w-5 h-5 text-amber-500" /> Needs Work
-                        </h3>
-                        <ul className="space-y-4">
-                            {reportData.readinessMap.needsWork.map((item, i) => (
-                                <li key={i} className="flex items-center gap-3 p-4 rounded-xl bg-white border border-gray-200 text-slate-600 font-medium text-sm">
-                                    <span className="w-2 h-2 rounded-full bg-amber-400" /> {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </section>
+                </div>
 
-                <hr className="border-gray-100" />
-
-                {/* 7 & 8. Improvement Plan & Next Steps */}
-                <div className="grid md:grid-cols-2 gap-12">
-                    {/* Priority Improvements */}
-                    <section className="space-y-6">
-                        <h3 className="text-xl font-bold text-slate-900">Priority Fixes (Max 3)</h3>
-                        <div className="space-y-4">
+                {/* 7. Actionable Improvement & Strategy */}
+                <section className="pt-12 border-t border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3">
+                            <Award className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-black uppercase tracking-widest text-slate-900">Priority Improvements</h3>
+                        </div>
+                        <div className="space-y-6">
                             {reportData.improvementPlan.map((plan, i) => (
-                                <div key={i} className="flex gap-4">
-                                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm">
-                                        {i + 1}
-                                    </span>
-                                    <p className="text-slate-700 font-medium pt-1">{plan}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* Next Strategy */}
-                    <section className="space-y-6">
-                        <h3 className="text-xl font-bold text-slate-900">Next Strategy</h3>
-                        <div className="space-y-3">
-                            {reportData.nextStrategy.map((step, i) => (
-                                <div key={i} className="group p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-default">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-slate-700 font-medium text-sm">{step.action}</span>
-                                        <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                                <div key={i} className="flex gap-6 group">
+                                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0 text-slate-900 font-black text-xs group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                        0{i + 1}
                                     </div>
+                                    <p className="text-slate-700 font-bold leading-relaxed pt-1.5">{plan}</p>
                                 </div>
                             ))}
                         </div>
-                    </section>
-                </div>
+                    </div>
 
-                <div className="pt-12 pb-8 flex justify-center text-slate-400 text-sm font-medium">
-                    Intervyu.ai Confidential Report • Generated {reportData.date}
-                </div>
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3">
+                            <Zap className="w-5 h-5 text-indigo-600" />
+                            <h3 className="text-lg font-black uppercase tracking-widest text-slate-900">Execution Strategy</h3>
+                        </div>
+                        <div className="grid gap-3">
+                            {reportData.nextStrategy.map((step, i) => (
+                                <div key={i} className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-indigo-600 hover:bg-slate-50 transition-all flex items-center justify-between group cursor-default">
+                                    <span className="text-sm font-black uppercase tracking-widest text-slate-900">{step.action}</span>
+                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
-            </div>
+                <footer className="pt-24 pb-8 flex flex-col items-center gap-4 text-slate-400">
+                    <div className="w-12 h-1 bg-slate-200 rounded-full" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">Intervyu Technical Dossier • {reportData.date}</p>
+                </footer>
+            </main>
         </div>
     );
 };

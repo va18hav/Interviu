@@ -143,7 +143,7 @@ const SlideWelcome = ({ onNext, onSkip }) => (
         <div className="space-y-3 max-w-sm px-2 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
             <p className="text-slate-500 text-sm md:text-base leading-relaxed">
                 A <span className="text-slate-800 font-semibold">realistic interview simulation</span> platform.<br className="hidden md:block" />
-                <span className="md:hidden"> </span>Face a real AI interviewer — not a coach — across every round type that matters.
+                <span className="md:hidden"> </span>Face a real AI interviewer — which probes like a senior engineer — across every round type that matters.
             </p>
         </div>
 
@@ -152,7 +152,7 @@ const SlideWelcome = ({ onNext, onSkip }) => (
             {[
                 { icon: Brain, label: 'AI Interviewer' },
                 { icon: BarChart3, label: 'In-depth Reports' },
-                { icon: Layers, label: '5+ Round Types' },
+                { icon: Layers, label: '4 Round Types' },
                 { icon: Zap, label: 'Instant Results' },
             ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-1.5 bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full">
@@ -169,9 +169,6 @@ const SlideWelcome = ({ onNext, onSkip }) => (
             >
                 Get Started
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button onClick={onSkip} className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
-                Skip for now
             </button>
         </div>
     </div>
@@ -880,7 +877,7 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
                     <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button
-                    onClick={onComplete}
+                    onClick={() => onComplete()}
                     disabled={loading}
                     className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-70 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 group"
                 >

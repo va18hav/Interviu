@@ -1,52 +1,72 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ChevronRight } from 'lucide-react'
+import { Plus, ChevronRight, Workflow } from 'lucide-react'
+import { motion } from 'framer-motion'
 import bot from "../assets/images/newbot.png"
 
-const DashboardBanner = ({ firstName }) => {
+const CustomInterviewBanner = ({ firstName }) => {
     const navigate = useNavigate()
+
     return (
-        <div className="relative rounded-3xl overflow-hidden bg-white border border-gray-100 shadow-sm group hover:shadow-md transition-all duration-300">
-            {/* Subtle Textured Background */}
-            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative rounded-[2.5rem] overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl group"
+        >
+            {/* Cinematic Background */}
+            <div className="absolute inset-0">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-600/20 to-transparent opacity-50" />
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
+                <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
+            </div>
 
-            {/* Very Subtle Gradient Orbs */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-gray-250 to-gray-200 rounded-full blur-3xl opacity-60" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gray-50 rounded-full blur-3xl opacity-60" />
-
-            {/* Content */}
-            <div className="relative z-10 px-8 md:px-12 py-10 md:py-12 flex items-center justify-between">
-                <div className="max-w-2xl space-y-8">
-                    <div>
-                        <h2 className="font-sans text-3xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight mb-4">
-                            Configure Interview
+            <div className="relative z-10 px-8 md:px-12 py-10 md:py-14 flex flex-col md:flex-row items-center justify-between gap-12">
+                <div className="max-w-2xl space-y-8 text-center md:text-left">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 backdrop-blur-md mx-auto md:mx-0">
+                            <Workflow className="w-3.5 h-3.5 text-indigo-400" />
+                            <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.15em]">Flexibile Setup</span>
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight">
+                            Custom Interview <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Configuration.</span>
                         </h2>
-                        <p className="text-lg text-gray-500 font-medium leading-relaxed max-w-lg">
-                            Ready to practice? Set up your custom interview session in seconds.
+                        <p className="text-base text-slate-400 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
+                            Configure your interview session by selecting specific roles, difficulty levels, and technical rounds to match your preparation needs.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
                         <button
                             onClick={() => navigate('/create')}
-                            className="px-8 py-3.5 rounded-2xl bg-black text-white font-semibold text-sm hover:bg-gray-800 transition-all shadow-sm flex items-center gap-2 group">
-                            <Plus className="w-5 h-5" />
-                            Create New
-                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2.5 group"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Create Custom Session
+                            <ChevronRight className="w-4 h-4 text-indigo-300 group-hover:translate-x-1 transition-transform" />
                         </button>
 
                         <button
-                            onClick={() => navigate('/dashboard/all-previous-interviews')}
-                            className="hidden md:flex px-8 py-3.5 rounded-2xl border border-gray-200 bg-white text-gray-600 font-medium text-sm hover:bg-gray-50 hover:text-gray-900 transition-all items-center gap-2">
+                            onClick={() => navigate('/dashboard/history')}
+                            className="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-800 bg-white/5 backdrop-blur-md text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                        >
                             View History
                         </button>
                     </div>
                 </div>
-                <img src={bot} alt="" className="hidden md:block absolute -bottom-10 right-0 rotate-[-0deg] opacity-90 w-55 object-contain drop-shadow-xl group-hover:scale-105 transition-transform duration-500" />
-                {/* <img src={configureBanner} alt="" className="hidden lg:block w-120 h-70 object-contain drop-shadow-xl group-hover:scale-105 transition-transform duration-500" /> */}
+
+                <div className="relative w-full md:w-auto flex justify-center md:block">
+                    <img
+                        src={bot}
+                        alt=""
+                        className="relative z-10 w-48 md:w-64 object-contain drop-shadow-[0_0_40px_rgba(79,70,229,0.2)] group-hover:scale-105 transition-all duration-700"
+                    />
+                    <div className="absolute inset-0 bg-indigo-500/10 blur-[80px] rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
+                </div>
             </div>
-        </div >
+        </motion.div>
     )
 }
 
-export default DashboardBanner
+export default CustomInterviewBanner

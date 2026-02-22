@@ -1,8 +1,64 @@
 import React, { useState, useEffect } from "react";
 
-import { User, Mail, Save, ArrowLeft, Loader2, Shield, Lock, Briefcase, GraduationCap, Code } from "lucide-react";
+import { User, Mail, Save, ArrowLeft, Loader2, Shield, Lock, Briefcase, GraduationCap, Code, Layers, Zap, X, Terminal, Code2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { sanitizeInput } from "../utils/sanitize";
+
+// ─── Skill Tag Input (replicated from onboarding) ───────────────────────────
+const SkillTagInput = ({ tags, onChange }) => {
+    const [input, setInput] = React.useState('');
+    const inputRef = React.useRef(null);
+
+    const addTag = (value) => {
+        const trimmed = value.trim();
+        if (trimmed && !tags.includes(trimmed)) {
+            onChange([...tags, trimmed]);
+        }
+        setInput('');
+    };
+
+    const removeTag = (tag) => {
+        onChange(tags.filter(t => t !== tag));
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key == ',') {
+            e.preventDefault();
+            addTag(input);
+        } else if (e.key === 'Backspace' && input === '' && tags.length > 0) {
+            removeTag(tags[tags.length - 1]);
+        }
+    };
+
+    return (
+        <div
+            className="min-h-[48px] flex flex-wrap gap-2 items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 cursor-text transition-all focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/20"
+            onClick={() => inputRef.current?.focus()}
+        >
+            {tags.map(tag => (
+                <span key={tag} className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">
+                    {tag}
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
+                        className="text-slate-400 hover:text-white transition-colors ml-0.5"
+                    >
+                        <X className="w-3 h-3" />
+                    </button>
+                </span>
+            ))}
+            <input
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={() => { if (input.trim()) addTag(input); }}
+                placeholder={tags.length === 0 ? "e.g. React, Node.js, Docker…" : "Add more…"}
+                className="flex-1 min-w-[120px] bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none border-none"
+            />
+        </div>
+    );
+};
 
 const ProfileSettings = () => {
     const navigate = useNavigate();
@@ -232,49 +288,62 @@ const ProfileSettings = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-sm font-medium text-slate-700">Target Role</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={formData.role}
-                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            placeholder="e.g. Senior Frontend Engineer"
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all pl-10 placeholder:text-slate-400"
-                                        />
-                                        <Briefcase className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                                    <label className="text-sm font-medium text-slate-700 block mb-2">Target Role</label>
+                                    <div className="flex gap-3">
+                                        {['SDE', 'DevOps / SRE'].map(r => (
+                                            <button
+                                                key={r}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, role: r })}
+                                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold border transition-all duration-200 ${formData.role === r
+                                                    ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10'
+                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                                    }`}
+                                            >
+                                                {r === 'SDE' ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <Code2 className="w-4 h-4" /> SDE
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <Terminal className="w-4 h-4" /> DevOps / SRE
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-700">Experience Level</label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.experience_level}
-                                            onChange={(e) => setFormData({ ...formData, experience_level: e.target.value })}
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all pl-10 appearance-none cursor-pointer"
-                                        >
-                                            <option value="" disabled>Select Level</option>
-                                            <option value="Junior">Junior (0-2 years)</option>
-                                            <option value="Mid">Mid-Level (3-5 years)</option>
-                                            <option value="Senior">Senior (5-8 years)</option>
-                                            <option value="Lead">Lead / Architect (8+ years)</option>
-                                        </select>
-                                        <GraduationCap className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-medium text-slate-700 block mb-2">Experience Level</label>
+                                    <div className="flex flex-wrap gap-3">
+                                        {[
+                                            { label: 'Junior', sub: '0–2 yrs', db: 'Junior' },
+                                            { label: 'Mid-Level', sub: '3–5 yrs', db: 'Mid-Level' },
+                                            { label: 'Senior', sub: '5+ yrs', db: 'Senior' },
+                                        ].map(({ label, sub, db }) => (
+                                            <button
+                                                key={label}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, experience_level: db })}
+                                                className={`flex-1 min-w-[120px] py-3 px-3 rounded-xl border text-center transition-all duration-200 ${formData.experience_level === db
+                                                    ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                                    }`}
+                                            >
+                                                <div className="text-sm font-bold">{label}</div>
+                                                <div className={`text-[11px] mt-0.5 ${formData.experience_level === db ? 'text-slate-300' : 'text-slate-400'}`}>{sub}</div>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-700">Top Skills</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={formData.skills}
-                                            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                                            placeholder="React, Node.js, Python..."
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all pl-10 placeholder:text-slate-400"
-                                        />
-                                        <Code className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
-                                    </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-medium text-slate-700 block mb-2">Top Skills</label>
+                                    <SkillTagInput
+                                        tags={formData.skills.split(',').map(s => s.trim()).filter(Boolean)}
+                                        onChange={(newTags) => setFormData({ ...formData, skills: newTags.join(', ') })}
+                                    />
                                 </div>
                             </div>
 

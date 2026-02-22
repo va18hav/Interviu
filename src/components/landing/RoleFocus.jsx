@@ -7,9 +7,11 @@ import {
     Terminal,
     Database,
     Cpu,
-    Layers
+    Layers,
+    ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const RoleFocus = () => {
     const navigate = useNavigate();
@@ -17,127 +19,149 @@ const RoleFocus = () => {
     const roles = [
         {
             id: 'sde',
-            icon: <Code2 className="w-8 h-8" />,
-            title: 'Software Engineer',
-            subtitle: 'L3 - L6 Roles',
-            description: 'Master the core competencies required for top-tier engineering roles. From algorithmic problem solving to high-level system architecture.',
+            icon: <Code2 />,
+            title: 'Software Engineering',
+            subtitle: 'Applications & Infrastructure',
+            description: 'Master the technical competencies for L3-L6 roles. Focus on high-level architecture, low-level design, and algorithmic efficiency.',
             features: [
-                'Data Structures & Algorithms',
-                'System Design (HLD & LLD)',
-                'Code Debugging & Optimization',
-                'Behavioral & Leadership'
+                'System Architecture (HLD/LLD)',
+                'Scalable Schema Design',
+                'Algorithmic Problem Solving',
+                'Senior Behavioral Signals'
             ],
-            gradient: "from-blue-600 to-indigo-600",
-            bgGradient: "bg-gradient-to-br from-blue-50 via-white to-blue-50/50",
-            accentColor: "text-blue-600",
-            techIcons: [<Terminal className="w-4 h-4" />, <Layers className="w-4 h-4" />]
+            color: "indigo"
         },
         {
             id: 'devops',
-            icon: <Server className="w-8 h-8" />,
-            title: 'DevOps & SRE',
-            subtitle: 'Infrastructure & Ops',
-            description: 'Scale and secure production systems. Navigate complex infrastructure challenges, incident response, and reliability engineering.',
+            icon: <Server />,
+            title: 'Systems & Reliability',
+            subtitle: 'Infrastructure & DevOps',
+            description: 'Navigate production-grade scaling challenges, Kubernetes orchestration, and complex incident response workflows.',
             features: [
-                'Kubernetes & Cloud Infrastructure',
-                'Incident Response & Root Cause',
-                'Observability & Monitoring',
-                'CI/CD Pipelines & Automation'
+                'Cloud Native Infrastructure',
+                'Distributed Systems Reliability',
+                'Incident Root Cause Analysis',
+                'CI/CD & Observability'
             ],
-            gradient: "from-purple-600 to-pink-600",
-            bgGradient: "bg-gradient-to-br from-purple-50 via-white to-purple-50/50",
-            accentColor: "text-purple-600",
-            techIcons: [<Cpu className="w-4 h-4" />, <Database className="w-4 h-4" />]
+            color: "blue"
         }
     ];
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.2
+            }
+        }
+    };
+
+    const cardVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+    };
+
     return (
-        <section className="py-10 bg-white relative overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <section className="py-24 bg-white relative overflow-hidden">
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
 
                 {/* Section Header */}
-                <div className="text-center mb-20">
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tight">
-                        Choose Your <span className="bg-gradient-to-r from-gray-900 via-gray-600 to-gray-900 bg-clip-text text-transparent">
-                            Career Path
+                <div className="max-w-3xl mb-20">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6"
+                    >
+                        <span>Targeted Preparation</span>
+                    </motion.div>
+
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-950 mb-6 leading-tight tracking-tighter">
+                        Engineering Domains <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
+                            Tailored for Success.
                         </span>
                     </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed font-medium">
-                        Specialized interview tracks designed to match the specific expectations of your target role and level.
+                    <p className="text-lg text-slate-500 max-w-2xl leading-relaxed font-medium">
+                        Select a specialized track calibrated to the specific expectations of top-tier engineering organizations.
                     </p>
                 </div>
 
                 {/* Roles Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-5xl mx-auto">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                >
                     {roles.map((role) => (
-                        <div
+                        <motion.div
                             key={role.id}
-                            className="group relative rounded-2xl p-0.5 bg-gradient-to-b from-gray-300 to-transparent hover:from-gray-200 transition-all duration-300"
+                            variants={cardVariants}
+                            className="group relative rounded-[2.5rem] bg-white border border-slate-100 p-1 hover:border-indigo-100 transition-all duration-500"
                         >
-                            <div className={`relative h-full bg-white rounded-[14px] p-5 md:p-6 overflow-hidden transition-all duration-300 group-hover:shadow-lg border border-gray-100 flex flex-col`}>
+                            <div className="relative h-full bg-slate-50/30 rounded-[2.3rem] p-10 flex flex-col overflow-hidden transition-all duration-500 group-hover:bg-white group-hover:shadow-2xl group-hover:shadow-indigo-500/5">
 
-                                {/* Subtle Background Gradient */}
-                                <div className={`absolute -top-10 -right-10 w-48 h-48 bg-gradient-to-br ${role.gradient} opacity-[0.03] rounded-4xl pointer-events-none transition-opacity group-hover:opacity-[0.06]`}></div>
+                                {/* Background Accent */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                {/* Content Wrapper */}
                                 <div className="relative z-10 flex flex-col h-full">
-
-                                    {/* Header + Title Row */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-3 rounded-xl bg-gray-50 text-gray-900 group-hover:bg-gray-900 group-hover:text-white transition-all duration-300 shadow-sm`}>
-                                                {React.cloneElement(role.icon, { className: "w-6 h-6" })}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
-                                                    {role.title}
-                                                </h3>
-                                                <div className={`text-xs font-bold uppercase tracking-wider ${role.accentColor}`}>
-                                                    {role.subtitle}
-                                                </div>
-                                            </div>
+                                    <div className="flex items-start justify-between mb-8">
+                                        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all duration-500">
+                                            {React.cloneElement(role.icon, { className: "w-7 h-7" })}
+                                        </div>
+                                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest py-2 px-4 rounded-full bg-indigo-50 border border-indigo-100">
+                                            Active Simulation
                                         </div>
                                     </div>
 
-                                    {/* Description */}
-                                    <p className="text-md text-gray-600 leading-relaxed font-medium mb-6 line-clamp-3">
+                                    <h3 className="text-2xl font-black text-slate-950 tracking-tight mb-2">
+                                        {role.title}
+                                    </h3>
+                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">
+                                        {role.subtitle}
+                                    </p>
+
+                                    <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8 flex-grow">
                                         {role.description}
                                     </p>
 
-                                    {/* Features List */}
-                                    <ul className="space-y-3 mb-8 flex-grow">
-                                        {role.features.slice(0, 3).map((feature, idx) => (
-                                            <li key={idx} className="flex items-start gap-2.5 text-gray-700 group/item">
-                                                <CheckCircle2 className={`w-4 h-4 ${role.accentColor} mt-0.5 flex-shrink-0 group-hover/item:scale-110 transition-transform`} />
-                                                <span className="font-medium text-sm">{feature}</span>
-                                            </li>
+                                    <div className="space-y-4 mb-10">
+                                        {role.features.map((feature, idx) => (
+                                            <div key={idx} className="flex items-center gap-3 text-slate-700">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                                <span className="font-bold text-xs uppercase tracking-wide">{feature}</span>
+                                            </div>
                                         ))}
-                                    </ul>
+                                    </div>
 
-                                    {/* CTA Button */}
                                     <button
                                         onClick={() => navigate('/dashboard/all-popular-interviews')}
-                                        className="max-w-[60%] mx-auto group/btn relative flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gray-900 text-white font-bold text-sm hover:bg-black transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 overflow-hidden"
+                                        className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 font-black text-[10px] uppercase tracking-[0.15em] hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 group/btn"
                                     >
-                                        <span className="relative z-10">Start {role.title} Track</span>
-                                        <ArrowRight className="w-4 h-4 relative z-10 group-hover/btn:translate-x-1 transition-transform" />
-
-                                        {/* Button Shine Effect */}
-                                        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12"></div>
+                                        Initiate Track
+                                        <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                     </button>
-
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
 
                 {/* Bottom Trust Note */}
-                <div className="mt-16 text-center">
-                    <p className="text-sm text-gray-400 font-medium">
-                        More roles coming soon • Constantly updated with latest interview patterns
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 1 }}
+                    className="mt-20 text-center"
+                >
+                    <p className="text-xs text-slate-400 font-black uppercase tracking-[0.3em]">
+                        New Engineering Verticals Under Stabilization
                     </p>
-                </div>
+                </motion.div>
             </div>
         </section>
     );

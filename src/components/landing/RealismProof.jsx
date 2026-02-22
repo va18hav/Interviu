@@ -1,29 +1,23 @@
-import React, { useEffect, useRef } from 'react';
-import { Brain, Zap, Target, Mic } from 'lucide-react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+import React from 'react';
+import { Target, MessageSquare, ShieldCheck, Zap, ChevronRight, User, Bot } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const RealismProof = () => {
-    const chatContainerRef = useRef(null);
-
     const differentiators = [
         {
-            icon: <Brain className="w-7 h-7" />,
-            title: 'Dynamic, Not Scripted',
-            description: 'No pre-defined questions. The AI adapts in real-time based on your answers, just like a real senior engineer would.'
+            icon: <MessageSquare className="w-6 h-6" />,
+            title: 'Dynamic Evaluation',
+            description: 'The AI adapts in real-time based on your technical depth, precisely mimicking a senior engineer\'s evaluation process.'
         },
         {
-            icon: <Zap className="w-7 h-7" />,
-            title: 'Probes Your Reasoning',
-            description: 'Asks "Why?", "What if?", and challenges your assumptions. It doesn\'t just check answers—it tests your thinking process.'
+            icon: <Target className="w-6 h-6" />,
+            title: 'Hiring Signal Probing',
+            description: 'Identifies and probes for specific hiring signals—reasoning, edge case awareness, and architectural trade-offs.'
         },
         {
-            icon: <Target className="w-7 h-7" />,
-            title: 'Adapts Difficulty',
-            description: 'Automatically adjusts complexity based on your performance. Struggling? It helps. Crushing it? It goes deeper.'
+            icon: <Zap className="w-6 h-6" />,
+            title: 'Adaptive Calibration',
+            description: 'Automatically calibrates the session complexity based on your performance to stay in the zone of optimal preparation.'
         }
     ];
 
@@ -31,161 +25,157 @@ const RealismProof = () => {
         exchanges: [
             {
                 speaker: 'AI',
-                text: 'What\'s the time complexity of your solution when the input array is already sorted?'
+                text: 'Based on your design for the cache layer, what happens to consistency if a write operation fails halfway through?'
             },
             {
                 speaker: 'Candidate',
-                text: 'It would still be O(n log n) because of the sorting step.'
+                text: 'The secondary nodes might have stale data until the background sync finishes.'
             },
             {
                 speaker: 'AI',
-                text: 'Right. But can you optimize for that case? What if 90% of your inputs are already sorted in production?'
+                text: 'How would you mitigate that if the client requires strict consistency for this specific workflow?'
             },
             {
                 speaker: 'Candidate',
-                text: 'I could add a check to see if it\'s sorted first, then skip the sort.'
+                text: 'I could implement a write-through policy with quorum-based acknowledgement.'
             },
             {
                 speaker: 'AI',
-                text: 'How would you implement that check without making it O(n) every time?'
+                text: 'Fair. What are the latency trade-offs of that approach in a multi-region setup?'
             }
         ]
     };
 
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            const bubbles = chatContainerRef.current.querySelectorAll('.chat-bubble-animate');
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.2
+            }
+        }
+    };
 
-            bubbles.forEach((bubble) => {
-                gsap.from(bubble, {
-                    scrollTrigger: {
-                        trigger: bubble,
-                        start: 'top 99%',
-                        toggleActions: 'play none none none',
-                    },
-                    opacity: 0,
-                    y: 30,
-                    scale: 0.9,
-                    duration: 2.5,
-                    ease: 'back.out(1.7)',
-                });
-            });
-        }, chatContainerRef);
-
-        return () => ctx.revert(); // Cleanup GSAP context
-    }, []);
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+    };
 
     return (
-        <section className="py-32 bg-gradient-to-b from-white via-gray-50/30 to-white relative overflow-hidden">
-            {/* Subtle Background Pattern */}
-            <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
+        <section className="py-32 bg-slate-50 relative overflow-hidden">
+            {/* Subtle Texture */}
+            <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:32px_32px] opacity-40"></div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                {/* Main Message */}
-                <div className="text-center mb-20">
-                    <h2 className="text-4xl md:text-7xl font-extrabold text-gray-900 mb-6 leading-[1.1] tracking-tighter">
-                        Real Conversations,
-                        <br />
-                        <span className="bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
-                            Not Scripted Q&A
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+                {/* Header Section */}
+                <div className="max-w-3xl mb-24 text-center lg:text-left mx-auto lg:mx-0">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-6"
+                    >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Adaptive Intelligence</span>
+                    </motion.div>
+
+                    <h2 className="text-4xl md:text-6xl font-black text-slate-950 mb-6 leading-[1.05] tracking-tighter">
+                        Evaluation That Goes <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">
+                            Beyond the Surface.
                         </span>
                     </h2>
 
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
-                        The AI doesn't follow a script. It probes your reasoning, challenges assumptions, and adapts based on your answers—just like a real interviewer.
+                    <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl">
+                        Traditional practice is scripted. Intervyiu uses proprietary technical signals to probe your systems thinking and architecture reasoning in real-time.
                     </p>
                 </div>
 
-                {/* Conversation + Cards Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-20 items-stretch">
-                    {/* Chat-style Conversation */}
-                    <div className="relative rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
-                        {/* Subtle gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 via-transparent to-gray-50/30 opacity-60"></div>
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
-                        <div className="relative p-8" ref={chatContainerRef}>
-                            {/* Chat-style Conversation */}
-                            <div className="space-y-4">
-                                {conversation.exchanges.map((exchange, exchangeIdx) => (
-                                    <div
-                                        key={exchangeIdx}
-                                        className={`chat-bubble-animate flex gap-3 ${exchange.speaker === 'Candidate' ? 'justify-end' : 'justify-start'}`}
-                                    >
-                                        {/* Mic Icon - Left side for AI */}
-                                        {exchange.speaker === 'AI' && (
-                                            <div className="flex-shrink-0 mt-1">
-                                                <Mic className="w-4 h-4 text-blue-500" />
-                                            </div>
-                                        )}
+                    {/* Chat Simulation Area */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="lg:col-span-7 relative rounded-[2.5rem] bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 p-8 md:p-10 overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-b from-slate-50/50 to-transparent pointer-events-none" />
 
-                                        <div className={`max-w-[85%]`}>
-                                            {/* Speaker Label */}
-                                            <div className={`text-xs font-semibold mb-1 ${exchange.speaker === 'AI'
-                                                ? 'text-blue-700'
-                                                : 'text-green-700 text-right'
-                                                }`}>
-                                                {exchange.speaker === 'AI' ? 'Interviewer' : 'Candidate'}
-                                            </div>
-
-                                            {/* Message Bubble */}
-                                            <div className={`rounded-2xl px-4 py-3 ${exchange.speaker === 'AI'
-                                                ? 'bg-blue-50 text-blue-900 border border-blue-100 rounded-tl-sm'
-                                                : 'bg-green-50 text-green-900 border border-green-100 rounded-tr-sm'
-                                                }`}>
-                                                <p className="text-sm leading-relaxed">
-                                                    {exchange.text}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Mic Icon - Right side for Candidate */}
-                                        {exchange.speaker === 'Candidate' && (
-                                            <div className="flex-shrink-0 mt-1">
-                                                <Mic className="w-4 h-4 text-green-500" />
-                                            </div>
-                                        )}
+                        <div className="relative space-y-6">
+                            {conversation.exchanges.map((exchange, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.2 }}
+                                    className={`flex gap-4 ${exchange.speaker === 'Candidate' ? 'flex-row-reverse' : 'flex-row'}`}
+                                >
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${exchange.speaker === 'AI'
+                                            ? 'bg-slate-900 border-slate-800 text-white'
+                                            : 'bg-white border-slate-200 text-slate-400'
+                                        }`}>
+                                        {exchange.speaker === 'AI' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                                     </div>
-                                ))}
-                            </div>
+
+                                    <div className={`max-w-[85%] space-y-1.5 ${exchange.speaker === 'Candidate' ? 'text-right' : 'text-left'}`}>
+                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                                            {exchange.speaker === 'AI' ? 'Interviewer' : 'You'}
+                                        </div>
+                                        <div className={`rounded-3xl px-6 py-4 text-sm font-medium leading-relaxed shadow-sm ${exchange.speaker === 'AI'
+                                                ? 'bg-slate-900 text-white rounded-tl-sm'
+                                                : 'bg-slate-50 text-slate-700 border border-slate-100 rounded-tr-sm'
+                                            }`}>
+                                            {exchange.text}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {/* Differentiators Cards - Stacked */}
-                    <div className="space-y-6 h-full">
-                        {differentiators.map((item, index) => (
-                            <div
-                                key={index}
-                                className="group relative rounded-2xl overflow-hidden bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-xl transition-all duration-300"
+                    {/* Feature Cards Column */}
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                        className="lg:col-span-5 space-y-6"
+                    >
+                        {differentiators.map((feature, idx) => (
+                            <motion.div
+                                key={idx}
+                                variants={itemVariants}
+                                className="group p-8 rounded-[2rem] bg-white border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500"
                             >
-                                {/* Subtle texture */}
-                                <div className="absolute inset-0 bg-[radial-gradient(#f3f4f6_1px,transparent_1px)] [background-size:16px_16px] opacity-0 group-hover:opacity-30 transition-opacity"></div>
-
-                                <div className="relative py-14 px-6">
-                                    <div className="flex items-start gap-4">
-                                        {/* Icon */}
-                                        <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gray-100 text-gray-900 group-hover:bg-gray-900 group-hover:text-white transition-all duration-300">
-                                            {item.icon}
-                                        </div>
-
-                                        <div className="flex-1">
-                                            {/* Title */}
-                                            <h3 className="text-lg font-bold text-gray-900 mb-2 tracking-tight">
-                                                {item.title}
-                                            </h3>
-
-                                            {/* Description */}
-                                            <p className="text-sm text-gray-600 leading-relaxed">
-                                                {item.description}
-                                            </p>
-                                        </div>
+                                <div className="flex items-start gap-6">
+                                    <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 shadow-sm">
+                                        {feature.icon}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-lg font-black text-slate-950 tracking-tight group-hover:text-indigo-600 transition-colors">
+                                            {feature.title}
+                                        </h3>
+                                        <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                                            {feature.description}
+                                        </p>
                                     </div>
                                 </div>
-
-                                {/* Hover accent line */}
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-900 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
-                            </div>
+                            </motion.div>
                         ))}
-                    </div>
+
+                        <motion.div variants={itemVariants} className="pt-4">
+                            <button className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-[0.2em] hover:gap-4 transition-all group">
+                                Explore Methodology
+                                <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
+                            </button>
+                        </motion.div>
+                    </motion.div>
+
                 </div>
             </div>
         </section>

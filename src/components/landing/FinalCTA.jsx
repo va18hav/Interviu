@@ -1,60 +1,110 @@
 import React from 'react';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight, Check, ChevronRight, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const FinalCTA = () => {
     const navigate = useNavigate();
 
     const benefits = [
-        "No setup required",
-        "Takes 2 minutes to begin",
-        "No prior prep needed",
-        "Free during early access"
+        "Executive Review Framework",
+        "Senior Engineering Benchmarks",
+        "Domain-Specific Calibration",
+        "Zero-Latency Adaptive Feedback"
     ];
 
     return (
-        <section className="py-32 bg-gray-950 relative overflow-hidden flex flex-col items-center justify-center min-h-[600px]">
-            {/* Sophisticated Background Glows */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-blue-900/10 via-purple-900/5 to-transparent blur-3xl pointer-events-none"></div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-indigo-500/5 blur-[100px] rounded-full pointer-events-none"></div>
+        <section className="py-40 bg-slate-950 relative overflow-hidden flex flex-col items-center justify-center min-h-[700px]">
+            {/* Cinematic Background Elements */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-slate-950 to-slate-950 pointer-events-none opacity-60"></div>
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent"></div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            {/* Floating Depth Particles (Subtle) */}
+            <motion.div
+                animate={{
+                    y: [0, -20, 0],
+                    opacity: [0.2, 0.4, 0.2]
+                }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/20 rounded-full blur-[80px]"
+            />
+            <motion.div
+                animate={{
+                    y: [0, 20, 0],
+                    opacity: [0.1, 0.3, 0.1]
+                }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-indigo-500/20 rounded-full blur-[100px]"
+            />
 
-                <h2 className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tighter leading-[1.1]">
-                    Start your first <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">
-                        interview today.
+            <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-12 backdrop-blur-sm"
+                >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Secure Access Protocols Ready</span>
+                </motion.div>
+
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8 }}
+                    className="text-5xl md:text-7xl font-black text-white mb-10 tracking-tighter leading-[0.95]"
+                >
+                    Elevate Your <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40">
+                        Technical Logic.
                     </span>
-                </h2>
+                </motion.h2>
 
-                {/* Refined Reassurance Bullets - Minimalist */}
-                <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 mb-12">
+                {/* Professional Reassurance Bullets */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 }}
+                    className="flex flex-wrap justify-center gap-x-10 gap-y-6 mb-16"
+                >
                     {benefits.map((benefit, index) => (
-                        <div key={index} className="flex items-center gap-2 text-gray-400">
-                            <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
-                                <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                        <div key={index} className="flex items-center gap-3 text-slate-400">
+                            <div className="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                                <Check className="w-3 h-3 text-indigo-400" strokeWidth={3} />
                             </div>
-                            <span className="text-sm tracking-wide font-medium">{benefit}</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest">{benefit}</span>
                         </div>
                     ))}
-                </div>
+                </motion.div>
 
-                <div className="flex flex-col items-center gap-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.6, duration: 1, ease: "circOut" }}
+                    className="flex flex-col items-center gap-8"
+                >
                     <button
                         onClick={() => navigate('/dashboard/all-popular-interviews')}
-                        className="group relative px-10 py-5 bg-white text-black font-semibold text-lg rounded-full overflow-hidden transition-all duration-300 hover:scale-105"
+                        className="group relative px-12 py-6 bg-white text-slate-950 font-black text-xs uppercase tracking-[0.3em] rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-2xl shadow-indigo-500/10"
                     >
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-200/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></div>
-                        <span className="relative flex items-center gap-2">
-                            Start Free Interview
-                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-indigo-500/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+                        <span className="relative flex items-center gap-3">
+                            Initiate Core Session
+                            <ChevronRight className="w-5 h-5 text-indigo-600 group-hover:translate-x-1 transition-transform" />
                         </span>
                     </button>
-                    <p className="text-xs text-gray-500 font-medium tracking-wider uppercase opacity-80">
-                        No credit card required
+
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em] opacity-60">
+                        Early Access Authorization: Phase 02
                     </p>
-                </div>
+                </motion.div>
             </div>
+
+            {/* Bottom Accent */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent"></div>
         </section>
     );
 };

@@ -24,21 +24,23 @@ export const validateDesign = (components, connections) => {
     });
 
     // --- RULE 1: Direct Database Exposure (SECURITY) ---
-    // Architecture Anti-Pattern: Client -> Database
     connections.forEach(conn => {
         const fromComp = components.find(c => c.id === conn.from);
         const toComp = components.find(c => c.id === conn.to);
 
         if (fromComp && toComp) {
-            const fromMeta = COMPONENT_METADATA[fromComp.type];
-            const toMeta = COMPONENT_METADATA[toComp.type];
+            const fromTypes = fromComp.mergedTypes || [fromComp.type];
+            const toTypes = toComp.mergedTypes || [toComp.type];
 
-            if (fromMeta?.category === 'client' && toMeta?.category === 'data') {
+            const fromIsClient = fromTypes.some(t => COMPONENT_METADATA[t]?.category === 'Basic Infrastructure' && t === COMPONENT_TYPES.CLIENT);
+            const toIsData = toTypes.some(t => COMPONENT_METADATA[t]?.category === 'Storage');
+
+            if (fromIsClient && toIsData) {
                 issues.push({
                     id: `sec-db-exposure-${conn.id}`,
                     ruleId: 'SECURITY_DB_EXPOSURE',
                     severity: 'HIGH',
-                    message: `Security Risk: Client '${fromMeta.label}' is directly accessing Database '${toMeta.label}'. Use a Service or API Gateway layer.`,
+                    message: `Security Risk: Client is directly accessing Database. Use a Service or API Gateway layer.`,
                     componentIds: [fromComp.id, toComp.id]
                 });
             }
@@ -46,25 +48,21 @@ export const validateDesign = (components, connections) => {
     });
 
     // --- RULE 2: Single Point of Failure (RELIABILITY) ---
-    // Components that should be redundant but aren't
     components.forEach(comp => {
-        const type = comp.type;
-        const meta = COMPONENT_METADATA[type];
+        const types = comp.mergedTypes || [comp.type];
+        const hasCriticalCategory = types.some(t => ['Compute', 'Basic Infrastructure', 'Storage'].includes(COMPONENT_METADATA[t]?.category));
 
-        // Skip clients, queues, CDNs for simple SPOF check (though queues can be SPOF, usually managed)
-        if (['service', 'gateway', 'data'].includes(meta?.category)) {
-            // Check 'instances' or 'redundancy' config
-            const instances = comp.config?.instances || 1;
-            const isRedundant = comp.config?.redundancy === true || comp.config?.redundancy === 'active-passive';
+        if (hasCriticalCategory) {
+            const instances = comp.config?.scale_min_instances || 1;
+            const isRedundant = comp.config?.scale_type === 'Horizontal (Auto)' || parseInt(instances) > 1;
 
-            // If instances is explicit and < 2, FLAG IT
-            // Note: We need to check if schema HAS instances field to avoid false positives on simple nodes
-            if (instances < 2 && !isRedundant) {
+            if (parseInt(instances) < 2 && !isRedundant) {
+                const label = comp.config?.label || types.map(t => COMPONENT_METADATA[t]?.label).join(' + ');
                 issues.push({
                     id: `rel-spof-${comp.id}`,
                     ruleId: 'RELIABILITY_SPOF',
                     severity: 'MEDIUM',
-                    message: `Potential SPOF: '${meta.label}' has only 1 instance configured. Consider adding redundancy (Min 2 instances).`,
+                    message: `Potential SPOF: '${label}' has only 1 instance configured. Consider adding redundancy (Min 2 instances).`,
                     componentIds: [comp.id]
                 });
             }
@@ -72,24 +70,24 @@ export const validateDesign = (components, connections) => {
     });
 
     // --- RULE 3: Missing Observability (OPERATIONAL) ---
-    // Services should have logging/metrics or be connected to an Observability tool
     components.forEach(comp => {
-        const meta = COMPONENT_METADATA[comp.type];
-        if (meta?.category === 'service' || meta?.category === 'gateway') {
-            // Check connection to Observability components
+        const types = comp.mergedTypes || [comp.type];
+        const needsObservability = types.some(t => ['Compute', 'Basic Infrastructure'].includes(COMPONENT_METADATA[t]?.category));
+
+        if (needsObservability) {
             const connectedToObservability = (adjList[comp.id] || []).some(targetId => {
                 const target = components.find(c => c.id === targetId);
-                return COMPONENT_METADATA[target?.type]?.category === 'observability';
+                const targetTypes = target?.mergedTypes || (target?.type ? [target.type] : []);
+                return targetTypes.some(tt => COMPONENT_METADATA[tt]?.category === 'Observability');
             });
 
-            const hasConfiguredLogs = comp.config?.logging_enabled === true;
-
-            if (!connectedToObservability && !hasConfiguredLogs) {
+            if (!connectedToObservability) {
+                const label = comp.config?.label || types.map(t => COMPONENT_METADATA[t]?.label).join(' + ');
                 issues.push({
                     id: `ops-no-obs-${comp.id}`,
                     ruleId: 'OPS_NO_OBSERVABILITY',
                     severity: 'LOW',
-                    message: `Missing Observability: '${meta.label}' has no connected logging or metrics pipeline.`,
+                    message: `Missing Observability: '${label}' has no connected logging or metrics pipeline.`,
                     componentIds: [comp.id]
                 });
             }
@@ -98,17 +96,18 @@ export const validateDesign = (components, connections) => {
 
     // --- RULE 4: Unbounded Queue (RELIABILITY) ---
     components.forEach(comp => {
-        if (comp.type === COMPONENT_TYPES.QUEUE || comp.type === COMPONENT_TYPES.STREAM) {
-            const retention = comp.config?.retention_period;
-            const maxSize = comp.config?.max_message_size;
+        const types = comp.mergedTypes || [comp.type];
+        const hasQueue = types.some(t => t === COMPONENT_TYPES.MESSAGE_QUEUE);
 
-            // If completely default/undefined
-            if (!retention && !maxSize) {
+        if (hasQueue) {
+            const retention = comp.config?.retention;
+            if (!retention) {
+                const label = comp.config?.label || types.map(t => COMPONENT_METADATA[t]?.label).join(' + ');
                 issues.push({
                     id: `rel-unbounded-queue-${comp.id}`,
                     ruleId: 'RELIABILITY_UNBOUNDED_QUEUE',
                     severity: 'MEDIUM',
-                    message: `Unbounded Queue/Stream: '${COMPONENT_METADATA[comp.type].label}' needs retention or size limits to prevent overflow.`,
+                    message: `Unbounded Queue/Stream: '${label}' needs retention or size limits to prevent overflow.`,
                     componentIds: [comp.id]
                 });
             }
@@ -117,14 +116,18 @@ export const validateDesign = (components, connections) => {
 
     // --- RULE 5: No Rate Limiting (PROTECTION) ---
     components.forEach(comp => {
-        if (comp.type === COMPONENT_TYPES.API_GATEWAY) {
-            const rateLimit = comp.config?.rate_limit;
-            if (!rateLimit) {
+        const types = comp.mergedTypes || [comp.type];
+        const hasGateway = types.some(t => t === COMPONENT_TYPES.API_GATEWAY);
+
+        if (hasGateway) {
+            const rateLimit = comp.config?.rate_limiting;
+            if (!rateLimit || rateLimit === 'None') {
+                const label = comp.config?.label || types.map(t => COMPONENT_METADATA[t]?.label).join(' + ');
                 issues.push({
                     id: `sec-no-ratelimit-${comp.id}`,
                     ruleId: 'SECURITY_NO_RATELIMIT',
                     severity: 'MEDIUM',
-                    message: `No Rate Limiting: API Gateway is unprotected from traffic spikes. Configure rate limits.`,
+                    message: `No Rate Limiting: '${label}' is unprotected from traffic spikes. Configure rate limits.`,
                     componentIds: [comp.id]
                 });
             }

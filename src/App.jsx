@@ -23,6 +23,9 @@ import DebugRound from "./pages/DebugRound"
 import BehavioralRound from "./pages/BehavioralRound"
 import InterviewReport from "./pages/InterviewReport"
 
+// Test Pages
+import TestDesignUI from "./pages/TestDesignUI"
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -51,6 +54,9 @@ const App = () => {
           <Route path="/debug-round" element={<DebugRound />} />
           <Route path="/behavioral-round" element={<BehavioralRound />} />
           <Route path="/report" element={<InterviewReport />} />
+
+          {/* Test Routes */}
+          <Route path="/dashboard/test-design-ui" element={<TestDesignUI />} />
         </Route>
       </Routes>
     </BrowserRouter>

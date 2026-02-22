@@ -22,7 +22,18 @@ const LANGUAGE_ICONS = {
     html: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
     css: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
     json: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/json/json-original.svg",
-    typescript: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg"
+    typescript: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
+    go: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg",
+    rust: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/rust/rust-original.svg",
+    ruby: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ruby/ruby-original.svg",
+    php: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg",
+    csharp: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg",
+    kotlin: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kotlin/kotlin-original.svg",
+    shell: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bash/bash-original.svg",
+    terraform: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/terraform/terraform-original.svg",
+    sql: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg",
+    docker: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+    markdown: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/markdown/markdown-original.svg"
 };
 
 const MonacoEditorWindow = ({
@@ -377,13 +388,25 @@ const MonacoEditorWindow = ({
     // Helpers
     const getLanguageFromFilename = (filename) => {
         if (!filename) return language;
+        const lowName = filename.toLowerCase();
         const ext = filename.split('.').pop().toLowerCase();
+
+        // Specific file name matches
+        if (lowName === 'dockerfile') return 'docker';
+        if (lowName === 'jenkinsfile') return 'groovy';
+        if (lowName === 'makefile') return 'makefile';
+
         const map = {
-            'js': 'javascript', 'jsx': 'javascript', 'ts': 'typescript', 'tsx': 'typescript',
-            'py': 'python', 'java': 'java', 'cpp': 'cpp', 'c': 'c', 'h': 'cpp',
-            'json': 'json', 'html': 'html', 'css': 'css', 'sql': 'sql', 'yaml': 'yaml', 'yml': 'yaml',
-            'txt': 'plaintext', 'md': 'markdown',
-            'sh': 'shell', 'bash': 'shell', 'log': 'plaintext'
+            'js': 'javascript', 'jsx': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript',
+            'ts': 'typescript', 'tsx': 'typescript',
+            'py': 'python', 'java': 'java', 'cpp': 'cpp', 'cc': 'cpp', 'c': 'c', 'h': 'cpp', 'hpp': 'cpp',
+            'json': 'json', 'html': 'html', 'css': 'css', 'scss': 'scss', 'sass': 'sass',
+            'sql': 'sql', 'yaml': 'yaml', 'yml': 'yaml',
+            'tf': 'terraform', 'tfvars': 'terraform',
+            'rs': 'rust', 'go': 'go', 'rb': 'ruby', 'php': 'php', 'cs': 'csharp',
+            'kt': 'kotlin', 'kts': 'kotlin', 'swift': 'swift', 'scala': 'scala',
+            'sh': 'shell', 'bash': 'shell',
+            'txt': 'plaintext', 'md': 'markdown', 'log': 'plaintext'
         };
         return map[ext] || language;
     };
@@ -757,7 +780,13 @@ const Tab = ({ filename, isActive, onClick, onClose, readOnly }) => (
 
 // Helper for Icons
 const getFileIcon = (filename) => {
+    if (!filename) return LANGUAGE_ICONS.javascript;
+    const lowName = filename.toLowerCase();
     const ext = filename.split('.').pop().toLowerCase();
+
+    // Specific file name matches
+    if (lowName === 'dockerfile') return LANGUAGE_ICONS.docker;
+
     const map = {
         'js': LANGUAGE_ICONS.javascript,
         'jsx': LANGUAGE_ICONS.javascript,
@@ -766,14 +795,30 @@ const getFileIcon = (filename) => {
         'py': LANGUAGE_ICONS.python,
         'java': LANGUAGE_ICONS.java,
         'cpp': LANGUAGE_ICONS.cpp,
+        'cc': LANGUAGE_ICONS.cpp,
         'c': LANGUAGE_ICONS.cpp,
+        'rs': LANGUAGE_ICONS.rust,
+        'go': LANGUAGE_ICONS.go,
+        'rb': LANGUAGE_ICONS.ruby,
+        'php': LANGUAGE_ICONS.php,
+        'cs': LANGUAGE_ICONS.csharp,
+        'kt': LANGUAGE_ICONS.kotlin,
+        'kts': LANGUAGE_ICONS.kotlin,
+        'swift': LANGUAGE_ICONS.swift,
+        'scala': LANGUAGE_ICONS.scala,
+        'sh': LANGUAGE_ICONS.shell,
+        'bash': LANGUAGE_ICONS.shell,
+        'yaml': LANGUAGE_ICONS.yaml,
+        'yml': LANGUAGE_ICONS.yaml,
+        'tf': LANGUAGE_ICONS.terraform,
+        'tfvars': LANGUAGE_ICONS.terraform,
+        'sql': LANGUAGE_ICONS.sql,
+        'json': LANGUAGE_ICONS.json,
         'html': LANGUAGE_ICONS.html,
         'css': LANGUAGE_ICONS.css,
-        'json': LANGUAGE_ICONS.json,
-        'txt': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/markdown/markdown-original.svg', // Use markdown icon for text
-        'md': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/markdown/markdown-original.svg',
-        'sh': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bash/bash-original.svg',
-        'log': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg' // Placeholder for log, or just file icon
+        'md': LANGUAGE_ICONS.markdown,
+        'txt': LANGUAGE_ICONS.markdown, // Use markdown icon or generic file
+        'log': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg' // Keep for now
     };
     return map[ext] || LANGUAGE_ICONS.javascript;
 };

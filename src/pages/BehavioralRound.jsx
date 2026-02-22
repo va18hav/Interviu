@@ -440,13 +440,13 @@ const BehavioralRound = () => {
             {/* Header */}
             <header className="absolute top-0 left-0 right-0 z-50 px-6 py-2 pointer-events-none">
                 <div className="flex items-center justify-between mx-auto max-w-8xl">
-                    <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm pointer-events-auto">
-                        <img src={logo} alt="Logo" className="w-5 h-5 object-contain" />
+                    <div className="flex items-center bg-white/90 backdrop-blur-md px-4 py-1 rounded-full border border-gray-200 shadow-sm pointer-events-auto">
+                        <img src={logo} alt="Logo" className="w-10 h-12 object-contain" />
                         <div className="flex flex-col leading-none">
                             <span className="text-sm font-bold text-slate-900">
-                                {role || 'Behavioral Interview'}
+                                {company} {role}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-medium">{company || 'Intervyu'}</span>
+                            <span className="text-[10px] text-slate-500 font-medium">Realtime Behavioral Round</span>
                         </div>
                     </div>
 

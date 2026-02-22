@@ -3,12 +3,25 @@
  */
 import { COMPONENT_METADATA } from './designComponentSchema';
 
+const getComponentDisplayName = (comp) => {
+    if (!comp) return 'Unknown';
+    if (comp.mergedTypes && comp.mergedTypes.length > 1) {
+        // Use custom label if it exists and is not just the default for the first type
+        const defaultLabel = COMPONENT_METADATA[comp.type]?.label;
+        if (comp.config?.label && comp.config.label !== defaultLabel) {
+            return comp.config.label;
+        }
+        return comp.mergedTypes.map(t => COMPONENT_METADATA[t]?.label || t).join(' + ');
+    }
+    return comp.config?.label || COMPONENT_METADATA[comp.type]?.label || 'Unknown';
+};
+
 export const generateConnectionSummary = (oldConn, newConn, components) => {
     const fromComp = components.find(c => c.id === newConn.from);
     const toComp = components.find(c => c.id === newConn.to);
 
-    const fromName = fromComp?.config?.label || fromComp ? COMPONENT_METADATA[fromComp.type]?.label : 'Unknown';
-    const toName = toComp?.config?.label || toComp ? COMPONENT_METADATA[toComp.type]?.label : 'Unknown';
+    const fromName = getComponentDisplayName(fromComp);
+    const toName = getComponentDisplayName(toComp);
 
     const changes = [];
     const oldConfig = oldConn?.config || {};
@@ -42,7 +55,7 @@ export const generateComponentSummary = (oldComp, newComp) => {
     const changes = [];
     const oldConfig = oldComp?.config || {};
     const newConfig = newComp.config || {};
-    const label = newConfig.label || COMPONENT_METADATA[newComp.type]?.label;
+    const label = getComponentDisplayName(newComp);
 
     // State Changes
     if (newConfig.st_type !== oldConfig.st_type) {

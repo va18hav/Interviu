@@ -1,12 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Award, Mic, Target, Pen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import heroImage from '../../assets/images/landingbot.png';
 import logo from '../../assets/images/logo.png';
 
 const NewHeroSection = () => {
     const navigate = useNavigate();
     const userCredentials = JSON.parse(localStorage.getItem("userCredentials"));
+    const containerRef = useRef(null);
+
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start start", "end start"]
+    });
+
+    const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
+    const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
     const [text, setText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
@@ -39,23 +49,51 @@ const NewHeroSection = () => {
         return () => clearTimeout(timer);
     }, [text, isDeleting, loopNum, typingSpeed]);
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.2,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.8, ease: "easeOut" }
+        }
+    };
+
     return (
         <>
             {/* Sticky Navigation */}
-            <nav className="fixed top-0 left-0 right-0 w-full border-b border-gray-200 bg-white z-50">
+            <motion.nav
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="fixed top-0 left-0 right-0 w-full border-b border-gray-200 bg-white/80 backdrop-blur-xl z-50"
+            >
                 <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-                    <div className="flex items-center gap-6 cursor-pointer" onClick={() => navigate('/')}>
-                        <img src={logo} alt="Intervyu" className="w-5 h-6" />
-                        <span className="text-2xl font-extrabold text-black tracking-tight -ml-4">
-                            Interv<span className="text-gray-500">iu</span>
-                        </span>
+                    <div className="flex items-center gap-4 cursor-pointer group" onClick={() => navigate('/')}>
+                        <div className="flex items-center justify-center relative">
+                            <img src={logo} alt="Logo" className="w-12 h-14 relative z-10 group-hover:scale-105 transition-transform duration-300" />
+                        </div>
+                        <div className="flex flex-col -ml-4">
+                            <h1 className="text-xl font-extrabold text-black leading-none">Interviu</h1>
+                            <p className="text-xs text-gray-500">Interview Better</p>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                         {userCredentials ? (
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="px-5 py-2 rounded-3xl text-white bg-black hover:bg-gray-800 text-sm font-medium transition-colors"
+                                className="px-5 py-2 rounded-3xl text-white bg-black hover:bg-gray-800 text-sm font-medium transition-all hover:shadow-lg active:scale-95"
                             >
                                 Dashboard
                             </button>
@@ -69,7 +107,7 @@ const NewHeroSection = () => {
                                 </button>
                                 <button
                                     onClick={() => navigate('/login')}
-                                    className="px-5 py-2 rounded-lg bg-black text-white hover:bg-gray-800 text-sm font-medium transition-colors"
+                                    className="px-5 py-2 rounded-lg bg-black text-white hover:bg-gray-800 text-sm font-medium transition-all hover:shadow-lg active:scale-95"
                                 >
                                     Get Started
                                 </button>
@@ -77,47 +115,73 @@ const NewHeroSection = () => {
                         )}
                     </div>
                 </div>
-            </nav>
+            </motion.nav>
 
             {/* Hero Content - Responsive Layout */}
-            <div className="relative min-h-screen lg:h-screen overflow-hidden flex flex-col lg:flex-row items-center pt-28 lg:pt-0">
+            <div ref={containerRef} className="relative min-h-screen lg:h-screen overflow-hidden flex flex-col lg:flex-row items-center pt-28 lg:pt-0">
                 {/* Main Content Area */}
-                <div className="relative w-full px-4 sm:px-6 md:px-12 lg:px-20 z-20 flex-shrink-0">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="relative w-full px-4 sm:px-6 md:px-12 lg:px-20 z-20 flex-shrink-0"
+                >
                     <div className="max-w-4xl lg:max-w-2xl xl:max-w-3xl mx-auto lg:mx-0 text-center lg:text-left flex flex-col items-center lg:items-start">
 
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 border border-gray-200 text-[10px] sm:text-xs font-medium text-gray-600 mb-6 w-fit">
+                        <motion.div
+                            variants={itemVariants}
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] sm:text-xs font-bold text-indigo-600 mb-6 w-fit shadow-sm shadow-indigo-500/5"
+                        >
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                             </span>
                             <span>Early Access: Coding | System Design | Behavioral Rounds For SDE/DevOps</span>
-                        </div>
+                        </motion.div>
 
                         {/* Main Headline */}
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-black tracking-tighter mb-6 leading-[1.1] px-2 sm:px-0">
-                            <span className="inline-block animate-fall-in opacity-0" style={{ animationDelay: '100ms' }}>Practice Real Interviews</span>
+                        <motion.h1
+                            variants={itemVariants}
+                            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-black tracking-tighter mb-6 leading-[1.1] px-2 sm:px-0"
+                        >
+                            <span>Practice Real Interviews</span>
                             <br className="hidden sm:block" />
-                            <span className="inline-block animate-fall-in opacity-0 bg-gradient-to-r from-gray-900 to-gray-500 bg-clip-text text-transparent" style={{ animationDelay: '300ms' }}>With an AI Interviewer</span>
-                        </h1>
+                            <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-500 bg-clip-text text-transparent">With an AI Interviewer</span>
+                        </motion.h1>
 
                         {/* Subheadline */}
-                        <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mb-10 md:mb-12 leading-relaxed animate-fade-in-up opacity-0 px-4 sm:px-0" style={{ animationDelay: '600ms' }}>
+                        <motion.p
+                            variants={itemVariants}
+                            className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mb-10 md:mb-12 leading-relaxed px-4 sm:px-0"
+                        >
                             Practice real coding, system design, and behavioral interviews with an AI interviewer trained on senior engineering hiring signals.
-                        </p>
+                        </motion.p>
 
                         {/* Credibility Tag */}
-                        <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-lg mb-10 md:mb-12 leading-relaxed animate-fade-in-up opacity-0 px-4 sm:px-0" style={{ animationDelay: '600ms' }}>
-                            <Target className="inline w-3 h-3" /> Trained on real hiring patterns | <Pen className="inline w-3 h-3" /> Built with real interview signals
-                        </p>
+                        <motion.p
+                            variants={itemVariants}
+                            className="text-xs sm:text-sm md:text-base text-gray-600 max-w-lg mb-10 md:mb-12 leading-relaxed px-4 sm:px-0 flex items-center flex-wrap justify-center lg:justify-start gap-4"
+                        >
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-100 text-orange-700 font-bold text-[10px] uppercase tracking-wider">
+                                <Target className="w-3.5 h-3.5" /> Trained on real hiring patterns
+                            </span>
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-700 font-bold text-[10px] uppercase tracking-wider">
+                                <Pen className="w-3.5 h-3.5" /> Built with real interview signals
+                            </span>
+                        </motion.p>
 
                         {/* CTAs */}
-                        <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up opacity-0 w-full sm:w-auto px-4 sm:px-0" style={{ animationDelay: '800ms' }}>
+                        <motion.div
+                            variants={itemVariants}
+                            className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4 sm:px-0"
+                        >
                             <button
                                 onClick={() => navigate('/login')}
-                                className="w-full sm:w-auto px-8 py-4 sm:py-3 rounded-3xl bg-black text-white font-semibold hover:bg-gray-800 transition-all active:scale-95 inline-flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+                                className="w-full sm:w-auto px-8 py-4 sm:py-3 rounded-3xl bg-black text-white font-semibold hover:bg-gray-800 transition-all active:scale-95 inline-flex items-center justify-center gap-2 shadow-lg shadow-black/10 group"
                             >
                                 Start Free Practice
-                                <ArrowRight className="w-5 h-5" />
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
                             <button
                                 onClick={() => navigate('/dashboard/all-popular-interviews')}
@@ -125,121 +189,45 @@ const NewHeroSection = () => {
                             >
                                 View Company Simulations
                             </button>
-                        </div>
+                        </motion.div>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Hero Image - Stacks on mobile, Absolute on desktop with better sizing */}
+                {/* Hero Image Section */}
                 <div className="relative lg:absolute bottom-[-25%] right-0 lg:right-[5%] xl:right-[5%] pointer-events-none select-none z-10 w-full lg:w-auto mt-auto lg:mt-0 flex justify-center lg:block">
-                    <img
+                    {/* Multi-layered Background Glows */}
+                    <div className="absolute inset-0 -z-10 flex items-center justify-center">
+                        <motion.div
+                            animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.3, 0.5, 0.3]
+                            }}
+                            style={{ y: useTransform(scrollYProgress, [0, 1], [0, 100]) }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute w-[400px] h-[400px] bg-indigo-500/20 blur-[100px] rounded-full"
+                        />
+                        <motion.div
+                            animate={{
+                                scale: [1.2, 1, 1.2],
+                                opacity: [0.2, 0.4, 0.2]
+                            }}
+                            style={{ y: useTransform(scrollYProgress, [0, 1], [0, 150]) }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                            className="absolute w-[350px] h-[350px] bg-violet-500/20 blur-[100px] rounded-full"
+                        />
+                    </div>
+
+                    <motion.img
+                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        style={{ y, opacity }}
+                        transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
                         src={heroImage}
                         alt="Intervyu Platform Interface"
-                        className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[500px] lg:max-w-none lg:w-[450px] xl:w-[550px] h-auto drop-shadow-2xl animate-pop-in animation-delay-300 opacity-0 lg:translate-y-20"
+                        className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[500px] lg:max-w-none lg:w-[450px] xl:w-[550px] h-auto drop-shadow-2xl"
                     />
                 </div>
-
-                {/* Hero AI Image Top Right */}
-                {/* <div className="absolute top-5 right-20 lg:top-10 lg:right-0 opacity-50 pointer-events-none select-none">
-                    <img
-                        src={heroImage2}
-                        alt="Intervyu Platform Interface"
-                        className="w-60 lg:w-90 h-auto drop-shadow-2xl animate-pop-in animation-delay-600 opacity-0"
-                    />
-                </div>
-                <div className="hidden lg:block absolute top-35 -right-25 lg:right-95 opacity-50">
-                    <img
-                        src={herocode}
-                        alt="Intervyu Platform Interface"
-                        className="w-70 h-auto drop-shadow-xl animate-pop-in animation-delay-900 opacity-0"
-                    />
-                </div>
-                <div className="hidden lg:block absolute bottom-10 right-100 opacity-80">
-                    <img
-                        src={herofeatures}
-                        alt="Intervyu Platform Interface"
-                        className="w-90 h-auto drop-shadow-2xl animate-pop-in animation-delay-1200 opacity-0"
-                    />
-                </div> */}
             </div>
-
-            {/* Animation Keyframes */}
-            <style>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px) translateX(0px); }
-                    50% { transform: translateY(-20px) translateX(10px); }
-                }
-                @keyframes spin-slow {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                @keyframes pulse-slow {
-                    0%, 100% { opacity: 0.4; transform: scale(1); }
-                    50% { opacity: 0.8; transform: scale(1.05); }
-                }
-                @keyframes bounce-slow {
-                    0%, 100% { transform: translateY(0px) rotate(-6deg); }
-                    50% { transform: translateY(-15px) rotate(-6deg); }
-                }
-                @keyframes ping-slow {
-                    0% { transform: scale(1); opacity: 0.5; }
-                    50% { transform: scale(1.5); opacity: 0.3; }
-                    100% { transform: scale(2); opacity: 0; }
-                }
-                @keyframes pop-in {
-                    0% { opacity: 0; transform: scale(0.5) translateY(20px); }
-                    70% { opacity: 1; transform: scale(1.05) translateY(-5px); }
-                    100% { opacity: 1; transform: scale(1) translateY(0); }
-                }
-                @keyframes fall-in {
-                    0% { opacity: 0; transform: translateY(-30px); }
-                    100% { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes fade-in-up {
-                    0% { opacity: 0; transform: translateY(20px); }
-                    100% { opacity: 1; transform: translateY(0); }
-                }
-                .animate-pop-in {
-                    animation: pop-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-                }
-                .animate-fall-in {
-                    animation: fall-in 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-                }
-                .animate-fade-in-up {
-                    animation: fade-in-up 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-                }
-                .animation-delay-500 {
-                    animation-delay: 0.5s;
-                }
-                .animate-float {
-                    animation: float 6s ease-in-out infinite;
-                }
-                .animate-float-delayed {
-                    animation: float 6s ease-in-out infinite;
-                    animation-delay: 2s;
-                }
-                .animate-float-slow {
-                    animation: float 8s ease-in-out infinite;
-                    animation-delay: 1s;
-                }
-                .animate-spin-slow {
-                    animation: spin-slow 20s linear infinite;
-                }
-                .animate-pulse-slow {
-                    animation: pulse-slow 4s ease-in-out infinite;
-                }
-                .animate-bounce-slow {
-                    animation: bounce-slow 5s ease-in-out infinite;
-                }
-                .animate-ping-slow {
-                    animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-                }
-                .animation-delay-1000 {
-                    animation-delay: 1s;
-                }
-                .animation-delay-2000 {
-                    animation-delay: 2s;
-                }
-            `}</style>
         </>
     );
 };

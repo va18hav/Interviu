@@ -111,16 +111,21 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
 
             // If changes exist, send ONE summary event
             if (changedKeys.length > 0) {
-                const schema = COMPONENT_CONFIG_SCHEMA[updatedComponent.type];
+                const types = updatedComponent.mergedTypes || [updatedComponent.type];
+                const allFields = types.flatMap(t => COMPONENT_CONFIG_SCHEMA[t]?.fields || []);
+
                 const readableKeys = changedKeys.map(k => {
-                    const field = schema?.fields?.find(f => f.key === k);
+                    const field = allFields.find(f => f.key === k);
                     return field?.label || k;
                 }).join(', ');
+
+                const componentLabel = updatedComponent.config?.label ||
+                    (types.length > 1 ? types.map(t => COMPONENT_METADATA[t]?.label).join(' + ') : COMPONENT_METADATA[updatedComponent.type]?.label);
 
                 onDesignChange({
                     type: 'config_updated',
                     component: updatedComponent,
-                    summary: `Configured ${COMPONENT_METADATA[updatedComponent.type]?.label}: set ${readableKeys}`,
+                    summary: `Configured ${componentLabel}: set ${readableKeys}`,
                     changedFields: changedKeys
                 });
             }
@@ -290,15 +295,54 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
     const handleMouseUp = () => {
         setIsPanning(false);
 
-        // If we were dragging a component, we need to check if we actually moved it
-        // to distinguish between a click and a drag.
-        // However, handleMouseMove updates the state directly, so we can't easily check "distance" here
-        // without tracking start pos. 
-        // Instead, let's set a flag in handleMouseMove if movement exceeds a threshold.
+        if (draggingComponentId) {
+            const draggedComp = components.find(c => c.id === draggingComponentId);
+            if (draggedComp) {
+                // Collision Detection for Merging
+                const targetComp = components.find(c => {
+                    if (c.id === draggingComponentId) return false;
+
+                    const dx = Math.abs(c.position.x - draggedComp.position.x);
+                    const dy = Math.abs(c.position.y - draggedComp.position.y);
+
+                    // Simple distance-based collision (assuming components are ~100x80)
+                    return dx < 60 && dy < 50;
+                });
+
+                if (targetComp) {
+                    // Merge!
+                    const updatedComponents = components.filter(c => c.id !== draggingComponentId).map(c => {
+                        if (c.id === targetComp.id) {
+                            const currentMergedTypes = c.mergedTypes || [c.type];
+                            const newMergedTypes = [...currentMergedTypes, draggedComp.type];
+                            return {
+                                ...c,
+                                mergedTypes: newMergedTypes,
+                                // Also merge configuration if relevant (e.g., label)
+                                config: {
+                                    ...c.config,
+                                    label: c.config.label || COMPONENT_METADATA[c.type].label
+                                }
+                            };
+                        }
+                        return c;
+                    });
+
+                    setComponents(updatedComponents);
+
+                    if (onDesignChange) {
+                        onDesignChange({
+                            type: 'components_merged',
+                            targetId: targetComp.id,
+                            mergedType: draggedComp.type,
+                            summary: `Merged ${COMPONENT_METADATA[draggedComp.type].label} into ${COMPONENT_METADATA[targetComp.type].label}`
+                        });
+                    }
+                }
+            }
+        }
 
         setDraggingComponentId(null);
-        // We don't reset isDraggingConfirmed here immediately because the click event fires *after* mouseup.
-        // We'll reset it in the click handler or after a small timeout.
         setTimeout(() => {
             isDraggingRef.current = false;
         }, 50);
@@ -369,17 +413,19 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
         const { x, y } = comp.position;
 
         // Dynamic sizes based on mode
-        const iconW = isFullScreen ? 56 : 40; // w-14 vs w-10
-        const iconH = isFullScreen ? 56 : 40;
-        const compW = isFullScreen ? 120 : 100;
+        const iconH = isFullScreen ? 56 : 48; // h-14 vs h-12
+        const typesCount = (comp.mergedTypes || [comp.type]).length;
+        const compW = (isFullScreen ? 120 : 100) + (typesCount > 1 ? (typesCount - 1) * 45 : 0);
 
-        const iconLeft = (compW - iconW) / 2;
+        // The icon container width is roughy 40px per icon + gaps
+        const iconContainerW = (isFullScreen ? 56 : 48) + (typesCount > 1 ? (typesCount - 1) * 40 : 0);
+        const iconLeft = (compW - iconContainerW) / 2;
 
         return {
-            top: { x: x + compW / 2, y: y },              // Top center of icon
-            right: { x: x + iconLeft + iconW, y: y + iconH / 2 }, // Right middle of icon
-            bottom: { x: x + compW / 2, y: y + iconH },   // Bottom center of icon
-            left: { x: x + iconLeft, y: y + iconH / 2 }   // Left middle of icon
+            top: { x: x + compW / 2, y: y },
+            right: { x: x + iconLeft + iconContainerW, y: y + iconH / 2 },
+            bottom: { x: x + compW / 2, y: y + iconH },
+            left: { x: x + iconLeft, y: y + iconH / 2 }
         };
     };
 
@@ -393,6 +439,9 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
             toPoints = { top: toPos, right: toPos, bottom: toPos, left: toPos };
         } else return null;
 
+        const dx = toPoints.top.x - fromPoints.top.x;
+        const dy = toPoints.top.y - fromPoints.top.y;
+
         const sides = ['top', 'right', 'bottom', 'left'];
         let minDist = Infinity;
         let bestS = 'right';
@@ -405,8 +454,23 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                 const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
 
                 let penalty = 0;
-                if (sSide === eSide) penalty = 100;
-                if (sSide === 'right' && eSide === 'left') penalty -= 50;
+                // Favor opposite sides (e.g., right to left, bottom to top)
+                const isOpposite = (sSide === 'right' && eSide === 'left') ||
+                    (sSide === 'left' && eSide === 'right') ||
+                    (sSide === 'bottom' && eSide === 'top') ||
+                    (sSide === 'top' && eSide === 'bottom');
+
+                if (isOpposite) penalty -= 40;
+
+                // Extra bias based on relative alignment
+                const isVerticalLayout = Math.abs(dy) > Math.abs(dx) * 1.5;
+                const isHorizontalLayout = Math.abs(dx) > Math.abs(dy) * 1.5;
+
+                if (isVerticalLayout && (sSide === 'bottom' || sSide === 'top')) penalty -= 30;
+                if (isHorizontalLayout && (sSide === 'left' || sSide === 'right')) penalty -= 30;
+
+                // Strongly discourage same side connections
+                if (sSide === eSide) penalty += 100;
 
                 if (d + penalty < minDist) {
                     minDist = d + penalty;
@@ -440,6 +504,37 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                 if (usage[from.id]) usage[from.id][sides.start].push(conn.id);
                 if (usage[to.id]) usage[to.id][sides.end].push(conn.id);
             }
+        });
+
+        // 2. Fix ordering based on spatial position to prevent "crossing" lines
+        // For each component's usage list, sort the connection IDs by the relative position of the "other" component.
+        Object.keys(usage).forEach(compId => {
+            ['top', 'right', 'bottom', 'left'].forEach(side => {
+                const connIds = usage[compId][side];
+                if (connIds.length > 1) {
+                    connIds.sort((aId, bId) => {
+                        const connA = connections.find(c => c.id === aId);
+                        const connB = connections.find(c => c.id === bId);
+                        if (!connA || !connB) return 0;
+
+                        const otherAId = connA.from === compId ? connA.to : connA.from;
+                        const otherBId = connB.from === compId ? connB.to : connB.from;
+                        const otherA = components.find(c => c.id === otherAId);
+                        const otherB = components.find(c => c.id === otherBId);
+
+                        if (!otherA || !otherB) return 0;
+
+                        // On Left/Right sides, sort by Y (top to bottom)
+                        if (side === 'left' || side === 'right') {
+                            return otherA.position.y - otherB.position.y;
+                        }
+                        // On Top/Bottom sides, sort by X (left to right)
+                        else {
+                            return otherA.position.x - otherB.position.x;
+                        }
+                    });
+                }
+            });
         });
 
         return { usage, decisions };
@@ -1002,7 +1097,7 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                                 style={{
                                     left: component.position.x,
                                     top: component.position.y,
-                                    width: isFullScreen ? '120px' : '100px',
+                                    width: `${(isFullScreen ? 120 : 100) + ((component.mergedTypes || [component.type]).length > 1 ? ((component.mergedTypes || [component.type]).length - 1) * 45 : 0)}px`,
                                     height: isFullScreen ? '90px' : '80px',
                                     zIndex: isConnectionStart ? 50 : 2
                                 }}
@@ -1012,10 +1107,10 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                                     {/* Icon Container - No Box, just Icon or Minimal Styling */}
                                     <div
                                         className={`
-                                            ${isFullScreen ? 'w-14 h-14' : 'w-10 h-10'} rounded-2xl flex items-center justify-center p-2 transition-all duration-200
+                                            ${isFullScreen ? 'h-14' : 'h-12'} w-auto min-w-[3rem] rounded-xl flex items-center justify-center p-2 transition-all duration-200
                                             ${selectedComponentId === component.id
                                                 ? 'bg-white ring-2 ring-blue-500 shadow-lg'
-                                                : 'bg-white/80 hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-md'
+                                                : 'bg-white/90 hover:bg-white border border-slate-200 hover:shadow-md'
                                             }
                                             ${activeFailures[component.id] === 'outage'
                                                 ? 'bg-red-50 ring-2 ring-red-400'
@@ -1026,15 +1121,28 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                                         `}
                                     >
                                         {(() => {
-                                            const IconComponent = getIconForType(component.type);
+                                            const typesToRender = component.mergedTypes || [component.type];
+
                                             // Dynamic color based on failure status
-                                            const iconColor = activeFailures[component.id] === 'outage'
+                                            const getIconColor = (type) => activeFailures[component.id] === 'outage'
                                                 ? '#EF4444'
                                                 : activeFailures[component.id] === 'latency'
                                                     ? '#F59E0B'
-                                                    : meta.color;
+                                                    : COMPONENT_METADATA[type]?.color || '#64748B';
 
-                                            return <IconComponent size={isFullScreen ? 32 : 24} color={iconColor} />;
+                                            return (
+                                                <div className="flex items-center gap-1.5 px-1">
+                                                    {typesToRender.map((type, idx) => {
+                                                        const IconComp = getIconForType(type);
+                                                        return (
+                                                            <React.Fragment key={`${component.id}-${type}-${idx}`}>
+                                                                {idx > 0 && <span className="text-slate-400 font-bold text-xs">+</span>}
+                                                                <IconComp size={isFullScreen ? 28 : 20} color={getIconColor(type)} />
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                </div>
+                                            );
                                         })()}
                                     </div>
 

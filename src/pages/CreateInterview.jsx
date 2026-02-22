@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useRef } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import {
-  Upload, Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Clock,
-  FileText, Lasso, Cpu, Activity, User, AlertTriangle, Layers, Monitor, Server,
-  Shield, CheckCircle, X, Loader2, Play
+  Briefcase, Target, Code, Sparkles, Brain, Zap, TrendingUp, Clock,
+  FileText, Cpu, Activity, User, Layers, Monitor, Server, Settings,
+  Shield, CheckCircle, X, Loader2, Play, ChevronRight, ArrowLeft,
+  Terminal, Database, Globe, Mic, Bug, Heart, Box, Workflow, Rocket
 } from 'lucide-react'
-import logo from "../assets/images/logo.png"
 import Navbar from "../components/Navbar"
-import { sanitizeInput } from "../utils/sanitize"
 import {
   ROUND_TYPES, ROLES, EXPERIENCE_LEVELS, DOMAIN_FOCUS, SYSTEM_CONTEXT_SUGGESTIONS,
   TECH_STACKS, PRODUCTION_MATURITY, YEARS_OF_EXPERIENCE, CANDIDATE_STRENGTHS,
   CANDIDATE_WEAKNESSES, FAILURE_INTENSITY, AMBIGUITY_LEVEL, INTERVIEW_STRICTNESS,
   ROUND_SPECIFIC_CONFIG
 } from "../utils/interviewConstants"
-
 
 const CreateInterview = () => {
   const navigate = useNavigate()
@@ -42,7 +41,6 @@ const CreateInterview = () => {
   })
 
   const [isCompiling, setIsCompiling] = useState(false);
-
 
   // -------------------------------------------------------------------------
   // Handlers
@@ -72,27 +70,11 @@ const CreateInterview = () => {
     }))
   }
 
-  const handleRoundSpecificMultiSelect = (field, value) => {
-    setFormData(prev => {
-      const current = prev.roundSpecific[field] || []
-      const updated = current.includes(value)
-        ? current.filter(item => item !== value)
-        : [...current, value]
-      return {
-        ...prev,
-        roundSpecific: {
-          ...prev.roundSpecific,
-          [field]: updated
-        }
-      }
-    })
-  }
-
   // -------------------------------------------------------------------------
   // Submit
   // -------------------------------------------------------------------------
   const handleGenerate = async (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     sessionStorage.removeItem("interviewEnded")
 
     const getRoundSpecific = (key) => formData.roundSpecific?.[key] || []
@@ -106,7 +88,6 @@ const CreateInterview = () => {
     const roleLabel = isDevops ? 'Site Reliability Engineer' : 'Software Engineer'
     const yearsLabel = (formData.yearsOfExperience || '').replace(/_/g, '-') || '5+'
 
-    // Build the full interviewState with every custom prompt template variable
     const interviewState = {
       customInterview: true,
       roundType: formData.roundType,
@@ -129,18 +110,15 @@ const CreateInterview = () => {
       job_description: formData.jobDescription || '',
       production_context: formData.productionMaturity,
       stress_conditions: `Intensity: ${formData.failureIntensity}`,
-      // SDE Coding
       implementation_domain: formatVal(getRoundSpecific('implementationDomain')),
       system_interaction: formatVal(getRoundSpecific('systemInteraction')),
       constraints_emphasis: formatVal(getRoundSpecific('constraintsEmphasis')),
       failure_environment: formatVal(getRoundSpecific('failureEnvironment')),
       data_interaction_type: formatVal(getRoundSpecific('dataInteractionType')),
-      // DevOps Coding
       automation_type: formatVal(getRoundSpecific('automationType')),
       infra_environment: formatVal(getRoundSpecific('infraEnvironment')),
       safety_expectations: formatVal(getRoundSpecific('safetyExpectations')),
       operational_constraints: formatVal(getRoundSpecific('operationalConstraints')),
-      // Design
       platform_type: formatVal(getRoundSpecific('platformType')),
       deployment_model: formatVal(getRoundSpecific('deploymentModel')),
       operational_expectations: formatVal(getRoundSpecific('operationalExpectations')),
@@ -149,7 +127,6 @@ const CreateInterview = () => {
       system_type: formatVal(getRoundSpecific('systemType')),
       scale_expectation: formatVal(getRoundSpecific('scaleExpectation')),
       data_profile: formatVal(getRoundSpecific('dataProfile')),
-      // Debug
       failure_surface: formatVal(getRoundSpecific('failureSurface')),
       observability: formatVal(getRoundSpecific('observability')),
       dependency_environment: formatVal(getRoundSpecific('dependencyEnvironment')),
@@ -158,7 +135,6 @@ const CreateInterview = () => {
       infra_layer: formatVal(getRoundSpecific('infraLayer')),
       signals_available: formatVal(getRoundSpecific('signalsAvailable')),
       impact_scope: formatVal(getRoundSpecific('impactScope')),
-      // Behavioral
       operational_exposure: formatVal(getRoundSpecific('operationalExposure')),
       leadership_scope: formatVal(getRoundSpecific('leadershipScope')),
       scenario_emphasis: formatVal(getRoundSpecific('scenarioEmphasis')),
@@ -171,9 +147,7 @@ const CreateInterview = () => {
 
     try {
       if (isDebug) {
-        // Debug rounds — call the lightweight compiler and show spinner
         setIsCompiling(true)
-
         const compilerContext = {
           level: formData.level,
           domain_focus: formData.domainFocus,
@@ -202,7 +176,6 @@ const CreateInterview = () => {
         })
 
         if (!response.ok) throw new Error(`Compilation failed: ${response.statusText}`)
-
         const problemData = await response.json()
 
         const problemObj = {
@@ -220,14 +193,9 @@ const CreateInterview = () => {
           }
         })
       } else {
-        // Non-debug rounds — navigate directly, no compiler call
-        if (formData.roundType === 'coding') {
-          navigate('/coding-round', { state: interviewState })
-        } else if (formData.roundType === 'design') {
-          navigate('/design-round', { state: interviewState })
-        } else {
-          navigate('/behavioral-round', { state: interviewState })
-        }
+        if (formData.roundType === 'coding') navigate('/coding-round', { state: interviewState })
+        else if (formData.roundType === 'design') navigate('/design-round', { state: interviewState })
+        else navigate('/behavioral-round', { state: interviewState })
       }
     } catch (error) {
       console.error('Error starting simulation:', error)
@@ -238,13 +206,9 @@ const CreateInterview = () => {
   }
 
   // Validation
-  // Validation
-  // Check if any round specific field is empty if it exists
   const areRoundSpecificsValid = () => {
     const config = ROUND_SPECIFIC_CONFIG[formData.roundType]?.[formData.role]
-    if (!config) return true // No specifics needed
-
-    // Check if each key in config has a corresponding value in formData.roundSpecific
+    if (!config) return true
     return Object.keys(config).every(key => {
       const val = formData.roundSpecific[key]
       return val && val.length > 0
@@ -267,383 +231,444 @@ const CreateInterview = () => {
     areRoundSpecificsValid()
 
   // -------------------------------------------------------------------------
-  // Render Helpers
+  // Mini UI Components
   // -------------------------------------------------------------------------
 
-  const SectionHeader = ({ icon: Icon, title, description }) => (
-    <div className="flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-      <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
-        <Icon className="w-5 h-5 text-cyan-600" />
+  const SectionTitle = ({ icon: Icon, title, step }) => (
+    <div className="flex items-center gap-4 mb-8">
+      <div className="relative">
+        <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-indigo-600" />
+        </div>
+        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center border-2 border-white">
+          {step}
+        </div>
       </div>
       <div>
-        <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-500">{description}</p>
+        <h3 className="text-xl font-black text-slate-900 leading-tight">{title}</h3>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Configuration Segment</p>
       </div>
     </div>
   )
 
   const Label = ({ children, required }) => (
-    <label className="block text-sm font-semibold text-gray-700 mb-2">
+    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
       {children}
-      {required && <span className="text-red-500 ml-1">*</span>}
+      {required && <span className="text-red-500 ml-1 mt-[-2px] inline-block">*</span>}
     </label>
   )
 
-  const Select = ({ name, value, onChange, options, placeholder = "Select..." }) => (
-    <div className="relative">
+  const Select = ({ name, value, onChange, options, placeholder = "Select Option" }) => (
+    <div className="relative group">
       <select
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-cyan-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-colors"
+        className="w-full appearance-none rounded-2xl border border-slate-100 bg-slate-50 px-6 py-4 text-sm font-bold text-slate-700 group-hover:bg-white group-hover:border-indigo-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/50 transition-all cursor-pointer"
       >
-        <option value="">{placeholder}</option>
+        <option value="" disabled>{placeholder}</option>
         {options.map(opt => (
           <option key={opt.id || opt} value={opt.id || opt}>
             {opt.label || opt}
           </option>
         ))}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-        <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-        </svg>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-slate-300 group-hover:text-indigo-400 transition-colors">
+        <ChevronRight className="h-4 w-4 rotate-90" />
       </div>
     </div>
   )
 
-  const CardSelect = ({ options, value, onChange, name }) => (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {options.map((opt) => (
-        <button
-          key={opt.id}
-          type="button"
-          onClick={() => handleChange({ target: { name, value: opt.id } })}
-          className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${value === opt.id
-            ? 'border-cyan-500 bg-cyan-50/50 text-cyan-700 shadow-sm'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-            }`}
-        >
-          <span className="font-semibold">{opt.label}</span>
-        </button>
-      ))}
-    </div>
-  )
-
-  const MultiSelectChips = ({ options, selected, onToggle, labelFn = (o) => o }) => (
-    <div className="flex flex-wrap gap-2">
-      {options.map(opt => {
-        const val = typeof opt === 'string' ? opt : opt.id
-        const label = labelFn(opt)
-        const isSelected = selected.includes(val)
-        return (
-          <button
-            key={val}
-            type="button"
-            onClick={() => onToggle(val)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isSelected
-              ? 'bg-cyan-100 text-cyan-700 ring-1 ring-cyan-500/20'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-          >
-            {label}
-            {isSelected && <CheckCircle className="w-3 h-3 ml-2 inline-block" />}
-          </button>
-        )
-      })}
-    </div>
-  )
-
-  // -------------------------------------------------------------------------
-  // Render Sections
-  // -------------------------------------------------------------------------
-
-  const renderRoundSpecifics = () => {
-    const config = ROUND_SPECIFIC_CONFIG[formData.roundType]?.[formData.role]
-    if (!config) return null
-
-    // Helper to format key 'implementationDomain' -> 'Implementation Domain'
-    const formatLabel = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+  const RoundTypeCard = ({ type }) => {
+    const isSelected = formData.roundType === type.id
+    const iconMap = {
+      'coding': <Terminal className="w-6 h-6" />,
+      'design': <Layers className="w-6 h-6" />,
+      'debug': <Bug className="w-6 h-6" />,
+      'behavioral': <Mic className="w-6 h-6" />
+    }
 
     return (
-      <div className="space-y-6 mt-8 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-        <SectionHeader
-          icon={Layers}
-          title={`${ROLES.find(r => r.id === formData.role)?.label} ${ROUND_TYPES.find(r => r.id === formData.roundType)?.label} Specifics`}
-          description="Fine-tune the scenario details."
-        />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries(config).map(([key, options]) => (
-            <div key={key} className="space-y-2">
-              <Label required>{formatLabel(key)}</Label>
-              <Select
-                name={key}
-                value={formData.roundSpecific[key] || ""}
-                onChange={(e) => handleRoundSpecificChange(key, e.target.value)}
-                options={options.map(o => ({ id: o, label: o }))}
-              />
-            </div>
-          ))}
+      <button
+        type="button"
+        onClick={() => setFormData(p => ({ ...p, roundType: type.id }))}
+        className={`relative flex flex-col p-6 rounded-[2rem] border transition-all duration-500 text-left overflow-hidden group ${isSelected
+          ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200'
+          : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-lg hover:shadow-slate-100'
+          }`}
+      >
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors mb-4 ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+          }`}>
+          {iconMap[type.id] || <Code className="w-6 h-6" />}
         </div>
-      </div>
+        <span className={`text-base font-black transition-colors ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+          {type.label}
+        </span>
+        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
+          Round Module
+        </span>
+        {isSelected && (
+          <motion.div
+            layoutId="activeRound"
+            className="absolute top-4 right-4"
+          >
+            <CheckCircle className="w-5 h-5 text-white" />
+          </motion.div>
+        )}
+      </button>
     )
   }
 
+  const Chip = ({ label, isSelected, onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest border transition-all duration-300 ${isSelected
+        ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200 translate-y-[-2px]'
+        : 'bg-white text-slate-600 border-slate-100 hover:border-indigo-200 hover:bg-slate-50'
+        }`}
+    >
+      {label}
+    </button>
+  )
+
   return (
-    <>
+    <div className="min-h-screen bg-white font-sans selection:bg-indigo-100 selection:text-indigo-900">
       <Navbar />
-      <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-        <div className="max-w-5xl mx-auto">
 
-          <div className="mb-10 text-center">
-            <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">
-              Design Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">Perfect Interview</span>
+      {/* Cinematic Header */}
+      <div className="relative w-full overflow-hidden bg-slate-950 px-6 py-24 md:px-16 md:py-32 mb-12 rounded-b-[4rem]">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 mix-blend-screen animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 mix-blend-screen" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/50 to-slate-950" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors group mb-4"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-bold text-xs uppercase tracking-[0.2em]">Abort Construction</span>
+            </button>
+            <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter">
+              Simulation <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Blueprint.</span>
             </h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Configure every aspect of your mock interview simulation. From system context to failure modes, make it as real as it gets.
+            <p className="text-slate-400 max-w-2xl text-xl font-medium leading-relaxed">
+              Architect your interview environment. Define stack constraints, inject failure vectors, and calibrate evaluating stressors.
             </p>
-          </div>
+          </motion.div>
+        </div>
+      </div>
 
-          <form onSubmit={handleGenerate} className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
 
-            {/* 1. TOP LEVEL: Round Type & Role */}
-            <div className="p-8 border-b border-slate-100 bg-white">
-              <div className="grid grid-cols-1 gap-8">
-                <div>
-                  <Label required>Round Type</Label>
-                  <CardSelect
-                    options={ROUND_TYPES}
-                    value={formData.roundType}
-                    name="roundType"
-                  />
+          {/* Form Content */}
+          <div className="lg:col-span-8 space-y-20">
+
+            {/* Phase 0: Objective */}
+            <motion.section
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-8"
+            >
+              <SectionTitle icon={Rocket} title="Round Objective" step="0" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {ROUND_TYPES.map(type => (
+                  <RoundTypeCard key={type.id} type={type} />
+                ))}
+              </div>
+            </motion.section>
+
+            {/* Phase 1: Environment */}
+            <motion.section
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-12"
+            >
+              <SectionTitle icon={Workflow} title="Environmental Core" step="1" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label required>Target Role Interface</Label>
+                  <Select name="role" value={formData.role} onChange={handleChange} options={ROLES} />
+                </div>
+                <div className="space-y-2">
+                  <Label required>Difficulty Normalization</Label>
+                  <Select name="level" value={formData.level} onChange={handleChange} options={EXPERIENCE_LEVELS} />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label required>Domain Architecture</Label>
+                  <Select name="domainFocus" value={formData.domainFocus} onChange={handleChange} options={DOMAIN_FOCUS.map(d => ({ id: d, label: d }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label required>Production Maturity</Label>
+                  <Select name="productionMaturity" value={formData.productionMaturity} onChange={handleChange} options={PRODUCTION_MATURITY} />
+                </div>
+              </div>
 
-              {/* LEFT COL: Core Settings */}
-              <div className="lg:col-span-8 p-8 border-r border-slate-100">
-
-                {/* Role & Level */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <Label required>Target Role</Label>
-                    <Select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      options={ROLES}
-                    />
-                  </div>
-                  <div>
-                    <Label required>Level</Label>
-                    <Select
-                      name="level"
-                      value={formData.level}
-                      onChange={handleChange}
-                      options={EXPERIENCE_LEVELS}
-                    />
+              <div className="space-y-2">
+                <Label required>System Context Identity</Label>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    name="systemContext"
+                    value={formData.systemContext}
+                    onChange={handleChange}
+                    placeholder="e.g. Distributed Consensus Engine..."
+                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-6 py-5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/50 transition-all placeholder:text-slate-300"
+                  />
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {SYSTEM_CONTEXT_SUGGESTIONS.map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setFormData(p => ({ ...p, systemContext: s }))}
+                        className="text-[10px] font-black uppercase tracking-widest bg-slate-50 text-slate-400 px-3 py-1.5 rounded-lg border border-slate-100 hover:bg-white hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                      >
+                        + {s}
+                      </button>
+                    ))}
                   </div>
                 </div>
+              </div>
 
-                {/* Core Context */}
-                <SectionHeader icon={Cpu} title="Core Context" description="Define the environment and tech stack." />
+              <div className="space-y-4">
+                <Label required>Primary Technology Stack</Label>
+                <div className="flex flex-wrap gap-3">
+                  {TECH_STACKS.map(tech => (
+                    <Chip
+                      key={tech}
+                      label={tech}
+                      isSelected={formData.techStack.includes(tech)}
+                      onClick={() => handleMultiSelect('techStack', tech)}
+                    />
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  name="customTechStack"
+                  value={formData.customTechStack}
+                  onChange={handleChange}
+                  placeholder="Additional specialized stack components (Redis, Kafka, AWS...)"
+                  className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-6 py-4 text-xs font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/50 transition-all placeholder:text-slate-300 italic"
+                />
+              </div>
 
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label required>Domain Focus</Label>
-                      <Select
-                        name="domainFocus"
-                        value={formData.domainFocus}
-                        onChange={handleChange}
-                        options={DOMAIN_FOCUS.map(d => ({ id: d, label: d }))}
-                      />
+              {/* Round Specifics Injection */}
+              {(() => {
+                const config = ROUND_SPECIFIC_CONFIG[formData.roundType]?.[formData.role]
+                if (!config) return null
+                return (
+                  <div className="pt-12 mt-12 border-t border-slate-50 space-y-8">
+                    <div className="flex items-center gap-4">
+                      <Box className="w-5 h-5 text-indigo-400" />
+                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Deep Logic Injection</h4>
                     </div>
-                    <div>
-                      <Label required>Production Maturity</Label>
-                      <Select
-                        name="productionMaturity"
-                        value={formData.productionMaturity}
-                        onChange={handleChange}
-                        options={PRODUCTION_MATURITY}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label required>System Context</Label>
-                    <div className="mb-2">
-                      <input
-                        type="text"
-                        name="systemContext"
-                        value={formData.systemContext}
-                        onChange={handleChange}
-                        placeholder="e.g. High-throughput payment gateway..."
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                      />
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {SYSTEM_CONTEXT_SUGGESTIONS.map(s => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => setFormData(p => ({ ...p, systemContext: s }))}
-                          className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-md hover:bg-cyan-50 hover:text-cyan-600 transition-colors"
-                        >
-                          + {s}
-                        </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {Object.entries(config).map(([key, options]) => (
+                        <div key={key} className="space-y-2">
+                          <Label required>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</Label>
+                          <Select
+                            name={key}
+                            value={formData.roundSpecific[key] || ""}
+                            onChange={(e) => handleRoundSpecificChange(key, e.target.value)}
+                            options={options.map(o => ({ id: o, label: o }))}
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
+                )
+              })()}
+            </motion.section>
 
-                  <div>
-                    <Label required>Tech Stack</Label>
-                    <MultiSelectChips
-                      options={TECH_STACKS}
-                      selected={formData.techStack}
-                      onToggle={(val) => handleMultiSelect('techStack', val)}
-                    />
-                    <input
-                      type="text"
-                      name="customTechStack"
-                      value={formData.customTechStack}
-                      onChange={handleChange}
-                      placeholder="Other (e.g. Temporal, Raft, eBPF...)"
-                      className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                    />
+            {/* Phase 2: Calibrations */}
+            <motion.section
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-12"
+            >
+              <SectionTitle icon={Settings} title="Execution Calibration" step="2" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-2">
+                  <Label required>Failure Intensity</Label>
+                  <Select name="failureIntensity" value={formData.failureIntensity} onChange={handleChange} options={FAILURE_INTENSITY} />
+                </div>
+                <div className="space-y-2">
+                  <Label required>Ambiguity Level</Label>
+                  <Select name="ambiguityLevel" value={formData.ambiguityLevel} onChange={handleChange} options={AMBIGUITY_LEVEL} />
+                </div>
+                <div className="space-y-2">
+                  <Label required>Evaluation Persona</Label>
+                  <Select name="interviewStrictness" value={formData.interviewStrictness} onChange={handleChange} options={INTERVIEW_STRICTNESS} />
+                </div>
+              </div>
+            </motion.section>
+
+            {/* Phase 3: Candidate Profile */}
+            <motion.section
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-12"
+            >
+              <SectionTitle icon={Brain} title="Candidate Profile" step="3" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2 md:col-span-2">
+                  <Label required>Experience Quantization</Label>
+                  <Select name="yearsOfExperience" value={formData.yearsOfExperience} onChange={handleChange} options={YEARS_OF_EXPERIENCE} />
+                </div>
+
+                <div className="space-y-4">
+                  <Label required>Strengths</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {CANDIDATE_STRENGTHS.map(s => (
+                      <Chip
+                        key={s}
+                        label={s}
+                        isSelected={formData.candidateStrengths.includes(s)}
+                        onClick={() => handleMultiSelect('candidateStrengths', s)}
+                      />
+                    ))}
                   </div>
                 </div>
 
-                {/* Dynamic Round Inputs */}
-                {renderRoundSpecifics()}
-
+                <div className="space-y-4">
+                  <Label required>Weaknesses</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {CANDIDATE_WEAKNESSES.map(w => (
+                      <Chip
+                        key={w}
+                        label={w}
+                        isSelected={formData.candidateWeaknesses.includes(w)}
+                        onClick={() => handleMultiSelect('candidateWeaknesses', w)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* RIGHT COL: Signals & Meta */}
-              <div className="lg:col-span-4 bg-slate-50/50 p-8">
+              <div className="space-y-2">
+                <Label>Job Description Synthesis (Optional)</Label>
+                <textarea
+                  name="jobDescription"
+                  value={formData.jobDescription}
+                  onChange={handleChange}
+                  rows={6}
+                  placeholder="Ingest JD to tailor the scenario logic..."
+                  className="w-full rounded-[2rem] border border-slate-100 bg-slate-50 px-8 py-6 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/50 transition-all placeholder:text-slate-300 resize-none"
+                />
+              </div>
+            </motion.section>
 
-                <SectionHeader icon={Activity} title="Realism & Signals" description="Tune the difficulty and evaluation." />
+          </div>
+
+          {/* Sidebar Blueprint Summary */}
+          <div className="lg:col-span-4 lg:sticky lg:top-32 h-fit">
+            <div className="p-8 rounded-[2.5rem] bg-slate-900 border border-slate-800 text-white space-y-8 shadow-2xl overflow-hidden relative group">
+              {/* Background Glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-6">
+                  <History className="w-5 h-5 text-indigo-400" />
+                  <h4 className="text-xs font-black uppercase tracking-[0.3em] text-indigo-400">Blueprint Scan</h4>
+                </div>
 
                 <div className="space-y-6">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-500 font-bold uppercase tracking-widest">Validation Status</span>
+                    <span className={`font-black uppercase tracking-[0.2em] ${canGenerate ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {canGenerate ? 'Stable' : 'Incomplete'}
+                    </span>
+                  </div>
 
-                  <div>
-                    <Label required>Failure Intensity</Label>
-                    <Select
-                      name="failureIntensity"
-                      value={formData.failureIntensity}
-                      onChange={handleChange}
-                      options={FAILURE_INTENSITY}
+                  {/* Progress Line */}
+                  <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: canGenerate ? "100%" : "65%" }}
+                      className={`h-full ${canGenerate ? 'bg-emerald-500' : 'bg-amber-500'}`}
                     />
                   </div>
 
-                  <div>
-                    <Label required>Ambiguity Level</Label>
-                    <Select
-                      name="ambiguityLevel"
-                      value={formData.ambiguityLevel}
-                      onChange={handleChange}
-                      options={AMBIGUITY_LEVEL}
-                    />
-                  </div>
-
-                  <div>
-                    <Label required>Interviewer Persona</Label>
-                    <Select
-                      name="interviewStrictness"
-                      value={formData.interviewStrictness}
-                      onChange={handleChange}
-                      options={INTERVIEW_STRICTNESS}
-                    />
-                  </div>
-
-                  <hr className="border-gray-200 my-6" />
-
-                  <SectionHeader icon={User} title="Candidate Profile" description="Help us calibrate." />
-
-                  <div>
-                    <Label required>Years of Experience</Label>
-                    <Select
-                      name="yearsOfExperience"
-                      value={formData.yearsOfExperience}
-                      onChange={handleChange}
-                      options={YEARS_OF_EXPERIENCE}
-                    />
-                  </div>
-
-                  <div>
-                    <Label required>Your Strengths</Label>
-                    <MultiSelectChips
-                      options={CANDIDATE_STRENGTHS}
-                      selected={formData.candidateStrengths}
-                      onToggle={(val) => handleMultiSelect('candidateStrengths', val)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label required>Known Weaknesses</Label>
-                    <MultiSelectChips
-                      options={CANDIDATE_WEAKNESSES}
-                      selected={formData.candidateWeaknesses}
-                      onToggle={(val) => handleMultiSelect('candidateWeaknesses', val)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Job Description (Optional)</Label>
-                    <textarea
-                      name="jobDescription"
-                      value={formData.jobDescription}
-                      onChange={handleChange}
-                      rows={4}
-                      placeholder="Paste the job description here to tailor the interview context..."
-                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none resize-none"
-                    />
+                  <div className="space-y-4 pt-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol</span>
+                      <span className="text-sm font-black text-white">{ROUND_TYPES.find(r => r.id === formData.roundType)?.label || 'Awaiting Selection'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Interface</span>
+                      <span className="text-sm font-black text-white">{ROLES.find(r => r.id === formData.role)?.label || 'N/A'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Environment</span>
+                      <span className="text-sm font-black text-white truncate">{formData.systemContext || 'Undefined'}</span>
+                    </div>
                   </div>
                 </div>
-
               </div>
 
+              <div className="relative border-t border-slate-800 pt-8 space-y-4">
+                <button
+                  onClick={handleGenerate}
+                  disabled={!canGenerate || isCompiling}
+                  className="w-full relative group/btn flex items-center justify-center gap-3 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] overflow-hidden transition-all disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 group-hover/btn:scale-105 transition-transform duration-500" />
+                  <div className="relative flex items-center gap-3">
+                    {isCompiling ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Initializing...
+                      </>
+                    ) : (
+                      <>
+                        Initiate Simulation
+                        <Play className="w-5 h-5" />
+                      </>
+                    )}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="w-full py-4 text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] hover:text-white transition-colors"
+                >
+                  Clear Blueprint
+                </button>
+              </div>
             </div>
+          </div>
 
-            {/* Footer */}
-            <div className="p-8 border-t border-slate-100 bg-white flex justify-end items-center gap-4 sticky bottom-0 z-10">
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="px-6 py-3 text-slate-600 font-medium hover:text-slate-900 transition-colors"
-                disabled={isCompiling}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={!canGenerate || isCompiling}
-                className="group relative px-8 py-3 rounded-xl font-bold text-white overflow-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 transition-all duration-300 group-hover:scale-105" />
-                <span className="relative flex items-center gap-2">
-                  {isCompiling ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Initializing Simulation...
-                    </>
-                  ) : (
-                    <>
-                      Start Simulation
-                      <Play className="w-5 h-5" />
-                    </>
-                  )}
-                </span>
-              </button>
-            </div>
-
-          </form>
         </div>
       </main>
-    </>
+    </div>
   )
 }
+
+// Minimal Helpers
+const History = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+  </svg>
+)
 
 export default CreateInterview

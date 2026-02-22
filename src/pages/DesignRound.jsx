@@ -14,6 +14,9 @@ const DesignRound = () => {
         role,
         firstName,
         roundProblemData,
+        company,
+        level,
+        type,
         evaluation_intelligence,
         candidate_reasoning_signals
     } = location.state || {};
@@ -730,13 +733,13 @@ const DesignRound = () => {
                 <div className={`flex items-center mx-auto max-w-8xl ${isFullScreen ? 'justify-end' : 'justify-between'}`}>
                     {/* Logo Badge - Hide in Full Screen */}
                     {!isFullScreen && (
-                        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-200 shadow-sm pointer-events-auto">
-                            <img src={logo} alt="Logo" className="w-5 h-5 object-contain" />
+                        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md px-4 py-1 rounded-full border border-gray-200 shadow-sm pointer-events-auto">
+                            <img src={logo} alt="Logo" className="w-10 h-12 object-contain" />
                             <div className="flex flex-col leading-none">
                                 <span className="text-sm font-bold text-slate-900">
-                                    {role || 'Test Interview'}
+                                    {company} {role}
                                 </span>
-                                <span className="text-[10px] text-slate-500 font-medium">Experimental</span>
+                                <span className="text-[10px] text-slate-500 font-medium">Realtime Design Round</span>
                             </div>
                         </div>
                     )}
@@ -885,75 +888,54 @@ const DesignRound = () => {
 
             {/* Bottom Control Bar */}
             {!isFullScreen && (
-                <div className="bg-white border-t border-gray-200 h-20 w-full absolute bottom-0 z-0 flex items-center justify-between px-4 md:px-8 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-                    {/* Left: State Indicator */}
-                    <div className="hidden md:flex items-center gap-4 w-1/3">
-                        <div className="text-sm text-slate-500 font-medium">
-                            {interviewState === 'initializing' && "Connecting..."}
-                            {interviewState === 'ai-speaking' && "AI is speaking..."}
-                            {interviewState === 'user-speaking' && "Listening..."}
-                            {interviewState === 'speechEnd' && "Thinking..."}
-                            {interviewState === 'ended' && "Session Ended"}
-                        </div>
-                    </div>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-gray-50/90 to-transparent z-40">
+                    <div className="max-w-2xl mx-auto flex items-center justify-center gap-6 p-1">
 
-                    {/* Center: Controls */}
-                    <div className="flex items-center justify-center gap-4 w-full md:w-1/3">
-                        {interviewState !== 'ended' && (
-                            <>
-                                {/* Microphone - Hidden in Phase 2 */}
-                                {interviewPhase !== 'design' && (
-                                    <button className={`p-3.5 rounded-full transition-all shadow-lg ${interviewState === 'user-speaking'
-                                        ? 'bg-green-500 text-white animate-pulse'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-transparent hover:border-slate-300'
-                                        }`}
-                                        title="Microphone"
-                                    >
-                                        <Mic className="w-5 h-5" />
-                                    </button>
-                                )}
-
-                                {/* Submit Button - Only in Phase 2 */}
-                                {interviewPhase === 'design' && (
-                                    <button
-                                        onClick={handleSubmitDesign}
-                                        className="px-6 py-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-105 transition-all duration-300 flex items-center gap-2 font-semibold"
-                                    >
-                                        <Send className="w-5 h-5" />
-                                        Submit Design
-                                    </button>
-                                )}
-
-                                {/* Video Button */}
-                                <button className="p-3.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 transition-all border border-transparent hover:border-slate-300" title="Video Off">
-                                    <Video className="w-5 h-5" />
-                                </button>
-
-                                {/* End Call Button */}
-                                <button
-                                    onClick={handleEndInterview}
-                                    className="p-3.5 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg"
-                                    title="End Interview"
-                                >
-                                    <PhoneOff className="w-5 h-5" />
-                                </button>
-                            </>
+                        {/* Microphone - Hidden in Phase 2 */}
+                        {interviewPhase !== 'design' && (
+                            <button
+                                className={`p-4 rounded-full shadow-lg transition-all duration-300 ${isListening
+                                    ? 'bg-green-500 text-white animate-pulse'
+                                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:scale-105'
+                                    }`}
+                                title="Microphone"
+                            >
+                                {isListening ? <Mic className="w-6 h-6" /> : <Mic className="w-4 h-4" />}
+                            </button>
                         )}
-                    </div>
 
-                    {/* Right: Spacer */}
-                    {/* Right: Tools */}
-                    <div className="hidden md:flex justify-end gap-4 w-1/3">
+                        {/* Submit Button - Only in Phase 2 */}
+                        {interviewPhase === 'design' && (
+                            <button
+                                onClick={handleSubmitDesign}
+                                className="px-8 py-4 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-105 transition-all duration-300 flex items-center gap-3 font-semibold"
+                            >
+                                <Send className="w-5 h-5" />
+                                Submit Design
+                            </button>
+                        )}
+
+                        {/* End Call Button */}
+                        <button
+                            onClick={handleEndInterview}
+                            className="p-4 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 hover:scale-105 transition-all duration-300"
+                            title="End Interview"
+                        >
+                            <PhoneOff className="w-4 h-4" />
+                        </button>
+
+                        {/* Toggle Canvas Button */}
                         <button
                             onClick={() => setShowCanvas(!showCanvas)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium border text-sm ${showCanvas
-                                ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
-                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                            className={`p-4 rounded-full shadow-lg transition-all duration-300 border border-slate-200 ${showCanvas
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'bg-white text-slate-700 hover:bg-slate-50'
                                 }`}
+                            title={showCanvas ? 'Hide Canvas' : 'Show Canvas'}
                         >
                             <Layout className="w-4 h-4" />
-                            {showCanvas ? 'Hide Canvas' : 'Show Canvas'}
                         </button>
+
                     </div>
                 </div>
             )}

@@ -7,8 +7,14 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
     const [definedFields, setDefinedFields] = useState(component?.definedFields || []);
     const [assumedFields, setAssumedFields] = useState(component?.assumedFields || []);
 
-    const schema = COMPONENT_CONFIG_SCHEMA[component?.type];
-    const metadata = COMPONENT_METADATA[component?.type];
+    const types = component?.mergedTypes || (component?.type ? [component.type] : []);
+
+    // Aggregate metadata and schemas
+    const allSchemas = types.map(t => COMPONENT_CONFIG_SCHEMA[t]).filter(Boolean);
+    const allMetadata = types.map(t => COMPONENT_METADATA[t]).filter(Boolean);
+
+    // Primary metadata (for colors/labels)
+    const primaryMetadata = allMetadata[0];
 
     useEffect(() => {
         if (component) {
@@ -18,7 +24,7 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
         }
     }, [component]);
 
-    if (!component || !schema) return null;
+    if (!component || allSchemas.length === 0) return null;
 
     const handleFieldChange = (fieldKey, value) => {
         // 🔄 Local State Update Only
@@ -47,10 +53,13 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
         }
     };
 
+    const allFieldsList = Array.from(
+        new Map(allSchemas.flatMap(s => s.fields || []).map(f => [f.key, f])).values()
+    );
+    const allFieldKeys = allFieldsList.map(f => f.key);
+
     const handleSave = () => {
-        const undefinedFields = schema.fields
-            .map(f => f.key)
-            .filter(key => !definedFields.includes(key) && !assumedFields.includes(key));
+        const undefinedFields = allFieldKeys.filter(key => !definedFields.includes(key) && !assumedFields.includes(key));
 
         const updatedComponent = {
             ...component,
@@ -71,7 +80,7 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
     };
 
     // Group fields by their group property
-    const groupedFields = schema.fields.reduce((acc, field) => {
+    const groupedFields = allFieldsList.reduce((acc, field) => {
         const group = field.group || 'Core Configuration';
         if (!acc[group]) acc[group] = [];
         acc[group].push(field);
@@ -152,18 +161,23 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
         );
     };
 
-    const undefinedCount = schema.fields.length - definedFields.length - assumedFields.length;
+    const undefinedCount = allFieldKeys.length - definedFields.length - assumedFields.length;
 
     return (
         <div className="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col border-l border-gray-200">
             {/* Header */}
             <div
                 className="p-4 text-white flex items-center justify-between"
-                style={{ backgroundColor: metadata.color }}
+                style={{ backgroundColor: primaryMetadata.color }}
             >
                 <div>
-                    <h3 className="font-semibold">{metadata.label}</h3>
-                    <p className="text-xs opacity-90 mt-1">
+                    <h3 className="font-semibold text-sm">
+                        {types.length > 1
+                            ? types.map(t => COMPONENT_METADATA[t]?.label).join(' + ')
+                            : primaryMetadata.label
+                        }
+                    </h3>
+                    <p className="text-[10px] opacity-90 mt-1">
                         {definedFields.length} defined • {assumedFields.length} assumed • {undefinedCount} undefined
                     </p>
                 </div>
@@ -203,7 +217,7 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
                                     type="text"
                                     value={config.label || ''}
                                     onChange={(e) => handleFieldChange('label', e.target.value)}
-                                    placeholder={metadata.label}
+                                    placeholder={types.length > 1 ? types.map(t => COMPONENT_METADATA[t]?.label).join(' + ') : primaryMetadata.label}
                                     className="w-full px-2 py-1.5 border border-blue-200 rounded text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-200 bg-white"
                                 />
                             </div>

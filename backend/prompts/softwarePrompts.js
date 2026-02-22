@@ -559,6 +559,9 @@ INTERVIEW PROBLEM
 Problem: {{problem_title}}
 {{problem_statement}}
 
+Relevant Files:
+{{files}}
+
 Language: {{language}}
 Constraints: {{constraints}}
 Production Context: {{production_context}}
