@@ -155,7 +155,7 @@ const NewHeroSection = () => {
                         >
                             <span>Practice Real Interviews</span>
                             <br className="hidden sm:block" />
-                            <span className="text-black">With an <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">AI Interviewer</span></span>
+                            <span className="text-black"> With an <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">AI Interviewer</span></span>
                         </motion.h1>
 
                         {/* Subheadline */}

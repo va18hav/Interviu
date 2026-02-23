@@ -488,7 +488,7 @@ const BehavioralRound = () => {
     return (
         <main className="h-screen bg-slate-50 flex flex-col relative overflow-hidden">
             {/* Header */}
-            <header className="absolute top-0 left-0 right-0 z-50 p-4 md:px-8 md:py-6 pointer-events-none">
+            <header className="absolute top-0 left-0 right-0 z-50 p-2 md:px-1 md:py-1 pointer-events-none">
                 <div className="flex items-center justify-between mx-auto max-w-8xl">
                     <div className="hidden md:flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
                         <div className="flex flex-col leading-tight">
@@ -573,8 +573,8 @@ const BehavioralRound = () => {
                         (interviewState === 'user-speaking' && currentAnswer && currentAnswer.trim().length > 0) ||
                         (interviewState === 'ai-speaking' && (currentQuestion || true)) // Always show StatusBox during AI turn for better feedback
                     ) && (
-                            <div className="absolute bottom-32 left-0 right-0 px-8 pointer-events-none flex justify-center z-30">
-                                <div className="w-full max-w-5xl pointer-events-auto">
+                            <div className="absolute bottom-26 left-0 right-0 px-8 pointer-events-none flex justify-center z-30">
+                                <div className="w-full max-w-6xl pointer-events-auto">
                                     <StatusBox
                                         interviewState={interviewState}
                                         currentQuestion={currentQuestion}
@@ -587,7 +587,7 @@ const BehavioralRound = () => {
             </div>
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 to-transparent z-40">
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-50 to-transparent z-40">
                 <div className="max-w-xl mx-auto flex items-center justify-center gap-6 bg-white/80 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
 
                     {/* Microphone Indicator */}
