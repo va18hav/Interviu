@@ -79,6 +79,31 @@ const PopularInterviewsPage = () => {
         return 'Other';
     };
 
+    const getCompanyColor = (company) => {
+        const colors = {
+            'Google': 'cyan',
+            'Amazon': 'amber',
+            'Meta': 'blue',
+            'Netflix': 'red',
+            'Microsoft': 'sky',
+            'Apple': 'slate',
+            'Nvidia': 'emerald',
+            'OpenAI': 'indigo'
+        };
+        return colors[company] || 'indigo';
+    };
+
+    const colorClasses = {
+        cyan: { bg: "bg-cyan-50", text: "text-cyan-600", accent: "from-cyan-500 to-cyan-600", border: "border-cyan-100", light: "bg-cyan-50/50", glow: "shadow-cyan-200" },
+        amber: { bg: "bg-amber-50", text: "text-amber-600", accent: "from-amber-500 to-amber-600", border: "border-amber-100", light: "bg-amber-50/50", glow: "shadow-amber-200" },
+        blue: { bg: "bg-blue-50", text: "text-blue-600", accent: "from-blue-500 to-blue-600", border: "border-blue-100", light: "bg-blue-50/50", glow: "shadow-blue-200" },
+        red: { bg: "bg-red-50", text: "text-red-600", accent: "from-red-500 to-red-600", border: "border-red-100", light: "bg-red-50/50", glow: "shadow-red-200" },
+        sky: { bg: "bg-sky-50", text: "text-sky-600", accent: "from-sky-500 to-sky-600", border: "border-sky-100", light: "bg-sky-50/50", glow: "shadow-sky-200" },
+        emerald: { bg: "bg-emerald-50", text: "text-emerald-600", accent: "from-emerald-500 to-emerald-600", border: "border-emerald-100", light: "bg-emerald-50/50", glow: "shadow-emerald-200" },
+        indigo: { bg: "bg-indigo-50", text: "text-indigo-600", accent: "from-indigo-500 to-indigo-600", border: "border-indigo-100", light: "bg-indigo-50/50", glow: "shadow-indigo-200" },
+        slate: { bg: "bg-slate-50", text: "text-slate-600", accent: "from-slate-600 to-slate-800", border: "border-slate-200", light: "bg-slate-50/50", glow: "shadow-slate-200" }
+    };
+
     const filteredInterviews = interviews.filter(interview => {
         const category = getRoleCategory(interview.role);
         const roleMatch = roleFilter === 'All' || category === roleFilter;
@@ -211,14 +236,14 @@ const PopularInterviewsPage = () => {
                                 variants={itemVariants}
                                 whileHover={{ y: -8 }}
                                 onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
-                                className="group relative rounded-[2.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 cursor-pointer flex flex-col p-8 space-y-6 overflow-hidden"
+                                className={`group relative rounded-[2.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col p-8 space-y-6 overflow-hidden ${colorClasses[getCompanyColor(interview.company)].glow}`}
                             >
                                 {/* Glass Decorative Overlay */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[5rem] translate-x-8 -translate-y-8 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-700" />
+                                <div className={`absolute top-0 right-0 w-32 h-32 ${colorClasses[getCompanyColor(interview.company)].light} rounded-bl-[5rem] translate-x-8 -translate-y-8 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-700`} />
 
                                 <div className="relative flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 rounded-2xl bg-white shadow-lg border border-slate-100 flex items-center justify-center p-3 group-hover:scale-110 group-hover:border-indigo-100 transition-all duration-500">
+                                        <div className={`w-16 h-16 rounded-2xl bg-white shadow-lg border border-slate-100 flex items-center justify-center p-3 group-hover:scale-110 transition-all duration-500 ${colorClasses[getCompanyColor(interview.company)].border} group-hover:border-opacity-100`}>
                                             <img src={interview.icon_url} alt="" className="w-full h-full object-contain" />
                                         </div>
                                         <div className="space-y-1">
@@ -249,7 +274,7 @@ const PopularInterviewsPage = () => {
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Duration</p>
                                         <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-indigo-500" />
+                                            <Clock className={`w-4 h-4 ${colorClasses[getCompanyColor(interview.company)].text}`} />
                                             <span className="text-sm font-bold text-slate-700">{interview.total_duration}m</span>
                                         </div>
                                     </div>
@@ -257,7 +282,7 @@ const PopularInterviewsPage = () => {
                                     <div className="space-y-1 text-right">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Curriculum</p>
                                         <div className="flex items-center gap-2 justify-end">
-                                            <Layers className="w-4 h-4 text-indigo-500" />
+                                            <Layers className={`w-4 h-4 ${colorClasses[getCompanyColor(interview.company)].text}`} />
                                             <span className="text-sm font-bold text-slate-700">{interview.rounds?.length || 0} Phases</span>
                                         </div>
                                     </div>
@@ -265,7 +290,12 @@ const PopularInterviewsPage = () => {
 
                                 <div className="relative pt-4 overflow-hidden rounded-2xl">
                                     <button
-                                        className="w-full py-4 rounded-2xl bg-slate-50 group-hover:bg-indigo-600 text-slate-900 group-hover:text-white font-black text-xs uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 shadow-sm hover:shadow-indigo-200"
+                                        className={`w-full py-4 rounded-2xl bg-slate-50 hover:bg-opacity-90 group-hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 shadow-sm ${(() => {
+                                            const c = colorClasses[getCompanyColor(interview.company)];
+                                            // Extract the from- part for the hover bg
+                                            const hoverColor = c.accent.split(' ')[0].replace('from-', 'bg-');
+                                            return `group-hover:${hoverColor}`;
+                                        })()}`}
                                     >
                                         Initialize Simulation
                                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

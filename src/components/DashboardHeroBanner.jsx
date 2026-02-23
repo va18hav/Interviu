@@ -21,7 +21,7 @@ const DashboardHeroBanner = ({ firstName }) => {
                 <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-10" />
             </div>
 
-            <div className="relative flex flex-col items-start z-10 px-8 py-10 md:px-12 space-y-6 w-full md:max-w-[65%]">
+            <div className="relative flex flex-col items-start z-10 px-12 py-14 md:px-16 space-y-6 w-full md:max-w-[65%]">
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -38,7 +38,7 @@ const DashboardHeroBanner = ({ firstName }) => {
                     transition={{ delay: 0.3 }}
                     className='font-sans text-4xl lg:text-5xl text-white font-black tracking-tighter leading-tight'
                 >
-                    Hi <span className='text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400'>{firstName},</span>
+                    Hi <span className='text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-300'>{firstName},</span>
                 </motion.h1>
 
                 <motion.p
@@ -57,7 +57,7 @@ const DashboardHeroBanner = ({ firstName }) => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate('/dashboard/all-popular-interviews')}
-                    className="px-8 py-3.5 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center gap-2.5 group"
+                    className="px-8 py-3.5 rounded-2xl bg-indigo-500 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center gap-2.5 group"
                 >
                     Explore All
                     <ChevronRight className="w-4 h-4 text-indigo-300 group-hover:translate-x-1 transition-transform" />

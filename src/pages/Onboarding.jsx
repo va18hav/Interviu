@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     ArrowRight, ArrowLeft, Code2, Cpu, Brain, Bug, Terminal,
@@ -44,16 +45,16 @@ const SkillTagInput = ({ tags, onChange }) => {
 
     return (
         <div
-            className="min-h-[48px] flex flex-wrap gap-2 items-center bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 cursor-text transition-all focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/20"
+            className="min-h-[52px] flex flex-wrap gap-2 items-center bg-white border border-slate-100 rounded-xl px-4 py-2 cursor-text transition-all focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-600/5"
             onClick={() => inputRef.current?.focus()}
         >
             {tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-semibold px-2.5 py-1 rounded-lg animate-fade-in-up">
+                <span key={tag} className="flex items-center gap-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg">
                     {tag}
                     <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
-                        className="text-slate-400 hover:text-white transition-colors ml-0.5"
+                        className="text-slate-400 hover:text-white transition-colors"
                     >
                         <X className="w-3 h-3" />
                     </button>
@@ -65,8 +66,8 @@ const SkillTagInput = ({ tags, onChange }) => {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onBlur={() => { if (input.trim()) addTag(input); }}
-                placeholder={tags.length === 0 ? "e.g. React, Node.js, Docker…" : "Add more…"}
-                className="flex-1 min-w-[120px] bg-transparent text-sm text-slate-700 placeholder:text-slate-400 outline-none border-none"
+                placeholder={tags.length === 0 ? "ADD TECHNICAL STACK..." : ""}
+                className="flex-1 min-w-[120px] bg-transparent text-xs font-bold text-slate-700 placeholder:text-slate-300 outline-none border-none uppercase tracking-widest"
             />
         </div>
     );
@@ -89,334 +90,335 @@ const InterviewCardSkeleton = () => (
 
 // ─── Interview Preview Card ────────────────────────────────────────────────────
 const InterviewCard = ({ interview }) => (
-    <div className="p-4 rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-all duration-300 group">
-        <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+    <div className="p-4 rounded-xl border border-slate-100 bg-white hover:border-indigo-100 transition-all duration-300 group shadow-sm">
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-50 flex items-center justify-center shrink-0">
                 {interview.icon_url || interview.icon_link ? (
-                    <img src={interview.icon_url || interview.icon_link} alt="" className="w-6 h-6 object-contain" />
+                    <img src={interview.icon_url || interview.icon_link} alt="" className="w-6 h-6 object-contain transition-all" />
                 ) : (
-                    <Code2 className="w-5 h-5 text-slate-400" />
+                    <Code2 className="w-4 h-4 text-slate-300" />
                 )}
             </div>
-            <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 truncate">{interview.role}</h4>
-                <p className="text-xs text-slate-400 font-medium capitalize">{interview.company || ''} · {interview.level}</p>
-            </div>
-            <div className="ml-auto shrink-0 flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                <span className="text-xs font-bold text-yellow-600">4.8</span>
-            </div>
-        </div>
-        <div className="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-50">
-            <div className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{interview.total_duration || '45 min'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" />
-                <span>1.2k took this</span>
+            <div className="min-w-0 flex-1">
+                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate">{interview.company}</h4>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{interview.role} · {interview.level}</p>
             </div>
         </div>
     </div>
 );
 
-// ─── Slide 1: Welcome ─────────────────────────────────────────────────────────────
-const SlideWelcome = ({ onNext, onSkip }) => (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8 relative">
-        {/* Ambient bg blobs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[500px] h-[300px] bg-gradient-to-b from-cyan-50 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
+// ─── Slide 1: Welcome (The Initiation) ─────────────────────────────────────────────────────────────
+const SlideWelcome = ({ onNext }) => (
+    <div className="flex flex-col items-center justify-center h-full text-center px-8 py-12 relative overflow-hidden">
+        {/* Cinematic Backdrop Glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[600px] h-[400px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Logo hero */}
-        <div className="relative mb-4 animate-fade-in-up">
-            <img
-                src={fullLogo}
-                alt="Interviu"
-                className="h-12 md:h-30 object-contain mx-auto"
-            />
-            {/* Subtle glow behind logo */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-48 h-20 rounded-full bg-cyan-400/15 blur-3xl" />
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative mb-8"
+        >
+            <div className="relative w-24 h-24 mx-auto flex items-center justify-center p-4">
+                <img
+                    src={fullLogo}
+                    alt="Interviu"
+                    className="w-20 h-24 object-contain"
+                />
             </div>
-            <span className="text-2xl md:text-3xl font-extrabold text-black leading-relaxed block mt-2">Intervi<span className="text-cyan-500 font-bold">u</span></span>
-        </div>
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                Interviu
+            </h1>
+        </motion.div>
 
-        <div className="space-y-3 max-w-sm px-2 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            <p className="text-slate-500 text-sm md:text-base leading-relaxed">
-                A <span className="text-slate-800 font-semibold">realistic interview simulation</span> platform.<br className="hidden md:block" />
-                <span className="md:hidden"> </span>Face a real AI interviewer — which probes like a senior engineer — across every round type that matters.
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-4 max-w-sm"
+        >
+            <p className="text-slate-500 text-sm md:text-lg font-medium leading-relaxed">
+                Ace your technical interviews with <span className="text-slate-900 font-bold">AI simulations</span>.
+                Experience senior-level probing across every critical domain.
             </p>
-        </div>
+        </motion.div>
 
-        {/* Feature badges */}
-        <div className="flex flex-wrap justify-center gap-2 mt-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+        {/* Technical Signals */}
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap justify-center gap-2 mt-10"
+        >
             {[
                 { icon: Brain, label: 'AI Interviewer' },
-                { icon: BarChart3, label: 'In-depth Reports' },
-                { icon: Layers, label: '4 Round Types' },
-                { icon: Zap, label: 'Instant Results' },
+                { icon: BarChart3, label: 'Instant Reports' },
+                { icon: Layers, label: 'Multi-Round' },
+                { icon: Zap, label: 'Real-time Feedback' },
             ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-1.5 bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1.5 rounded-full">
-                    <Icon className="w-3.5 h-3.5 text-cyan-500" />
+                <div key={label} className="flex items-center gap-2 bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 py-2 rounded-xl">
+                    <Icon className="w-3 h-3 text-indigo-600" />
                     {label}
                 </div>
             ))}
-        </div>
+        </motion.div>
 
-        <div className="flex flex-col items-center gap-3 mt-8 w-full max-w-xs animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-12 w-full max-w-xs"
+        >
             <button
                 onClick={onNext}
-                className="w-full py-3.5 rounded-2xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 group"
+                className="w-full py-4 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black transition-all flex items-center justify-center gap-3 shadow-2xl shadow-slate-200"
             >
                 Get Started
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4" />
             </button>
-        </div>
+        </motion.div>
     </div>
 );
 
 // ─── Slide 2: Features Showcase ──────────────────────────────────────────────────────────
 // ─── Slide 2: Company Simulations ──────────────────────────────────────────────────────────
-// ─── Slide 2: Company Simulations ──────────────────────────────────────────────────────────
+// ─── Slide 2: Company Simulations (Technical Benchmarking) ──────────────────────────────────────────────────────────
 const SlideCompanyFeatures = ({ onNext, onBack }) => (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
-        <div className="px-4 md:px-6 pt-6 pb-2 text-center mt-2 md:mt-0">
-            <h2 className="text-xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Practice with Top Companies
+        <div className="px-8 pt-8 pb-4">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                Top Company <span className="text-indigo-600">Interviews</span>
             </h2>
-            <p className="text-base text-slate-500 mt-2 max-w-lg mx-auto">
-                Target specific companies tailored to your role and level.
+            <p className="text-sm text-slate-500 font-medium max-w-lg">
+                Practice with interview questions curated from top tech companies like Google, Amazon, and Meta.
             </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-4 md:px-6 py-4 flex items-center justify-center">
-            <div className="group relative w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 to-blue-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative p-5 md:p-8">
-                    <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                        <Users className="w-8 h-8 text-blue-600" />
+        <div className="flex-1 overflow-y-auto no-scrollbar px-8 py-4">
+            <div className="relative rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden group shadow-sm">
+                <div className="relative p-6 md:p-10 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white shadow-xl shadow-slate-200/50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 border border-slate-100">
+                        <Users className="w-8 h-8 text-indigo-600" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Company Simulations</h3>
-                    <p className="text-base text-slate-500 mb-6 leading-relaxed max-w-lg">
-                        Targeted questions from top tech companies (Google, Amazon, etc.) tailored to specific roles/levels.
-                    </p>
-                    <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-md">
-                        <img src={uiCompanyInterviews} alt="Company Interviews" className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                    <div className="space-y-4 w-full">
+                        <div className="rounded-xl overflow-hidden border border-slate-200 shadow-2xl shadow-indigo-500/10">
+                            <img src={uiCompanyInterviews} alt="Company Interviews" className="w-full h-auto object-cover" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+        <div className="flex items-center justify-between gap-4 px-8 py-6 border-t border-slate-100 bg-slate-50/30">
             <button
                 onClick={onBack}
-                className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
             >
-                <ArrowLeft className="w-4 h-4" /> Back
+                <ArrowLeft className="w-4 h-4" /> Go Back
             </button>
             <button
                 onClick={onNext}
-                className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-md group"
+                className="px-8 py-3.5 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black transition-all flex items-center gap-3 shadow-xl shadow-slate-200"
             >
-                Next <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                Next Step <ArrowRight className="w-4 h-4" />
             </button>
         </div>
     </div>
 );
 
 // ─── Slide 3: Custom Scenarios ──────────────────────────────────────────────────────────
-// ─── Slide 3: Custom Scenarios ──────────────────────────────────────────────────────────
+// ─── Slide 3: Custom Scenarios (Spec-Based Injection) ──────────────────────────────────────────────────────────
 const SlideCustomFeatures = ({ onNext, onBack }) => (
     <div className="flex flex-col flex-1 min-h-0 bg-white">
-        <div className="px-4 md:px-6 pt-6 pb-2 text-center mt-2 md:mt-0">
-            <h2 className="text-xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Build Custom Scenarios
+        <div className="px-8 pt-8 pb-4">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                Custom <span className="text-indigo-600">Scenarios</span>
             </h2>
-            <p className="text-base text-slate-500 mt-2 max-w-lg mx-auto">
-                Create unique interview situations based on any job description.
+            <p className="text-sm text-slate-500 font-medium max-w-lg">
+                Create unique interview sessions by providing your own job descriptions or specific technical topics.
             </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar px-4 md:px-6 py-4 flex items-center justify-center">
-            <div className="group relative w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 to-fuchsia-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative p-5 md:p-8">
-                    <div className="w-16 h-16 rounded-2xl bg-violet-50 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
-                        <Zap className="w-8 h-8 text-violet-600" />
+        <div className="flex-1 overflow-y-auto no-scrollbar px-8 py-4">
+            <div className="relative rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden group shadow-sm">
+                <div className="relative p-6 md:p-10 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white shadow-xl shadow-slate-200/50 flex items-center justify-center mb-6 border border-slate-100">
+                        <Zap className="w-8 h-8 text-indigo-600" />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Custom Scenarios</h3>
-                    <p className="text-base text-slate-500 mb-6 leading-relaxed max-w-lg">
-                        Paste a job description or define a specific scenario, and our AI will generate a unique interview instantly.
-                    </p>
-                    <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-md">
-                        <img src={uiCustomInterviews} alt="Custom Interviews" className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                    <div className="space-y-4 w-full">
+                        <div className="rounded-xl overflow-hidden border border-slate-200 shadow-2xl shadow-indigo-500/10">
+                            <img src={uiCustomInterviews} alt="Custom Interviews" className="w-full h-auto object-cover" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+        <div className="flex items-center justify-between gap-4 px-8 py-6 border-t border-slate-100 bg-slate-50/30">
             <button
                 onClick={onBack}
-                className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
             >
-                <ArrowLeft className="w-4 h-4" /> Back
+                <ArrowLeft className="w-4 h-4" /> Go Back
             </button>
             <button
                 onClick={onNext}
-                className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-md group"
+                className="px-8 py-3.5 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black transition-all flex items-center gap-3 shadow-xl shadow-slate-200"
             >
-                Next <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                Explore Rounds <ArrowRight className="w-4 h-4" />
             </button>
         </div>
     </div>
 );
 
-// ─── Slide 3: Round Types (2-column grid) ────────────────────────────────────────────
+// ─── Slide 4: Round Types (Technical Catalog) ────────────────────────────────────────────
 const SlideRoundTypes = ({ onNext, onBack }) => {
     const rounds = [
         {
             icon: Code2,
             name: 'Coding',
-            tag: 'Code real features',
-            color: 'bg-violet-50 border-violet-100',
-            iconColor: 'text-violet-500',
-            desc: 'Live in-browser IDE. Solve problems under time pressure while the AI watches.',
+            tag: 'Full-Stack Logic',
+            color: 'bg-indigo-50/30 border-slate-100',
+            iconColor: 'text-indigo-600',
+            desc: 'Live evaluation of algorithmic speed and secondary reasoning.',
             img: uiCoding,
         },
         {
             icon: Layers,
-            name: 'System Design',
-            tag: 'Design real systems',
-            color: 'bg-emerald-50 border-emerald-100',
-            iconColor: 'text-emerald-500',
-            desc: 'Design scalable systems on a live canvas as the AI probes every decision.',
+            name: 'Architecture',
+            tag: 'System Design',
+            color: 'bg-indigo-50/30 border-slate-100',
+            iconColor: 'text-indigo-600',
+            desc: 'Canvas-based probing of consistency models and trade-offs.',
             img: uiDesign,
         },
         {
             icon: Bug,
-            name: 'Debug',
-            tag: 'Fix buggy files',
-            color: 'bg-red-50 border-red-100',
-            iconColor: 'text-red-500',
-            desc: 'Multi-file debugging under time pressure. Narrate your thought process as you go.',
+            name: 'Debugging',
+            tag: 'Production Repair',
+            color: 'bg-indigo-50/30 border-slate-100',
+            iconColor: 'text-indigo-600',
+            desc: 'Multi-file incident response and systemic root-cause analysis.',
             img: uiDebug,
         },
         {
             icon: MessageSquare,
             name: 'Behavioral',
-            tag: 'Soft Skills',
-            color: 'bg-blue-50 border-blue-100',
-            iconColor: 'text-blue-500',
-            desc: 'Leadership, conflict & impact questions. The AI probes every answer for depth.',
+            tag: 'Leadership & Impact',
+            color: 'bg-indigo-50/30 border-slate-100',
+            iconColor: 'text-indigo-600',
+            desc: 'High-stakes conflict resolution and architectural leadership.',
             img: uiInterview,
         }
     ];
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 px-4 py-5">
-            <div className="text-center mb-4">
-                <p className="text-xs font-bold tracking-widest text-cyan-500 uppercase mb-1">Interview Types</p>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Every Round Type,<br /><span className="text-slate-400">One Platform</span>
+        <div className="flex flex-col flex-1 min-h-0">
+            <div className="px-8 pt-8 pb-4">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    Interview <span className="text-indigo-600">Types</span>
                 </h2>
+                <p className="text-sm text-slate-500 font-medium">
+                    Master every stage of the technical hiring process.
+                </p>
             </div>
 
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto no-scrollbar">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 px-8 py-4 overflow-y-auto no-scrollbar">
                 {rounds.map(({ icon: Icon, name, tag, color, iconColor, desc, img }, i) => (
-                    <div
+                    <motion.div
                         key={name}
-                        className={`rounded-2xl border ${color} overflow-hidden flex flex-col animate-fade-in-up`}
-                        style={{ animationDelay: `${i * 80}ms` }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className={`rounded-2xl border ${color} overflow-hidden flex flex-col group hover:border-indigo-200 transition-all`}
                     >
-                        {/* Screenshot */}
-                        <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-                            <img src={img} alt={name} className="w-full h-full object-cover object-top" />
+                        <div className="w-full h-32 bg-white overflow-hidden border-b border-slate-100">
+                            <img src={img} alt={name} className="w-full h-full object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-105" />
                         </div>
-                        {/* Info */}
-                        <div className="flex items-start gap-2 p-3">
-                            <div className="w-7 h-7 rounded-lg bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
-                                <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
+                        <div className="flex items-start gap-3 p-4">
+                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+                                <Icon className={`w-4 h-4 ${iconColor}`} />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-900 leading-tight">{name}</p>
-                                <p className="text-[10px] text-slate-400 font-medium">{tag}</p>
+                                <p className="text-xs font-bold text-slate-900 uppercase tracking-widest">{name}</p>
+                                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{tag}</p>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
             </div>
 
-            <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between gap-4 px-8 py-6 border-t border-slate-100 bg-slate-50/30">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Back
+                    <ArrowLeft className="w-4 h-4" /> Go Back
                 </button>
                 <button
                     onClick={onNext}
-                    className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-md group"
+                    className="px-8 py-3.5 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black transition-all flex items-center gap-3 shadow-xl shadow-slate-200"
                 >
-                    Next <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    Show Reports <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </div>
     );
 };
 
-// ─── Slide 3: Report Showcase ────────────────────────────────────────────────────
+// ─── Slide 5: Analytical Dossier (Report Showcase) ────────────────────────────────────────────────────
 const SlideReport = ({ onNext, onBack }) => (
-    <div className="flex flex-col flex-1 min-h-0 px-4 py-5">
-        <div className="text-center mb-4">
-            <p className="text-xs font-bold tracking-widest text-cyan-500 uppercase mb-1">After Every Session</p>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Know Exactly <span className="text-slate-400">Where You Stand</span>
+    <div className="flex flex-col flex-1 min-h-0 bg-white">
+        <div className="px-8 pt-8 pb-4">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                Detailed <span className="text-indigo-600">Reports</span>
             </h2>
-            <p className="text-sm text-slate-500 mt-1.5">Every interview ends with a deep, scored breakdown</p>
+            <p className="text-sm text-slate-500 font-medium max-w-lg">
+                Know exactly where you stand with a deep breakdown of your performance after every session.
+            </p>
         </div>
 
-        {/* Report screenshot */}
-        <div className="flex-1 rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50 min-h-0">
-            <img
-                src={uiReport}
-                alt="Interview Report"
-                className="w-full h-full object-cover object-top"
-            />
+        <div className="flex-1 overflow-y-auto no-scrollbar px-8 py-4">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-2xl shadow-indigo-500/10 bg-slate-50 min-h-0 group">
+                <img
+                    src={uiReport}
+                    alt="Interview Report"
+                    className="w-full h-full object-cover object-top filter grayscale group-hover:grayscale-0 transition-all duration-700"
+                />
+            </div>
         </div>
 
-        {/* Highlights */}
-        <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="grid grid-cols-3 gap-4 px-8 mt-4">
             {[
-                { icon: BarChart3, label: 'Hiring Signal', color: 'text-cyan-500' },
-                { icon: Brain, label: 'Technical Depth', color: 'text-violet-500' },
-                { icon: Zap, label: 'Action Plan', color: 'text-emerald-500' },
+                { icon: BarChart3, label: 'Hiring Signal', color: 'text-indigo-600' },
+                { icon: Brain, label: 'Technical Depth', color: 'text-indigo-600' },
+                { icon: Zap, label: 'Action Plan', color: 'text-indigo-600' },
             ].map(({ icon: Icon, label, color }) => (
-                <div key={label} className="flex flex-col items-center gap-1 bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                <div key={label} className="flex flex-col items-center gap-2 bg-slate-50/50 rounded-xl p-4 border border-slate-100">
                     <Icon className={`w-4 h-4 ${color}`} />
-                    <span className="text-[10px] font-semibold text-slate-600 text-center leading-tight">{label}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 text-center">{label}</span>
                 </div>
             ))}
         </div>
 
-        <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between gap-4 px-8 py-6 border-t border-slate-100 bg-slate-50/30">
             <button
                 onClick={onBack}
-                className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
             >
-                <ArrowLeft className="w-4 h-4" /> Back
+                <ArrowLeft className="w-4 h-4" /> Go Back
             </button>
             <button
                 onClick={onNext}
-                className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-md group"
+                className="px-8 py-3.5 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black transition-all flex items-center gap-3 shadow-xl shadow-slate-200"
             >
-                Set Up Profile <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                Set Up Profile <ArrowRight className="w-4 h-4" />
             </button>
         </div>
     </div>
 );
 
 
-// ─── Slide 4: Profile + Live Preview ───────────────────────────────────────────
+// ─── Slide 6: Protocol Selection (Profile + Live Preview) ───────────────────────────────────────────
 const SlideProfile = ({ onBack, onNextSlide }) => {
     const [role, setRole] = useState('');
     const [level, setLevel] = useState('');
@@ -452,7 +454,7 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
 
             // Fallback logic: if skills provided but no results, try without skills
             if ((!data.interviews || data.interviews.length === 0) && currentSkills.length > 0) {
-                const fallbackRes = await fetch(buildUrl(currentRole, currentLevel, [])); // logic: retry without skills
+                const fallbackRes = await fetch(buildUrl(currentRole, currentLevel, []));
                 const fallbackData = await fallbackRes.json();
                 if (fallbackData.interviews?.length > 0) {
                     setInterviews(fallbackData.interviews);
@@ -471,7 +473,6 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
         }
     }, []);
 
-    // Debounced fetch trigger for skills (immediate for role/level)
     const debouncedFetch = useCallback((r, l, s) => {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => fetchInterviews(r, l, s), 400);
@@ -506,210 +507,148 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
     };
 
     return (
-        <div className="flex flex-col flex-1 min-h-0">
-            {/* Header */}
-            <div className="px-6 pt-6 pb-4 text-center border-b border-slate-100">
-                <div className="inline-flex items-center gap-1.5 bg-cyan-50 border border-cyan-100 text-cyan-600 text-xs font-bold px-3 py-1 rounded-full mb-2">
-                    <Sparkles className="w-3 h-3" />
-                    Your Gateway to the First Interview
-                </div>
-                <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                    Find Your Perfect First Interview
+        <div className="flex flex-col flex-1 min-h-0 bg-white">
+            <div className="px-8 pt-8 pb-4">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    Profile <span className="text-indigo-600">Setup</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
-                    We'll surface the best matches as you fill in your preferences
+                <p className="text-sm text-slate-500 font-medium max-w-lg">
+                    Tell us about your target role and stack to find the perfect interview matches.
                 </p>
             </div>
 
-            {/* Body: two-column on md+ */}
             <div className="flex-1 overflow-y-auto no-scrollbar">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100">
 
                     {/* Left: Form */}
-                    <div className="px-4 md:px-5 py-5 space-y-5">
-                        {/* Role */}
+                    <div className="px-8 py-6 space-y-8">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">
                                 Target Role
                             </label>
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                                 {['SDE', 'DevOps / SRE'].map(r => (
                                     <button
                                         key={r}
                                         type="button"
                                         onClick={() => handleRoleChange(r)}
-                                        className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-semibold border transition-all duration-200 ${role === r
-                                            ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/10'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                        className={`flex-1 py-4 px-4 rounded-xl text-[11px] font-bold uppercase tracking-widest border transition-all duration-300 ${role === r
+                                            ? 'bg-slate-900 text-white border-slate-900 shadow-xl'
+                                            : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
                                             }`}
                                     >
-                                        {r === 'SDE' ? (
-                                            <span className="flex items-center justify-center gap-1.5">
-                                                <Code2 className="w-4 h-4" /> SDE
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center justify-center gap-1.5">
-                                                <Terminal className="w-4 h-4" /> DevOps / SRE
-                                            </span>
-                                        )}
+                                        {r}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Experience Level */}
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">
                                 Experience Level
                             </label>
-                            <div className="flex flex-wrap gap-2">
-                                {[
-                                    { label: 'Junior', sub: '0–2 yrs' },
-                                    { label: 'Mid-Level', sub: '3–5 yrs' },
-                                    { label: 'Senior', sub: '5+ yrs' },
-                                ].map(({ label, sub }) => (
+                            <div className="flex flex-wrap gap-3">
+                                {['Junior', 'Mid-Level', 'Senior'].map((label) => (
                                     <button
                                         key={label}
                                         type="button"
                                         onClick={() => handleLevelChange(label)}
                                         disabled={!role}
-                                        className={`flex-1 min-w-[80px] py-2.5 px-2 rounded-xl border text-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${level === label
-                                            ? 'bg-slate-900 text-white border-slate-900 shadow-md'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                        className={`flex-1 min-w-[100px] py-4 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all duration-300 disabled:opacity-20 ${level === label
+                                            ? 'bg-slate-900 text-white border-slate-900 shadow-xl'
+                                            : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
                                             }`}
                                     >
-                                        <div className="text-xs font-bold">{label}</div>
-                                        <div className={`text-[10px] mt-0.5 ${level === label ? 'text-slate-300' : 'text-slate-400'}`}>{sub}</div>
+                                        {label}
                                     </button>
                                 ))}
                             </div>
-                            {!role && (
-                                <p className="text-[11px] text-slate-400 mt-1.5 pl-1">Select a role first</p>
-                            )}
                         </div>
 
-                        {/* Skills */}
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                                Skills / Tech Stack
-                                <span className="ml-1.5 text-slate-300 normal-case font-normal">(Press Enter or , to add)</span>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">
+                                Skills & Tech Stack
                             </label>
                             <SkillTagInput
                                 tags={skills}
                                 onChange={handleSkillsChange}
                             />
-                            {skills.length > 0 && (
-                                <p className="text-[11px] text-cyan-500 mt-1.5 pl-1 font-medium">
-                                    ✓ Finding interviews matching {skills.length} skill{skills.length > 1 ? 's' : ''}
-                                </p>
-                            )}
                         </div>
                     </div>
 
                     {/* Right: Live Preview */}
-                    <div className="px-4 md:px-5 py-5">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex flex-col">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    {!role ? (
-                                        "Select your details to see tailored interviews"
-                                    ) : (
-                                        <>
-                                            Interviews tailored to your{' '}
-                                            <span className="text-slate-800">
-                                                {[
-                                                    'role',
-                                                    level && 'level',
-                                                    skills.length > 0 && !isFallback && 'skills'
-                                                ].filter(Boolean).join(
-                                                    (skills.length > 0 && !isFallback && level) ? ', ' : ' and '
-                                                ).replace(/, ([^,]*)$/, ' and $1')}
-                                            </span>
-                                        </>
-                                    )}
-                                </p>
-                                {isFallback && (
-                                    <p className="text-[10px] text-amber-600 font-medium mt-0.5">
-                                        No exact skill matches found — displaying filtering by role & level instead.
-                                    </p>
-                                )}
-                            </div>
+                    <div className="px-8 py-6 bg-slate-50/30">
+                        <div className="flex items-center justify-between mb-6">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                {!role ? 'Recommended Interviews' : `Interviews tailored to ${role}${level ? ` · ${level}` : ''}${skills.length > 0 ? ` · ${skills[0]}${skills.length > 1 ? ` +${skills.length - 1}` : ''}` : ''}`}
+                            </span>
                             {fetchLoading && (
-                                <div className="flex items-center gap-1.5 text-xs text-cyan-500 font-medium">
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    Fetching…
-                                </div>
+                                <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
                             )}
                         </div>
 
-                        {/* States */}
                         {!hasFetched && !role ? (
-                            /* Placeholder state */
-                            <div className="flex flex-col items-center justify-center h-40 rounded-2xl border-2 border-dashed border-slate-200 text-center px-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mb-3">
-                                    <Sparkles className="w-5 h-5 text-slate-400" />
-                                </div>
-                                <p className="text-sm font-semibold text-slate-400">Select a role to see<br />matching interviews</p>
+                            <div className="flex flex-col items-center justify-center h-64 rounded-2xl border-2 border-dashed border-slate-200 text-center px-6">
+                                <Sparkles className="w-6 h-6 text-slate-300 mb-4" />
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Select details to see<br />matching interviews</p>
                             </div>
                         ) : fetchLoading ? (
-                            /* Loading skeletons */
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 <InterviewCardSkeleton />
                                 <InterviewCardSkeleton />
                             </div>
                         ) : interviews.length > 0 ? (
-                            /* Interview cards */
                             <div className="space-y-3">
-                                {interviews.map((interview) => (
+                                {interviews.slice(0, 4).map((interview) => (
                                     <InterviewCard key={interview.id} interview={interview} />
                                 ))}
-                                <p className="text-xs text-slate-400 text-center pt-1">
-                                    {skills.length > 0 ? `Sorted by best skill match` : `Most recent for your role`}
-                                </p>
                             </div>
                         ) : (
-                            /* No results */
-                            <div className="flex flex-col items-center justify-center h-40 rounded-2xl border-2 border-dashed border-slate-200 text-center px-4">
-                                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mb-3">
-                                    <Cpu className="w-5 h-5 text-slate-400" />
-                                </div>
-                                <p className="text-sm font-semibold text-slate-400">No matches found</p>
-                                <p className="text-xs text-slate-300 mt-1">Try different skills or level</p>
+                            <div className="flex flex-col items-center justify-center h-64 rounded-2xl border-2 border-dashed border-slate-200 text-center px-6">
+                                <Cpu className="w-6 h-6 text-slate-300 mb-4" />
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">No interviews found</p>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Footer actions */}
-            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+            <div className="flex items-center justify-between gap-4 px-8 py-6 border-t border-slate-100 bg-slate-50/30">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Back
+                    <ArrowLeft className="w-4 h-4" /> Go Back
                 </button>
                 <button
                     onClick={handleSubmit}
                     disabled={!role || !level}
-                    className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 group"
+                    className="px-8 py-3.5 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black disabled:opacity-30 transition-all flex items-center gap-3 shadow-xl shadow-slate-200"
                 >
-                    Next
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    Save & Next <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </div>
     );
 };
 
-// ─── Slide 5: Credits + Recommended Interviews ─────────────────────────────────
+// ─── Slide 7: Protocol Activation (Final) ─────────────────────────────────
 const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews }) => {
     const navigate = useNavigate();
     const [displayInterviews, setDisplayInterviews] = useState(skillInterviews || []);
     const [isFallback, setIsFallback] = useState(false);
     const [fallbackLoading, setFallbackLoading] = useState(false);
+    const [hasScrolled, setHasScrolled] = useState(false);
+    const scrollRef = useRef(null);
 
-    // If skill-matched interviews are empty, fetch fallback (role + level only)
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        // Enable button if user scrolls down at least 100px or reaches near bottom
+        if (scrollTop > 100 || scrollTop + clientHeight >= scrollHeight - 20) {
+            setHasScrolled(true);
+        }
+    };
+
     useEffect(() => {
         if (!skillInterviews || skillInterviews.length === 0) {
             if (!profileData?.role) return;
@@ -732,7 +671,6 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
     }, [skillInterviews, profileData]);
 
     const handleViewInterview = (id) => {
-        // Complete onboarding first, then navigate
         onComplete().then(() => {
             navigate(`/dashboard/interview-details/${id}`);
         }).catch(() => {
@@ -741,50 +679,55 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
     };
 
     return (
-        <div className="flex flex-col flex-1 min-h-0">
-            {/* Header */}
-            <div className="px-6 pt-6 pb-4 text-center border-b border-slate-100 shrink-0">
-                <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full mb-2">
+        <div className="flex flex-col flex-1 min-h-0 bg-white">
+            <div className="px-8 pt-8 pb-4">
+                <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full mb-4">
                     <Zap className="w-3 h-3" />
                     You're all set!
                 </div>
-                <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-                    Ready to Start Interviewing
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    Ready to <span className="text-indigo-600">Start</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">Here's what you get from day one</p>
+                <p className="text-sm text-slate-500 font-medium max-w-lg">
+                    Your profile is ready. We've added 500 free credits to your account to get you started.
+                </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar">
-                {/* Credits Banner - Subtle & Premium (Compact) */}
-                <div className="mx-6 mt-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 relative overflow-hidden group hover:border-slate-200 transition-colors">
-                    <div className="relative flex items-center gap-4">
-                        <div className="shrink-0 w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-100">
-                            <Zap className="w-6 h-6 text-slate-900" />
+            <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto no-scrollbar"
+            >
+                {/* Credits Grant - Premium Activation Treatment */}
+                <div className="mx-8 mt-4 p-8 rounded-2xl bg-slate-900 relative overflow-hidden group shadow-2xl">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110 duration-1000" />
+
+                    <div className="relative flex items-center gap-8">
+                        <div className="shrink-0 w-20 h-20 rounded-2xl bg-white/5 backdrop-blur-xl flex items-center justify-center border border-white/10 shadow-inner">
+                            <Zap className="w-10 h-10 text-white" />
                         </div>
                         <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-3">
-                                    <h3 className="text-base font-bold text-slate-900">Your Free Plan</h3>
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200/50 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
-                                        Starter
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Free Starter Plan</h3>
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-[8px] font-bold uppercase tracking-widest border border-indigo-500/30">
+                                        Starter Pack
                                     </span>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    <div className="flex items-baseline gap-1.5">
-                                        <span className="text-2xl font-extrabold text-slate-900 tracking-tight">500</span>
-                                        <span className="text-slate-500 text-xs font-medium">credits</span>
-                                    </div>
+                                <div className="text-right">
+                                    <div className="text-4xl font-black text-white tracking-tighter">500</div>
+                                    <div className="text-indigo-300/60 text-[9px] font-bold uppercase tracking-widest mt-1">Free Credits</div>
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            <div className="flex flex-wrap gap-x-6 gap-y-3 pt-4 border-t border-white/5">
                                 {[
-                                    '500 minutes of mock interviews for free',
-                                    'Detailed reports',
-                                    'All interview types'
+                                    '500 minutes of interviews',
+                                    'Full performance reports',
+                                    'Access to all rounds'
                                 ].map((label) => (
-                                    <div key={label} className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                    <div key={label} className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                                         <span>{label}</span>
                                     </div>
                                 ))}
@@ -793,100 +736,81 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
                     </div>
                 </div>
 
-                {/* Recommended Interviews */}
-                <div className="px-5 pb-5 mt-5">
-                    <div className="flex items-center gap-2 mb-4 px-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            {isFallback ? 'Recommended for Your Level' : 'Your Matched Interviews'}
-                        </p>
-                        {isFallback && (
-                            <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-500 font-semibold px-2.5 py-0.5 rounded-full">
-                                Based on experience
-                            </span>
-                        )}
+                {/* Final Matches */}
+                <div className="px-8 pb-8 mt-10">
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                            Recommended for you
+                        </span>
+                        <div className="h-px flex-1 bg-slate-100" />
                     </div>
 
-                    {isFallback && (
-                        <p className="text-xs text-slate-400 mb-3 leading-relaxed">
-                            No exact skill matches found — here are interviews tailored to your experience level to get you started.
-                        </p>
-                    )}
-
                     {fallbackLoading ? (
-                        <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
                             <InterviewCardSkeleton />
                             <InterviewCardSkeleton />
                         </div>
                     ) : displayInterviews.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {displayInterviews.map((interview) => (
-                                <div key={interview.id} className="p-4 rounded-2xl border border-slate-100 bg-white hover:border-slate-300 transition-all group">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        {interview.icon_link ? (
-                                            <img src={interview.icon_link} alt={interview.company} className="w-10 h-10 object-contain rounded-xl bg-white p-1.5 border border-slate-100 shadow-sm" />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center">
-                                                <Code2 className="w-5 h-5 text-slate-400" />
-                                            </div>
-                                        )}
-                                        <div className="flex-1 min-w-0 pt-0.5">
-                                            <p className="text-sm font-bold text-slate-900 truncate mb-0.5">{interview.company}</p>
-                                            <p className="text-xs text-slate-500 truncate">{interview.role}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {displayInterviews.slice(0, 4).map((interview) => (
+                                <div key={interview.id} className="p-5 rounded-2xl border border-slate-100 bg-white hover:border-indigo-100 transition-all group relative overflow-hidden">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-50 flex items-center justify-center p-2">
+                                            {interview.icon_link ? (
+                                                <img src={interview.icon_link} alt="" className="w-full h-full object-contain transition-all" />
+                                            ) : (
+                                                <Code2 className="w-5 h-5 text-slate-300" />
+                                            )}
                                         </div>
-                                        {interview._matchCount > 0 && (
-                                            <span className="shrink-0 text-[10px] bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded-full">
-                                                {interview._matchCount} match
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className="text-[10px] font-medium text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 capitalize">
-                                            {interview.level}
-                                        </span>
-                                        <span className="text-[10px] font-medium text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                            {interview.total_duration} min
-                                        </span>
+                                        <div className="min-w-0">
+                                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest truncate mb-1">{interview.company}</h4>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{interview.role}</p>
+                                        </div>
                                     </div>
 
                                     <button
                                         onClick={() => handleViewInterview(interview.id)}
-                                        className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-900 hover:text-white transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-900 bg-slate-50 hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2"
                                     >
                                         Start Interview
-                                        <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                                        <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
                                     </button>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-28 rounded-2xl border-2 border-dashed border-slate-200 text-center px-4">
-                            <p className="text-sm font-semibold text-slate-400">No interviews yet</p>
-                            <p className="text-xs text-slate-300 mt-0.5">Explore all on the dashboard</p>
+                        <div className="py-12 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Loading recommendations...</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+            <div className="flex items-center justify-between gap-4 px-8 py-6 border-t border-slate-100 bg-slate-50/30">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-100 transition-all"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Back
+                    <ArrowLeft className="w-4 h-4" /> Go Back
                 </button>
-                <button
-                    onClick={() => onComplete()}
-                    disabled={loading}
-                    className="w-auto px-8 py-3 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-70 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 group"
-                >
-                    {loading ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Setting up…</>
-                    ) : (
-                        <><CheckCircle2 className="w-4 h-4" /> Complete Setup</>
+                <div className="flex flex-col items-end gap-2">
+                    <button
+                        onClick={() => onComplete()}
+                        disabled={loading || !hasScrolled}
+                        className="px-8 py-3.5 rounded-xl font-bold text-[13px] text-white bg-slate-900 hover:bg-black disabled:opacity-30 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all flex items-center gap-3 shadow-xl shadow-slate-200"
+                    >
+                        {loading ? (
+                            <>Loading...</>
+                        ) : (
+                            <>GO TO DASHBOARD <ArrowRight className="w-4 h-4" /></>
+                        )}
+                    </button>
+                    {!hasScrolled && !loading && (
+                        <span className="text-[10px] font-bold text-indigo-600 animate-pulse uppercase tracking-widest">
+                            Scroll down to see your path
+                        </span>
                     )}
-                </button>
+                </div>
             </div>
         </div>
     );
@@ -894,12 +818,12 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
 
 // ─── Progress Dots ─────────────────────────────────────────────────────────────
 const ProgressDots = ({ total, current }) => (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
         {Array.from({ length: total }).map((_, i) => (
             <div
                 key={i}
-                className={`rounded-full transition-all duration-300 ${i === current
-                    ? 'w-5 h-1.5 bg-slate-900'
+                className={`rounded-full transition-all duration-500 ${i === current
+                    ? 'w-6 h-1.5 bg-indigo-600'
                     : i < current
                         ? 'w-1.5 h-1.5 bg-slate-400'
                         : 'w-1.5 h-1.5 bg-slate-200'
@@ -994,48 +918,67 @@ const Onboarding = ({ onComplete }) => {
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             {/* Scrim */}
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <AnimatePresence>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+                />
+            </AnimatePresence>
 
             {/* Card */}
-            <div
-                className="relative z-10 w-full max-w-[95vw] sm:max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-premium-card"
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative z-10 w-full max-w-[95vw] sm:max-w-3xl bg-white rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-slate-100/10 overflow-hidden flex flex-col"
                 style={{ maxHeight: 'min(90vh, 720px)' }}
             >
                 {/* Top bar: progress + step counter */}
-                <div className="flex items-center justify-between px-6 pt-5 pb-0 shrink-0">
+                <div className="flex items-center justify-between px-8 pt-6 pb-2 shrink-0">
                     <ProgressDots total={TOTAL_SLIDES} current={currentSlide} />
-                    <span className="text-xs font-medium text-slate-400">
-                        {currentSlide + 1} / {TOTAL_SLIDES}
-                    </span>
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Step</span>
+                        <span className="text-xs font-black text-slate-900">
+                            {String(currentSlide + 1).padStart(2, '0')} / {String(TOTAL_SLIDES).padStart(2, '0')}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Slide container */}
                 <div
                     key={animKey}
                     className="flex-1 flex flex-col min-h-0 overflow-hidden"
-                    style={{
-                        animation: `${slideDir === 'right' ? 'slideInFromRight' : 'slideInFromLeft'} 0.35s cubic-bezier(0.16, 1, 0.3, 1) both`
-                    }}
                 >
-                    {slides[currentSlide]}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentSlide}
+                            initial={{ opacity: 0, x: slideDir === 'right' ? 20 : -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: slideDir === 'right' ? -20 : 20 }}
+                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                            className="flex-1 flex flex-col min-h-0"
+                        >
+                            {slides[currentSlide]}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Bot — fixed to bottom-right of the screen, visible across all slides */}
-            <div
-                className="hidden lg:block absolute bottom-[-10%] right-[2%] z-20 pointer-events-none select-none"
-                style={{ animation: 'floatY 3s ease-in-out infinite' }}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="hidden lg:block absolute bottom-[-5%] right-[2%] z-20 pointer-events-none select-none"
+                style={{ animation: 'floatY 4s ease-in-out infinite' }}
             >
                 <div className="relative">
                     <img
                         src={bot}
                         alt="AI Interviewer"
-                        className="hidden lg:block w-20 md:w-72 object-contain drop-shadow-2xl"
+                        className="w-20 md:w-64 mix-blend-luminosity"
                     />
-                    {/* Glow under bot */}
-                    <div className="hidden lg:block absolute bottom-0 left-1/2 -translate-x-1/2 w-14 h-5 rounded-full bg-cyan-400/30 blur-xl pointer-events-none" />
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

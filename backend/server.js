@@ -751,9 +751,9 @@ app.get('/api/onboarding-interviews', async (req, res) => {
                 .sort((a, b) => b._matchCount - a._matchCount); // most matches first
         }
 
-        // Return top 2
-        const topTwo = results.slice(0, 2);
-        res.json({ interviews: topTwo });
+        // Return top 4
+        const topFour = results.slice(0, 4);
+        res.json({ interviews: topFour });
     } catch (error) {
         console.error('[OnboardingInterviews] Error:', error);
         res.status(500).json({ error: error.message });

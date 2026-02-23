@@ -2,7 +2,8 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight, Workflow } from 'lucide-react'
 import { motion } from 'framer-motion'
-import bot from "../assets/images/newbot.png"
+import bot from "../assets/images/bot.png"
+import configure from "../assets/images/configure.png"
 
 const CustomInterviewBanner = ({ firstName }) => {
     const navigate = useNavigate()
@@ -30,7 +31,7 @@ const CustomInterviewBanner = ({ firstName }) => {
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight">
                             Custom Interview <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Configuration.</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-blue-300">Configuration.</span>
                         </h2>
                         <p className="text-base text-slate-400 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
                             Configure your interview session by selecting specific roles, difficulty levels, and technical rounds to match your preparation needs.
@@ -40,7 +41,7 @@ const CustomInterviewBanner = ({ firstName }) => {
                     <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
                         <button
                             onClick={() => navigate('/create')}
-                            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2.5 group"
+                            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-400 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2.5 group"
                         >
                             <Plus className="w-4 h-4" />
                             Create Custom Session

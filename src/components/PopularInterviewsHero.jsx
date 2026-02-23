@@ -39,8 +39,7 @@ const Hexagon = ({ logo, delay = 0 }) => (
         >
             <path
                 d="M50 0 L100 25 L100 90 L50 115 L0 90 L0 25 Z"
-                className="fill-white/80 group-hover:fill-white stroke-slate-200 group-hover:stroke-indigo-300 transition-colors duration-300"
-                strokeWidth="2"
+                className="fill-white/90 group-hover:fill-white transition-colors duration-300"
             />
         </svg>
 
@@ -49,7 +48,7 @@ const Hexagon = ({ logo, delay = 0 }) => (
             <img
                 src={logo.src}
                 alt={logo.name}
-                className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-110"
+                className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110"
             />
         </div>
 

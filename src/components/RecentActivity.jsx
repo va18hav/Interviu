@@ -145,9 +145,9 @@ const RecentActivity = () => {
                                 onClick={() => navigate(`/dashboard/interview-details/${currentInterview.id}`)}
                                 className="flex-1 flex flex-col justify-between cursor-pointer"
                             >
-                                <div className="space-y-4">
+                                <div className="space-y-8">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-[1rem] bg-slate-900 border border-slate-800 flex items-center justify-center p-3 shadow-2xl group-hover:scale-105 transition-transform duration-500">
+                                        <div className="w-14 h-14 rounded-[1rem] bg-white border border-slate-800 flex items-center justify-center p-3 shadow-2xl group-hover:scale-105 transition-transform duration-500">
                                             <img
                                                 src={currentInterview.icon_url}
                                                 alt={currentInterview.company}
@@ -164,7 +164,7 @@ const RecentActivity = () => {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-6">
                                         <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
                                             <span className="text-slate-500">Progress</span>
                                             <span className="text-indigo-400">{currentInterview.progress}%</span>

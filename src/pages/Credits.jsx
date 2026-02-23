@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Zap, Clock, Check, Star, MessageSquare,
+    Sparkles, ShieldCheck, Mail, Send, X, ArrowRight,
+    TrendingUp, Award, BarChart3
+} from 'lucide-react';
 import Navbar from "../components/Navbar";
-import { Zap, CreditCard, Clock, Check, ChevronRight, Shield } from 'lucide-react';
 
 const CreditsPage = () => {
     const [credits, setCredits] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [showRequestModal, setShowRequestModal] = useState(false);
+    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [formData, setFormData] = useState({
+        experience: '',
+        features: '',
+        willingToPay: ''
+    });
 
     useEffect(() => {
         const fetchCredits = async () => {
@@ -26,165 +38,245 @@ const CreditsPage = () => {
         fetchCredits();
     }, []);
 
-    const packages = [
-        {
-            name: "Starter",
-            credits: 5,
-            price: "$9.99",
-            features: ["5 Practice Interviews", "Basic Feedback", "Valid for 30 days"]
-        },
-        {
-            name: "Pro",
-            credits: 20,
-            price: "$29.99",
-            features: ["20 Practice Interviews", "Detailed Feedback", "Priority Support", "Valid for 90 days"],
-            popular: true
-        },
-        {
-            name: "Enterprise",
-            credits: 100,
-            price: "$99.99",
-            features: ["100 Practice Interviews", "Advanced Analytics", "Team Access", "Unlimited Validity"]
-        }
-    ];
+    const handleRequestSubmit = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        // Simulate API call for feedback collection
+        setTimeout(() => {
+            setLoading(false);
+            setFormSubmitted(true);
+            setTimeout(() => {
+                setShowRequestModal(false);
+                setFormSubmitted(false);
+                setFormData({ experience: '', features: '', willingToPay: '' });
+            }, 3000);
+        }, 1500);
+    };
 
-    const history = [
-        { id: 1, type: "Purchase", amount: 20, date: "2024-03-15", status: "Completed" },
-        { id: 2, type: "Usage", amount: -1, date: "2024-03-14", status: "Completed", detail: "Mock Interview #12" },
-        { id: 3, type: "Bonus", amount: 5, date: "2024-03-01", status: "Completed", detail: "Welcome Bonus" },
-    ];
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-slate-50">
             <Navbar credits={credits} />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+            <main className="max-w-7xl mx-auto px-6 py-12">
+                {/* Hero section */}
+                <div className="relative mb-12">
+                    <div className="absolute inset-0 bg-indigo-600 rounded-[2.5rem] blur-[100px] opacity-[0.03] pointer-events-none" />
 
-                {/* Header Section */}
-                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-8 py-12 shadow-2xl sm:px-12 sm:py-16">
-                    <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                        <div className="space-y-4">
-                            <h1 className="text-3xl font-bold text-white sm:text-4xl font-display">
-                                Credits & Billing
-                            </h1>
-                            <p className="max-w-xl text-lg text-slate-300">
-                                Manage your interview credits and subscription plan.
-                                Use credits to start new mock interview sessions.
-                            </p>
-                        </div>
+                    <div className="relative bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+                        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none" />
 
-                        <div className="flex items-center gap-4 rounded-2xl bg-white/10 p-4 backdrop-blur-sm border border-white/10">
-                            <div className="rounded-xl bg-yellow-500/20 p-3">
-                                <Zap className="h-8 w-8 text-yellow-400 fill-yellow-400" />
+                        <div className="flex flex-col lg:flex-row items-center gap-12 p-8 md:p-12">
+                            <div className="flex-1 space-y-6">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest">
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    Early Access Phase
+                                </div>
+                                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                                    Credits & <span className="text-indigo-600">Usage</span>
+                                </h1>
+                                <p className="text-slate-500 font-medium text-lg max-w-xl">
+                                    During our Early Access phase, credits are granted for free to help you sharpen your technical skills. Your feedback sessions directly influence our protocol development.
+                                </p>
+
+                                <div className="flex flex-wrap gap-4 pt-2">
+                                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
+                                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                                        Fair Usage Policy
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
+                                        <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                                        Reward Scaling
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-slate-300">Current Balance</p>
-                                <p className="text-3xl font-bold text-white tabular-nums">{loading ? "..." : credits}</p>
+
+                            <div className="w-full lg:w-[400px]">
+                                <div className="relative p-8 rounded-3xl bg-slate-900 shadow-2xl overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-[40px] -mr-16 -mt-16 transition-transform group-hover:scale-125 duration-1000" />
+
+                                    <div className="relative">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
+                                                <Zap className="w-6 h-6 text-white fill-white" />
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Current Balance</span>
+                                                <div className="text-5xl font-black text-white tabular-nums tracking-tighter mt-1">
+                                                    {loading ? '...' : credits}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setShowRequestModal(true)}
+                                            className="w-full py-4 rounded-xl bg-white text-slate-900 font-black text-[12px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
+                                        >
+                                            Request More Credits
+                                            <ArrowRight className="w-4 h-4" />
+                                        </button>
+
+                                        <p className="mt-4 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                            Refills based on feedback contribution
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Background decorations */}
-                    <div className="absolute top-0 right-0 -translate-y-12 translate-x-12 blur-3xl opacity-20">
-                        <div className="h-64 w-64 rounded-full bg-cyan-500" />
-                    </div>
-                    <div className="absolute bottom-0 left-0 translate-y-12 -translate-x-12 blur-3xl opacity-20">
-                        <div className="h-64 w-64 rounded-full bg-blue-500" />
                     </div>
                 </div>
 
-                {/* Packages */}
-                <section>
-                    <div className="flex items-center gap-3 mb-8">
-                        <CreditCard className="w-6 h-6 text-cyan-500" />
-                        <h2 className="text-2xl font-bold text-slate-900">Purchase Credits</h2>
-                    </div>
-
-                    <div className="grid gap-8 md:grid-cols-3">
-                        {packages.map((pkg) => (
-                            <div key={pkg.name} className={`relative flex flex-col rounded-2xl border p-8 transition-all hover:shadow-xl ${pkg.popular ? 'border-cyan-500 bg-slate-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                                {pkg.popular && (
-                                    <span className="absolute -top-3 right-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-1 text-xs font-bold text-white shadow-lg">
-                                        MOST POPULAR
-                                    </span>
-                                )}
-                                <div className="mb-6">
-                                    <h3 className="text-lg font-semibold text-slate-900">{pkg.name}</h3>
-                                    <div className="mt-4 flex items-baseline">
-                                        <span className="text-4xl font-bold text-slate-900">{pkg.price}</span>
-                                        <span className="ml-2 text-sm text-slate-500">/one-time</span>
-                                    </div>
-                                    <p className="mt-2 text-sm text-cyan-600 font-medium">{pkg.credits} Credits</p>
-                                </div>
-                                <ul className="mb-8 flex-1 space-y-4">
-                                    {pkg.features.map((feature) => (
-                                        <li key={feature} className="flex items-start gap-3">
-                                            <Check className="h-5 w-5 shrink-0 text-cyan-500" />
-                                            <span className="text-sm text-slate-600">{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button className={`w-full rounded-xl py-3 font-semibold transition-all ${pkg.popular ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg hover:shadow-xl' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'}`}>
-                                    Choose {pkg.name}
-                                </button>
+                {/* Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    {[
+                        {
+                            icon: Sparkles,
+                            title: 'How it works',
+                            desc: 'Use credits to start specialized interview rounds. Each session consumes a fixed amount of units.',
+                            color: 'text-amber-500'
+                        },
+                        {
+                            icon: Award,
+                            title: 'Earning More',
+                            desc: 'Complete surveys, report bugs, and share detailed feedback to earn additional calibration units.',
+                            color: 'text-indigo-500'
+                        },
+                        {
+                            icon: BarChart3,
+                            title: 'Future Launch',
+                            desc: 'Early adopters will receive special legacy status and permanent boosters upon public release.',
+                            color: 'text-emerald-500'
+                        }
+                    ].map((item, i) => (
+                        <div key={i} className="p-8 rounded-[1.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div className={`w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-6 border border-slate-50`}>
+                                <item.icon className={`w-6 h-6 ${item.color}`} />
                             </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* History */}
-                <section className="pb-10">
-                    <div className="flex items-center gap-3 mb-8">
-                        <Clock className="w-6 h-6 text-slate-400" />
-                        <h2 className="text-2xl font-bold text-slate-900">Transaction History</h2>
-                    </div>
-
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 border-b border-slate-200">
-                                    <tr>
-                                        <th className="px-6 py-4 font-semibold text-slate-900">Date</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900">Type</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900">Details</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 text-right">Amount</th>
-                                        <th className="px-6 py-4 font-semibold text-slate-900 text-right">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {history.map((item) => (
-                                        <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4 text-slate-500">{item.date}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.type === 'Purchase' || item.type === 'Bonus'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-slate-100 text-slate-800'
-                                                    }`}>
-                                                    {item.type}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-900 font-medium">
-                                                {item.type === 'Purchase' ? `Purchased ${item.amount} Credits` : item.detail || '-'}
-                                            </td>
-                                            <td className={`px-6 py-4 text-right font-bold ${item.amount > 0 ? 'text-green-600' : 'text-slate-600'
-                                                }`}>
-                                                {item.amount > 0 ? '+' : ''}{item.amount}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="text-green-600 font-medium flex items-center justify-end gap-1.5">
-                                                    <Check className="w-3.5 h-3.5" />
-                                                    {item.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-3">{item.title}</h3>
+                            <p className="text-slate-500 text-xs font-medium leading-relaxed uppercase tracking-tight">
+                                {item.desc}
+                            </p>
                         </div>
-                    </div>
-                </section>
+                    ))}
+                </div>
 
             </main>
+
+            {/* Request Modal */}
+            <AnimatePresence>
+                {showRequestModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowRequestModal(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+                        />
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden"
+                        >
+                            {!formSubmitted ? (
+                                <form onSubmit={handleRequestSubmit}>
+                                    <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                                                <MessageSquare className="w-5 h-5 text-indigo-600" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Request Refill</h3>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Early Access Feedback Form</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowRequestModal(false)}
+                                            className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+
+                                    <div className="p-8 space-y-6">
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">How has your experience been so far?</label>
+                                            <textarea
+                                                required
+                                                value={formData.experience}
+                                                onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                                                placeholder="TELL US ABOUT THE REALISM AND QUALITY..."
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase min-h-[100px]"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">What features would you like to see next?</label>
+                                            <textarea
+                                                required
+                                                value={formData.features}
+                                                onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+                                                placeholder="E.G. MORE COMPANIES, TEAM COLLAB..."
+                                                className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs font-bold text-slate-700 placeholder:text-slate-300 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Would you be willing to pay for credits after launch?</label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {['Definitely', 'Probably', 'Maybe', 'Not interested'].map(option => (
+                                                    <button
+                                                        key={option}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, willingToPay: option })}
+                                                        className={`py-3.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${formData.willingToPay === option
+                                                            ? 'bg-slate-900 text-white border-slate-900'
+                                                            : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
+                                                            }`}
+                                                    >
+                                                        {option}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-8 bg-slate-50/50 border-t border-slate-100">
+                                        <button
+                                            type="submit"
+                                            disabled={loading || !formData.willingToPay}
+                                            className="w-full py-4 rounded-xl bg-slate-900 text-white font-black text-[12px] uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-30"
+                                        >
+                                            {loading ? 'Transmitting...' : (
+                                                <>Send Feedback & Request <Send className="w-4 h-4" /></>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-12 text-center flex flex-col items-center gap-6"
+                                >
+                                    <div className="w-20 h-20 rounded-[2rem] bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-xl shadow-emerald-500/10">
+                                        <Send className="w-10 h-10" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Transmission Received</h3>
+                                        <p className="text-slate-500 font-medium max-w-xs">
+                                            Your feedback has been logged. Our systems will reviewed your request for additional units.
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

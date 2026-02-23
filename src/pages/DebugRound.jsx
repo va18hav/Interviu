@@ -84,6 +84,7 @@ const DebugRound = () => {
     const {
         role,
         firstName,
+        lastName,
         ttsProvider = 'azure',
         problemDescription,
         codeContext,
@@ -111,6 +112,7 @@ const DebugRound = () => {
     const [elapsedTime, setElapsedTime] = useState(0);
     const [isListening, setIsListening] = useState(false);
     const [sessionId, setSessionId] = useState(null); // Added session ID state
+    const [initError, setInitError] = useState(false); // New: Tracks initialization failure
 
     // Coding State
     const [files, setFiles] = useState(() => constructInitialFiles(roundProblemData, codeContext));
@@ -332,6 +334,9 @@ const DebugRound = () => {
                 }
                 else if (msg.type === 'error') {
                     console.error('[Server Error]', msg.payload.message);
+                    if (interviewStateRef.current === 'initializing') {
+                        setInitError(true);
+                    }
                 }
             } catch (err) {
                 console.error('[WS] Message Error:', err);
@@ -347,12 +352,24 @@ const DebugRound = () => {
         };
 
         return () => {
-            stopAudioCapture();
-            if (ws.current) ws.current.close();
-            if (audioContext.current) audioContext.current.close();
+            stopAudioServices();
             if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         };
     }, []);
+
+    // 1.2 Initialization Timeout Watchdog
+    useEffect(() => {
+        let timeout;
+        if (interviewState === 'initializing') {
+            timeout = setTimeout(() => {
+                if (interviewStateRef.current === 'initializing') {
+                    console.error('[Session] Initialization timed out (25s)');
+                    setInitError(true);
+                }
+            }, 25000);
+        }
+        return () => clearTimeout(timeout);
+    }, [interviewState]);
 
     // 1.5 Audio Capture Logic (Linear16 PCM)
     const startAudioCapture = async () => {
@@ -412,6 +429,25 @@ const DebugRound = () => {
             mediaStreamRef.current.getTracks().forEach(track => track.stop());
         }
         setIsListening(false);
+    };
+
+    const stopAudioServices = () => {
+        console.log('[Audio] Stopping all audio services...');
+        stopAudioCapture();
+
+        if (audioContext.current) {
+            try {
+                if (audioContext.current.state !== 'closed') {
+                    audioContext.current.suspend();
+                }
+            } catch (err) {
+                console.error('[Audio] Error suspending audio context:', err);
+            }
+        }
+
+        if (ws.current) {
+            console.log('[WS] STT/TTS services detached from hardware.');
+        }
     };
 
 
@@ -775,6 +811,8 @@ const DebugRound = () => {
         }
 
         setIsEndingInterview(true);
+        // IMMEDIATE CLEANUP of STT/TTS (Mic/AudioContext)
+        stopAudioServices();
 
 
         try {
@@ -843,33 +881,31 @@ const DebugRound = () => {
     // if (isEndingInterview) { ... }
 
     return (
-        <main className="h-screen bg-gray-50 flex flex-col relative overflow-hidden">
+        <main className="h-screen bg-slate-50 flex flex-col relative overflow-hidden">
             {/* Background */}
-            <div className="absolute inset-0 z-0 pointer-events-none opacity-40" style={{
-                backgroundImage: 'radial-gradient(circle at center, #bfdbfe 0%, transparent 70%)'
+            <div className="absolute inset-0 z-0 pointer-events-none opacity-20" style={{
+                backgroundImage: 'radial-gradient(circle at center, #818cf8 0%, transparent 70%)'
             }}></div>
 
             {/* Header */}
-            <header className="absolute top-0 left-0 right-0 z-50 px-6 py-2 pointer-events-none">
+            <header className="absolute top-0 left-0 right-0 z-50 px-8 py-6 pointer-events-none">
                 <div className="flex items-center justify-between mx-auto max-w-8xl">
-                    {/* Logo Badge */}
-                    <div className="flex items-center bg-white/90 backdrop-blur-md px-4 py-1 rounded-full border border-gray-200 shadow-sm pointer-events-auto">
-                        <img src={logo} alt="Logo" className="w-10 h-12 object-contain" />
-                        <div className="flex flex-col leading-none">
-                            <span className="text-sm font-bold text-slate-900">
-                                {company} {role}
+                    <div className="flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
+                        <div className="flex flex-col leading-tight">
+                            <span className="text-sm font-black text-slate-900 tracking-tight">
+                                {company} • {role}
                             </span>
-                            <span className="text-[10px] text-slate-500 font-medium">Realtime Debugging Round</span>
+                            <span className="text-[10px] text-indigo-600 font-black uppercase tracking-[0.2em] mt-0.5">Debug Protocol</span>
                         </div>
                     </div>
 
-                    <div className="flex gap-3 pointer-events-auto">
-
-
-                        {/* Timer Badge */}
-                        <div className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200 shadow-sm flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                            <div className="font-mono text-sm font-semibold text-slate-900 tabular-nums">
+                    <div className="flex gap-4 pointer-events-auto">
+                        <div className="bg-white/80 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-3 transition-all duration-500 hover:scale-[1.02]">
+                            <div className="relative">
+                                <div className={`w-2.5 h-2.5 rounded-full ${isListening ? 'bg-green-500' : 'bg-slate-300'}`}></div>
+                                {isListening && <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>}
+                            </div>
+                            <div className="font-mono text-base font-black text-slate-900 tabular-nums tracking-wider">
                                 {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                             </div>
                         </div>
@@ -911,23 +947,24 @@ const DebugRound = () => {
 
                         <div className={`flex gap-4 h-full w-full ${!showCode ? 'items-stretch p-4' : 'max-h-[80vh]'}`}>
                             {/* Left Side: Video Cards */}
-                            <div className={`flex gap-4 transition-all duration-500 ${!showCode ? 'flex-row w-full h-full' : 'flex-col w-[30%] min-w-[300px]'}`}>
+                            <div className={`flex gap-4 transition-all duration-500 ${!showCode ? 'flex-row w-full h-full' : 'flex-col w-[30%] min-w-[320px]'}`}>
                                 {/* AI Interviewer Card */}
-                                <div className="relative flex-1 min-h-[250px]">
+                                <div className={`relative flex-1 ${!showCode ? 'min-h-[400px]' : 'min-h-[220px]'}`}>
                                     <InterviewerCard interviewState={interviewState} />
-                                    <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 z-20">
-                                        <p className="text-white text-xs font-medium">AI Interviewer</p>
+                                    <div className="absolute bottom-6 left-6 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 z-20 shadow-2xl">
+                                        <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">Senior Analyst</p>
                                     </div>
                                 </div>
 
                                 {/* User Card */}
-                                <div className="relative flex-1 min-h-[250px]">
+                                <div className={`relative flex-1 ${!showCode ? 'min-h-[400px]' : 'min-h-[220px]'}`}>
                                     <UserCard
                                         interviewState={interviewState}
                                         firstName={firstName}
+                                        lastName={lastName}
                                     />
-                                    <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10">
-                                        <p className="text-white text-xs font-medium">{firstName || "You"}</p>
+                                    <div className="absolute bottom-6 left-6 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 z-20 shadow-2xl">
+                                        <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">{firstName || "Candidate"} {lastName || ""}</p>
                                     </div>
                                 </div>
                             </div>
@@ -955,10 +992,10 @@ const DebugRound = () => {
                     {/* Status Box - Show User OR Interviewer transcript */}
                     {interviewState !== 'initializing' && interviewState !== 'ended' && interviewState !== 'speechEnd' && (
                         (interviewState === 'user-speaking' && currentAnswer && currentAnswer.trim().length > 0) ||
-                        (interviewState === 'ai-speaking' && currentQuestion && currentQuestion.trim().length > 0)
+                        (interviewState === 'ai-speaking' && (currentQuestion || true))
                     ) && (
-                            <div className="absolute bottom-24 left-0 right-0 px-4 pointer-events-none flex justify-center z-30">
-                                <div className="w-full max-w-6xl pointer-events-auto">
+                            <div className="absolute bottom-32 left-0 right-0 px-8 pointer-events-none flex justify-center z-30">
+                                <div className="w-full max-w-5xl pointer-events-auto">
                                     <StatusBox
                                         interviewState={interviewState}
                                         currentQuestion={currentQuestion}
@@ -971,54 +1008,116 @@ const DebugRound = () => {
             </div>
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-gray-50/90 to-transparent z-40">
-                <div className="max-w-2xl mx-auto flex items-center justify-center gap-6 p-1">
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 to-transparent z-40">
+                <div className="max-w-xl mx-auto flex items-center justify-center gap-6 bg-white/80 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
 
-                    {/* Microphone - Hidden in Phase 2 */}
+                    {/* Microphone Indicator */}
                     {interviewPhase !== 'implementation' && (
-                        <button
-                            className={`p-4 rounded-full shadow-lg transition-all duration-300 ${isListening
-                                ? 'bg-green-500 text-white animate-pulse'
-                                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:scale-105'
-                                }`}
-                        >
-                            {isListening ? <Mic className="w-6 h-6" /> : <Mic className="w-4 h-4" />}
-                        </button>
+                        <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-all duration-500 ${isListening ? 'bg-green-50 text-green-600' : 'bg-slate-50 text-slate-400'
+                            }`}>
+                            <div className="relative">
+                                <Mic className={`w-5 h-5 ${isListening ? 'animate-pulse' : ''}`} />
+                                {isListening && <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping"></div>}
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest">{isListening ? 'Active' : 'Muted'}</span>
+                        </div>
                     )}
 
                     {/* Submit Button - Only in Phase 2 */}
                     {interviewPhase === 'implementation' && (
                         <button
                             onClick={handleSubmitSolution}
-                            className="px-8 py-4 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-105 transition-all duration-300 flex items-center gap-3 font-semibold"
+                            className="group relative px-10 py-4 rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-200 overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95"
                         >
-                            <Send className="w-5 h-5" />
-                            Submit Solution
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative flex items-center gap-3">
+                                <Send className="w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                                <span className="text-xs font-black uppercase tracking-[0.2em]">Commit Patch</span>
+                            </div>
                         </button>
                     )}
+
+                    {/* Separator */}
+                    <div className="w-px h-8 bg-slate-100" />
+
+                    {/* View Controls */}
+                    <button
+                        onClick={() => setShowCode(!showCode)}
+                        className={`group relative flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden transition-all duration-500 ${showCode ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-900 text-white'
+                            }`}
+                        title={showCode ? 'Expand View' : 'Workspace View'}
+                    >
+                        {showCode ? <Layout className="w-5 h-5" /> : <Code className="w-5 h-5" />}
+                    </button>
 
                     {/* End Call Button */}
                     <button
                         onClick={handleEndInterview}
-                        className="p-3.5 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg"
+                        className="group relative flex items-center justify-start w-14 h-14 rounded-2xl bg-slate-900 overflow-hidden transition-all duration-500 hover:w-44 hover:bg-red-600 shadow-xl"
                         title="End Interview"
                     >
-                        <PhoneOff className="w-5 h-5" />
-                    </button>
-
-                    <button
-                        onClick={() => setShowCode(!showCode)}
-                        className={`p-4 rounded-full shadow-lg transition-all duration-300 border border-slate-200 ${showCode
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-white text-slate-700 hover:bg-slate-50'
-                            }`}
-                        title={showCode ? 'Hide Code' : 'Show Code'}
-                    >
-                        <Terminal className="w-4 h-4" />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex items-center w-full px-4.5 gap-3 relative z-10">
+                            <PhoneOff className="w-5 h-5 text-white flex-shrink-0 transition-transform duration-500 group-hover:rotate-[135deg]" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">
+                                Terminate Session
+                            </span>
+                        </div>
                     </button>
 
                 </div>
             </div>
+
+            {/* Premium Connection Error Modal */}
+            <AnimatePresence>
+                {initError && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative bg-white/90 backdrop-blur-2xl rounded-[3rem] shadow-2xl max-w-md w-full p-10 border border-white/40 overflow-hidden text-center"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 opacity-50" />
+
+                            <div className="relative space-y-8">
+                                <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto ring-8 ring-indigo-50/50">
+                                    <AlertTriangle className="w-10 h-10 text-indigo-600" />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Connection Protocol Failed</h3>
+                                    <p className="text-slate-500 font-medium leading-relaxed">
+                                        We encountered a synchronization error with our AI interviewer.
+                                        <span className="block mt-2 font-bold text-slate-900">Your credits have not been deducted.</span>
+                                    </p>
+                                </div>
+
+                                <div className="pt-4">
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-indigo-600 transition-all shadow-xl hover:shadow-indigo-200/50 uppercase tracking-[0.2em] text-xs"
+                                    >
+                                        Synchronize Again
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/dashboard')}
+                                        className="w-full py-4 mt-2 text-slate-400 font-black hover:text-slate-900 transition-colors uppercase tracking-[0.2em] text-[10px]"
+                                    >
+                                        Return to Dashboard
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </main>
     );
 };
