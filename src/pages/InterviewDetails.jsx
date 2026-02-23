@@ -23,31 +23,33 @@ const InterviewDetails = () => {
                 if (!id) return;
                 setCompletedRounds({});
 
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}?type=${type || 'sde'}`);
-                const data = await response.json();
+                const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Interview not found');
-                }
+                const [detailsRes, progressRes] = await Promise.all([
+                    fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}?type=${type || 'sde'}`),
+                    userCreds?.id ? fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}&interviewId=${id}`) : Promise.resolve({ ok: false })
+                ]);
+
+                const [detailsData, progressData] = await Promise.all([
+                    detailsRes.json(),
+                    progressRes.ok ? progressRes.json() : Promise.resolve([])
+                ]);
+
+                if (!detailsRes.ok) throw new Error(detailsData.error || 'Interview not found');
 
                 setInterview({
-                    ...data,
-                    icon_url: data.icon_link
+                    ...detailsData,
+                    icon_url: detailsData.icon_link
                 });
 
-                const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
-                if (userCreds?.id) {
-                    const progressRes = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}&interviewId=${id}`);
-                    if (progressRes.ok) {
-                        const progressData = await progressRes.json();
-                        const completedMap = {};
-                        progressData.forEach(item => {
-                            if (item.round_id && !completedMap[item.round_id]) {
-                                completedMap[item.round_id] = item;
-                            }
-                        });
-                        setCompletedRounds(completedMap);
-                    }
+                if (progressData.length > 0) {
+                    const completedMap = {};
+                    progressData.forEach(item => {
+                        if (item.round_id && !completedMap[item.round_id]) {
+                            completedMap[item.round_id] = item;
+                        }
+                    });
+                    setCompletedRounds(completedMap);
                 }
             } catch (err) {
                 console.error("Error fetching interview details:", err);
@@ -251,13 +253,8 @@ const InterviewDetails = () => {
                 <section className="relative rounded-[2.5rem] bg-slate-900 overflow-hidden shadow-2xl shadow-indigo-100/50 group">
                     {/* Animated Abstract Backgrounds */}
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-slate-900 to-black pointer-events-none" />
-                    <motion.div
-                        animate={{
-                            backgroundPosition: ['0% 0%', '100% 100%'],
-                            opacity: [0.3, 0.5, 0.3]
-                        }}
-                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 opacity-30 blur-[100px]"
+                    <div
+                        className="absolute inset-0 opacity-30 animate-pulse-slow blur-3xl transition-opacity duration-1000"
                         style={{ background: 'radial-gradient(circle at 70% 30%, rgba(99, 102, 241, 0.4), transparent)' }}
                     />
 

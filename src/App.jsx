@@ -12,7 +12,6 @@ import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import './App.css'
 
-import DashboardBlack from "./pages/DashboardBlack"
 import Onboarding from "./pages/Onboarding"
 import CreditsPage from "./pages/Credits"
 
@@ -25,6 +24,7 @@ import InterviewReport from "./pages/InterviewReport"
 
 // Test Pages
 import TestDesignUI from "./pages/TestDesignUI"
+import DashboardBlack from "./pages/DashboardBlack"
 
 const App = () => {
   return (
@@ -57,6 +57,8 @@ const App = () => {
 
           {/* Test Routes */}
           <Route path="/dashboard/test-design-ui" element={<TestDesignUI />} />
+          <Route path="/dashboard-black" element={<DashboardBlack />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Mic, Video, PhoneOff, Send, Layout, Code, Terminal, Play, Loader2, Volume2, VolumeX, AlertTriangle, TerminalIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 import InterviewerCard from '../components/InterviewerCard';
 import UserCard from '../components/UserCard';
@@ -50,7 +51,7 @@ const CodingRound = () => {
         "main.js": "// Write your solution here\n"
     });
     const [activeFile, setActiveFile] = useState("problem.txt");
-    const [showCode, setShowCode] = useState(true); // Default visible for coding
+    const [showCode, setShowCode] = useState(window.innerWidth >= 1024); // Default hidden on mobile
 
     const [currentAnswer, setCurrentAnswer] = useState(null); // User's transcript
     const [currentQuestion, setCurrentQuestion] = useState(null); // AI's Karaoke text
@@ -369,7 +370,7 @@ ${formatList(critical_requirements)}
             }
 
             const input = audioContext.current.createMediaStreamSource(stream);
-            const processor = audioContext.current.createScriptProcessor(4096, 1, 1);
+            const processor = audioContext.current.createScriptProcessor(2048, 1, 1);
 
             input.connect(processor);
             processor.connect(audioContext.current.destination);
@@ -895,9 +896,9 @@ ${formatList(critical_requirements)}
     return (
         <main className="h-screen bg-slate-50 flex flex-col relative overflow-hidden">
             {/* Header */}
-            <header className="absolute top-0 left-0 right-0 z-50 px-8 py-6 pointer-events-none">
+            <header className="absolute top-0 left-0 right-0 z-50 p-4 md:px-8 md:py-6 pointer-events-none">
                 <div className="flex items-center justify-between mx-auto max-w-8xl">
-                    <div className="flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
+                    <div className="hidden md:flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
                         <div className="flex flex-col leading-tight">
                             <span className="text-sm font-black text-slate-900 tracking-tight">
                                 {company} • {role}
@@ -907,12 +908,12 @@ ${formatList(critical_requirements)}
                     </div>
 
                     <div className="flex gap-4 pointer-events-auto">
-                        <div className="bg-white/80 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-3 transition-all duration-500 hover:scale-[1.02]">
+                        <div className="bg-white/80 backdrop-blur-xl px-4 py-2.5 md:px-5 md:py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-2 md:gap-3 transition-all duration-500 hover:scale-[1.02]">
                             <div className="relative">
                                 <div className={`w-2.5 h-2.5 rounded-full ${isListening ? 'bg-green-500' : 'bg-slate-300'}`}></div>
                                 {isListening && <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>}
                             </div>
-                            <div className="font-mono text-base font-black text-slate-900 tabular-nums tracking-wider">
+                            <div className="font-mono text-sm md:text-base font-black text-slate-900 tabular-nums tracking-wider">
                                 {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                             </div>
                         </div>
@@ -921,7 +922,7 @@ ${formatList(critical_requirements)}
             </header>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col relative z-0 justify-center p-4 pb-24 md:px-8">
+            <div className={`flex-1 flex flex-col relative z-0 justify-center pb-24 ${!showCode ? 'p-4 md:px-8' : 'p-0 md:px-8 pt-20 md:pt-4'}`}>
                 <div className="w-full max-w-8xl mx-auto h-full flex flex-col justify-center">
                     {interviewState === 'initializing' ? (
                         <div className="flex items-center justify-center h-full">
@@ -952,11 +953,11 @@ ${formatList(critical_requirements)}
                         </div>
                     ) : (
 
-                        <div className={`flex gap-4 h-full w-full ${!showCode ? 'items-stretch p-4' : 'max-h-[80vh]'}`}>
+                        <div className={`flex gap-4 h-full w-full ${!showCode ? 'items-stretch' : 'max-h-full md:max-h-[80vh]'}`}>
                             {/* Left Side: Video Cards */}
-                            <div className={`flex gap-4 transition-all duration-500 ${!showCode ? 'flex-row w-full h-full' : 'flex-col w-[30%] min-w-[320px]'}`}>
+                            <div className={`flex gap-4 transition-all duration-500 ${!showCode ? 'flex-col md:flex-row w-full h-full' : 'hidden md:flex flex-col w-[30%] min-w-[320px]'}`}>
                                 {/* AI Interviewer Card */}
-                                <div className={`relative flex-1 ${!showCode ? 'min-h-[400px]' : 'min-h-[220px]'}`}>
+                                <div className={`relative flex-1 ${!showCode ? 'min-h-[200px] md:min-h-[400px]' : 'min-h-[220px]'}`}>
                                     <InterviewerCard interviewState={interviewState} />
                                     <div className="absolute bottom-6 left-6 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 z-20 shadow-2xl">
                                         <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">Technical Lead</p>
@@ -964,7 +965,7 @@ ${formatList(critical_requirements)}
                                 </div>
 
                                 {/* User Card */}
-                                <div className={`relative flex-1 ${!showCode ? 'min-h-[400px]' : 'min-h-[220px]'}`}>
+                                <div className={`relative flex-1 ${!showCode ? 'min-h-[200px] md:min-h-[400px]' : 'min-h-[220px]'}`}>
                                     <UserCard
                                         interviewState={interviewState}
                                         firstName={firstName}
@@ -978,7 +979,7 @@ ${formatList(critical_requirements)}
 
                             {/* Right Side: Code Editor (70%) */}
                             {showCode && (
-                                <div className="flex-1 relative bg-[#1e1e1e] rounded-lg shadow-lg overflow-hidden border border-slate-700 animate-in fade-in slide-in-from-right duration-700 flex flex-col">
+                                <div className="flex-1 relative bg-[#1e1e1e] rounded-none md:rounded-lg shadow-lg overflow-hidden border-0 md:border border-slate-700 animate-in fade-in slide-in-from-right duration-700 flex flex-col">
                                     <MonacoEditorWindow
                                         files={files}
                                         activeFile={activeFile}

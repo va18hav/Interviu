@@ -184,7 +184,7 @@ const Navbar = ({ credits: propCredits }) => {
 
     return (
         <>
-            <header className="border-b border-slate-400/50 bg-white/50 backdrop-blur-xl sticky top-0 z-40 w-full ">
+            <header className="border-b border-slate-200/60 bg-white/70 backdrop-blur-2xl sticky top-0 z-40 w-full transition-all duration-300">
                 <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
@@ -202,10 +202,10 @@ const Navbar = ({ credits: propCredits }) => {
                         </div>
 
                         {/* Desktop Nav-bar */}
-                        <nav ref={navRef} className='hidden md:flex items-center gap-1 bg-slate-100/30 p-1.5 rounded-full border border-slate-300/50 relative'>
+                        <nav ref={navRef} className='hidden md:flex items-center gap-1 bg-slate-50 p-1.5 rounded-full border border-slate-200/60 shadow-inner relative'>
                             {/* Sliding Indicator */}
                             <div
-                                className="absolute top-1.5 bottom-1.5 bg-white rounded-full shadow-sm transition-all duration-300 ease-out"
+                                className="absolute top-1.5 bottom-1.5 bg-white rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] ring-1 ring-slate-900/5 transition-all duration-300 ease-out"
                                 style={{
                                     left: `${indicatorStyle.left}px`,
                                     width: `${indicatorStyle.width}px`,
@@ -219,9 +219,9 @@ const Navbar = ({ credits: propCredits }) => {
                                         key={link.path}
                                         ref={el => addToNavLinksRef(el, index)}
                                         to={link.path}
-                                        className={`relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${isActive(link.path)
-                                            ? 'text-black'
-                                            : 'text-slate-600 hover:text-slate-900'
+                                        className={`relative z-10 px-4 py-2 text-sm font-semibold tracking-wide transition-colors duration-300 ${isActive(link.path)
+                                            ? 'text-slate-900'
+                                            : 'text-slate-500 hover:text-slate-700'
                                             }`}
                                     >
                                         {link.name === 'My Interviews' ? 'Interviews' : link.name === 'Create Interview' ? 'Create' : link.name}
@@ -239,7 +239,7 @@ const Navbar = ({ credits: propCredits }) => {
                                     onClick={() => setShowProfile(prev => !prev)}
                                     className="group flex items-center gap-2 cursor-pointer focus:outline-none"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-500 to-gray-800 flex items-center justify-center text-white font-semibold shadow-lg ring-2 ring-transparent group-hover:ring-cyan-500/50 transition-all duration-300 text-sm">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-semibold shadow-md ring-2 ring-white group-hover:ring-indigo-100 transition-all duration-300 text-sm">
                                         {firstName?.charAt(0).toUpperCase() + lastName?.charAt(0).toUpperCase() || 'U'}
                                     </div>
                                 </button>
@@ -250,11 +250,12 @@ const Navbar = ({ credits: propCredits }) => {
                                 showProfile && (
                                     <>
                                         <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
-                                        <div className="absolute top-full mt-4 right-0 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden ring-1 ring-black/5 origin-top-right animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="absolute top-full mt-3 right-0 w-80 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] z-50 overflow-hidden origin-top-right animate-in fade-in zoom-in-95 duration-200">
                                             {/* Header */}
-                                            <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-500 to-gray-800 flex items-center justify-center text-xl text-white font-bold shadow-md ring-4 ring-white">
+                                            <div className="p-6 border-b border-slate-100 relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
+                                                <div className="flex items-center gap-4 relative z-10">
+                                                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-2xl text-white font-bold shadow-lg ring-4 ring-white">
                                                         {firstName?.charAt(0).toUpperCase() || 'U'}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
@@ -263,21 +264,21 @@ const Navbar = ({ credits: propCredits }) => {
                                                         </p>
                                                         <p className="text-xs text-slate-500 truncate mb-2">{email}</p>
 
-                                                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 w-fit">
-                                                            <Zap className="w-3 h-3 text-yellow-600 fill-yellow-600" />
-                                                            <span className="text-xs font-bold text-yellow-700">{credits} Credits</span>
+                                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 w-fit shadow-[0_2px_10px_-2px_rgba(0,0,0,0.2)] mt-1">
+                                                            <Zap className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                                                            <span className="text-[11px] font-black tracking-wider text-white uppercase">{credits} Credits</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Menu Items */}
-                                            <div className="p-2 flex flex-col gap-1">
-                                                <div className="px-3 py-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Account</div>
+                                            <div className="p-2 gap-0.5 flex flex-col">
+                                                <div className="px-4 py-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Account</div>
 
-                                                <Link to="/profile" onClick={() => setShowProfile(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all duration-200 group">
-                                                    <div className="p-2 rounded-lg bg-slate-100 border border-slate-200 group-hover:border-slate-300 transition-colors">
-                                                        <User size={16} className="text-slate-500 group-hover:text-cyan-600 transition-colors" />
+                                                <Link to="/profile" onClick={() => setShowProfile(false)} className="flex items-center gap-4 px-4 py-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all duration-200 group">
+                                                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-sm group-hover:border-indigo-200 group-hover:shadow-indigo-100 transition-all">
+                                                        <User size={18} className="text-slate-400 group-hover:text-indigo-600 transition-colors" />
                                                     </div>
                                                     <div className="flex flex-col">
                                                         <span className="font-semibold">Profile Settings</span>
@@ -285,9 +286,9 @@ const Navbar = ({ credits: propCredits }) => {
                                                     </div>
                                                 </Link>
 
-                                                <Link to="/credits" onClick={() => setShowProfile(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all duration-200 group">
-                                                    <div className="p-2 rounded-lg bg-slate-100 border border-slate-200 group-hover:border-slate-300 transition-colors">
-                                                        <Zap size={16} className="text-slate-500 group-hover:text-yellow-500 transition-colors" />
+                                                <Link to="/credits" onClick={() => setShowProfile(false)} className="flex items-center gap-4 px-4 py-3 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all duration-200 group">
+                                                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-sm group-hover:border-yellow-200 group-hover:shadow-yellow-100 transition-all">
+                                                        <Zap size={18} className="text-slate-400 group-hover:text-yellow-500 transition-colors" />
                                                     </div>
                                                     <div className="flex flex-col">
                                                         <span className="font-semibold">Credits & Billing</span>
@@ -301,10 +302,10 @@ const Navbar = ({ credits: propCredits }) => {
                                             <div className="p-2">
                                                 <button
                                                     onClick={handleSignOut}
-                                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group"
+                                                    className="w-full flex items-center gap-4 px-4 py-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-2xl transition-all duration-200 group"
                                                 >
-                                                    <div className="p-2 rounded-lg bg-red-50 border border-red-100 group-hover:border-red-200 transition-colors">
-                                                        <LogOut size={16} className="text-red-500 group-hover:text-red-600 transition-colors" />
+                                                    <div className="p-2.5 rounded-xl bg-white border border-red-100 shadow-sm group-hover:border-red-200 group-hover:shadow-red-100 transition-all">
+                                                        <LogOut size={18} className="text-red-400 group-hover:text-red-600 transition-colors" />
                                                     </div>
                                                     <span className="font-semibold">Sign out</span>
                                                 </button>
@@ -338,28 +339,29 @@ const Navbar = ({ credits: propCredits }) => {
             {/* Mobile Menu Slide-over */}
             <div
                 ref={menuRef}
-                className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white border-l border-slate-200 z-[66] md:hidden shadow-2xl flex flex-col translate-x-full"
+                className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white/95 backdrop-blur-2xl border-l border-slate-200/60 z-[66] md:hidden shadow-[-20px_0_60px_-15px_rgba(0,0,0,0.1)] flex flex-col translate-x-full overflow-hidden"
             >
                 {/* Mobile Menu Header */}
-                <div className="relative p-6 border-b border-slate-100 flex flex-col gap-6 bg-gradient-to-b from-slate-50 to-transparent">
+                <div className="relative p-8 border-b border-slate-100/60 flex flex-col gap-6 overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-60"></div>
                     <button
                         onClick={() => setShowMobileMenu(false)}
                         className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors z-50 cursor-pointer"
                     >
                         <X size={20} />
                     </button>
-                    <div ref={addToRefs} className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-xl text-white font-bold shadow-lg ring-4 ring-white">
+                    <div ref={addToRefs} className="flex items-center gap-4 relative z-10">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-2xl text-white font-bold shadow-lg ring-4 ring-white">
                             {firstName?.charAt(0).toUpperCase() || 'U'}
                         </div>
                         <div className="flex flex-col min-w-0">
                             <h3 className="text-slate-900 font-bold text-lg truncate">
                                 {firstName ? `Hi, ${firstName}` : 'Welcome'}
                             </h3>
-                            <div className="flex items-center gap-2 mt-1">
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                                    <Zap className="w-3 h-3 text-yellow-600 fill-yellow-600" />
-                                    <span className="text-xs font-bold text-yellow-700">{credits} Credits</span>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 w-fit shadow-[0_2px_10px_-2px_rgba(0,0,0,0.2)]">
+                                    <Zap className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                                    <span className="text-[11px] font-black tracking-wider text-white uppercase">{credits} Credits</span>
                                 </div>
                             </div>
                         </div>
@@ -378,14 +380,14 @@ const Navbar = ({ credits: propCredits }) => {
                             ref={addToRefs}
                             to={link.path}
                             onClick={() => setShowMobileMenu(false)}
-                            className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 group ${isActive(link.path)
-                                ? 'bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-100'
+                            className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-200 group ${isActive(link.path)
+                                ? 'bg-indigo-50/50 border border-indigo-100/50 shadow-sm'
                                 : 'hover:bg-slate-50 border border-transparent'
                                 }`}
                         >
-                            <div className={`p-2.5 rounded-lg transition-colors ${isActive(link.path)
-                                ? 'bg-cyan-500 text-white'
-                                : 'bg-slate-100 text-slate-500 group-hover:text-slate-900 group-hover:bg-slate-200'
+                            <div className={`p-2.5 rounded-xl transition-all shadow-sm ${isActive(link.path)
+                                ? 'bg-indigo-600 text-white shadow-indigo-200'
+                                : 'bg-white border border-slate-200/60 text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-200'
                                 }`}>
                                 <link.icon size={20} className={isActive(link.path) ? 'stroke-[2.5px]' : ''} />
                             </div>
@@ -394,7 +396,7 @@ const Navbar = ({ credits: propCredits }) => {
                                 {link.name}
                             </span>
                             {isActive(link.path) && (
-                                <ChevronRight size={16} className="ml-auto text-cyan-500" />
+                                <ChevronRight size={16} className="ml-auto text-indigo-500" />
                             )}
                         </Link>
                     ))}
@@ -407,9 +409,9 @@ const Navbar = ({ credits: propCredits }) => {
                         ref={addToRefs}
                         to="/profile"
                         onClick={() => setShowMobileMenu(false)}
-                        className="flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-slate-50 border border-transparent transition-all duration-200 group"
+                        className="flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-slate-50 border border-transparent transition-all duration-200 group"
                     >
-                        <div className="p-2.5 rounded-lg bg-slate-100 text-slate-500 group-hover:text-slate-900 group-hover:bg-slate-200 transition-colors">
+                        <div className="p-2.5 rounded-xl bg-white border border-slate-200/60 shadow-sm transition-all text-slate-400 group-hover:text-indigo-600 group-hover:border-indigo-200">
                             <User size={20} />
                         </div>
                         <span className="text-base font-medium text-slate-600 group-hover:text-slate-900">
@@ -419,16 +421,16 @@ const Navbar = ({ credits: propCredits }) => {
                 </div>
 
                 {/* Mobile Menu Footer */}
-                <div className="p-4 border-t border-slate-100 bg-slate-50">
+                <div className="p-6 border-t border-slate-100/60 bg-slate-50/50">
                     <button
                         ref={addToRefs}
                         onClick={handleSignOut}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white border border-slate-200 text-red-600 font-medium hover:bg-red-50 hover:border-red-200 transition-all active:scale-[0.98] shadow-sm"
+                        className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white border border-red-100 text-red-600 font-bold hover:bg-red-50 hover:border-red-200 transition-all active:scale-[0.98] shadow-sm group"
                     >
-                        <LogOut size={18} />
+                        <LogOut size={18} className="group-hover:scale-110 transition-transform" />
                         <span>Sign Out</span>
                     </button>
-                    <p ref={addToRefs} className="text-center text-[10px] text-slate-400 mt-4">
+                    <p ref={addToRefs} className="text-center text-[10px] text-slate-400 font-bold tracking-widest uppercase mt-6">
                         Interviu v1.0.0 &copy; 2026
                     </p>
                 </div>

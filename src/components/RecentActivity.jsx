@@ -55,20 +55,17 @@ const RecentActivity = () => {
     const variants = {
         enter: (direction) => ({
             y: 20,
-            opacity: 0,
-            filter: 'blur(8px)'
+            opacity: 0
         }),
         center: {
             zIndex: 1,
             y: 0,
-            opacity: 1,
-            filter: 'blur(0px)'
+            opacity: 1
         },
         exit: (direction) => ({
             zIndex: 0,
             y: -20,
-            opacity: 0,
-            filter: 'blur(8px)'
+            opacity: 0
         })
     };
 
@@ -136,8 +133,7 @@ const RecentActivity = () => {
                             exit="exit"
                             transition={{
                                 y: { type: "spring", stiffness: 300, damping: 30 },
-                                opacity: { duration: 0.2 },
-                                filter: { duration: 0.2 }
+                                opacity: { duration: 0.2 }
                             }}
                             className="h-full flex flex-col"
                         >

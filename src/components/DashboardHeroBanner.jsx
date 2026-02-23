@@ -15,10 +15,9 @@ const DashboardHeroBanner = ({ firstName }) => {
         >
             {/* Cinematic Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-0 right-0 w-[50%] h-full bg-gradient-to-l from-indigo-600/20 to-transparent opacity-50 blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[100px]" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
-                <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-10" />
+                <div className="absolute top-0 right-0 w-[50%] h-full bg-gradient-to-l from-indigo-500/10 to-transparent opacity-30 blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-3xl" />
+                <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
             </div>
 
             <div className="relative flex flex-col items-start z-10 px-12 py-14 md:px-16 space-y-6 w-full md:max-w-[65%]">
@@ -73,7 +72,7 @@ const DashboardHeroBanner = ({ firstName }) => {
                 <img
                     src={bot}
                     alt=""
-                    className="w-full h-full object-contain object-right drop-shadow-[0_0_40px_rgba(79,70,229,0.2)] group-hover:scale-105 transition-transform duration-1000"
+                    className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_30px_rgba(79,70,229,0.15)] group-hover:scale-105 transition-transform duration-700"
                 />
             </motion.div>
         </motion.div>

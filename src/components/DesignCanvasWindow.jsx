@@ -114,7 +114,7 @@ const DesignCanvasWindow = ({
     return (
         <div className="flex h-full w-full bg-[#f8fafc] text-[#334155] overflow-hidden font-sans rounded-lg relative border border-slate-200 shadow-xl">
             {/* 1. Activity Bar (Far Left) - Matching Monaco style */}
-            <div className="w-12 flex flex-col items-center py-3 bg-[#e2e8f0] shrink-0 z-20 border-r border-slate-300">
+            <div className="hidden md:flex w-12 flex-col items-center py-3 bg-[#e2e8f0] shrink-0 z-20 border-r border-slate-300">
                 <div className="flex flex-col gap-6">
                     <div
                         onClick={() => {

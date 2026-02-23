@@ -66,8 +66,8 @@ const PopularInterviewsHero = () => {
         <section className="relative w-full rounded-[2.5rem] overflow-hidden bg-slate-950 px-6 py-16 md:px-16 md:py-24 mb-12 shadow-2xl">
             {/* Cinematic Background Elements */}
             <div className="absolute inset-0">
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 mix-blend-screen animate-pulse" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 mix-blend-screen" />
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 mix-blend-screen animate-pulse" />
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 mix-blend-screen" />
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-overlay" />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/50 to-slate-950" />
             </div>

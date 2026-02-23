@@ -5,7 +5,7 @@ const StatusBox = ({ interviewState, currentQuestion, currentAnswer }) => {
     return (
         <div className="w-full">
             {/* Live Caption Style Box - Premium Light Glass */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/40 transition-all duration-500 transform hover:scale-[1.01]">
+            <div className="bg-white/40 md:bg-white/80 backdrop-blur-md md:backdrop-blur-xl rounded-[2.5rem] shadow-lg md:shadow-2xl overflow-hidden border border-white/40 transition-all duration-500 transform hover:scale-[1.01]">
                 <div className="px-8 py-6">
                     <div className="flex items-start gap-6">
                         {/* Avatar / Icon based on state */}
@@ -38,8 +38,8 @@ const StatusBox = ({ interviewState, currentQuestion, currentAnswer }) => {
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-2">
                                 <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md ${interviewState === "ai-speaking" ? "text-indigo-600 bg-indigo-50" :
-                                        interviewState === "user-speaking" ? "text-green-600 bg-green-50" :
-                                            "text-slate-500 bg-slate-50"
+                                    interviewState === "user-speaking" ? "text-green-600 bg-green-50" :
+                                        "text-slate-500 bg-slate-50"
                                     }`}>
                                     {interviewState === "initializing" && "System Protocol"}
                                     {interviewState === "ai-speaking" && "Interviewer Signal"}

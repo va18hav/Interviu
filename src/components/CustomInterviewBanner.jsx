@@ -18,7 +18,7 @@ const CustomInterviewBanner = ({ firstName }) => {
             {/* Cinematic Background */}
             <div className="absolute inset-0">
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-600/20 to-transparent opacity-50" />
-                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
                 <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
             </div>
 
@@ -49,7 +49,7 @@ const CustomInterviewBanner = ({ firstName }) => {
                         </button>
 
                         <button
-                            onClick={() => navigate('/dashboard/history')}
+                            onClick={() => navigate('/dashboard/all-previous-interviews')}
                             className="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-800 bg-white/5 backdrop-blur-md text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                         >
                             View History

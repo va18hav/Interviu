@@ -53,22 +53,23 @@ const InterviewDashboard = () => {
 
       setUserCredentials(storedUser);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/dashboard?userId=${storedUser.id}`);
-      const data = await response.json();
+      const [dashboardRes, customRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard?userId=${storedUser.id}`),
+        fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${storedUser.id}`)
+      ]);
 
-      if (!response.ok) throw new Error(data.error || "Failed to load dashboard data");
+      const [dashboardData, customData] = await Promise.all([
+        dashboardRes.json(),
+        customRes.ok ? customRes.json() : Promise.resolve([])
+      ]);
 
-      setCredits(data.profile?.credits || 0);
-      setPopularInterviews(data.popularInterviews || []);
+      if (!dashboardRes.ok) throw new Error(dashboardData.error || "Failed to load dashboard data");
 
-      // Fetch custom interviews separately
-      const customRes = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${storedUser.id}`);
-      if (customRes.ok) {
-        const customData = await customRes.json();
-        setPastInterviews(customData || []);
-      }
+      setCredits(dashboardData.profile?.credits || 0);
+      setPopularInterviews(dashboardData.popularInterviews || []);
+      setPastInterviews(customData || []);
 
-      if (data.profile && !data.profile.onboarding_completed) {
+      if (dashboardData.profile && !dashboardData.profile.onboarding_completed) {
         setTimeout(() => {
           setShowOnboarding(true);
         }, 500);
@@ -141,7 +142,7 @@ const InterviewDashboard = () => {
     <div className="min-h-screen bg-[#FDFDFF] font-sans selection:bg-indigo-100 selection:text-indigo-900">
       <Navbar />
 
-      <div className={`transition-all duration-700 ${showOnboarding ? 'blur-xl scale-[0.98] pointer-events-none' : ''}`}>
+      <div className={`transition-[filter,transform] duration-700 ${showOnboarding ? 'blur-xl scale-[0.98] pointer-events-none' : ''}`}>
 
         {/* Integrated Command Center Hero */}
         <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-6 md:py-10">
@@ -175,20 +176,21 @@ const InterviewDashboard = () => {
               {popularInterviews.slice(0, 6).map((interview, index) => (
                 <motion.div
                   key={interview.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={index < 3 ? { opacity: 1, y: 0 } : undefined}
+                  whileInView={index >= 3 ? { opacity: 1, y: 0 } : undefined}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
                   onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
-                  className="group relative bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden"
+                  className="group relative bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-[transform,shadow,border-color] duration-300 cursor-pointer overflow-hidden"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                   <div className="relative flex items-start justify-between mb-8">
-                    <div className="w-16 h-16 rounded-[1.25rem] bg-slate-50 border border-slate-100 flex items-center justify-center p-3 shadow-sm group-hover:bg-white group-hover:scale-110 transition-all duration-500">
+                    <div className="w-16 h-16 rounded-[1.25rem] bg-slate-50 border border-slate-100 flex items-center justify-center p-3 shadow-sm group-hover:bg-white group-hover:scale-110 transition-[background-color,transform] duration-300">
                       <img src={interview.icon_url} alt="" className="w-full h-full object-contain" />
                     </div>
-                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors ${(() => {
+                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors duration-300 ${(() => {
                       const l = (interview.level || '').toLowerCase();
                       if (l.includes('entry') || l.includes('l3')) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
                       if (l.includes('senior') || l.includes('l5')) return 'bg-amber-50 text-amber-600 border-amber-100';
@@ -200,7 +202,7 @@ const InterviewDashboard = () => {
                   </div>
 
                   <div className="space-y-2 mb-8">
-                    <h3 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                    <h3 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors duration-300 line-clamp-1">
                       {interview.company} {interview.role}
                     </h3>
                     <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
@@ -216,9 +218,9 @@ const InterviewDashboard = () => {
                   </div>
 
                   <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                    <span className="text-[10px] font-black text-slate-400 group-hover:text-indigo-600 uppercase tracking-widest transition-colors">View Details</span>
-                    <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white transition-all duration-500">
-                      <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+                    <span className="text-[10px] font-black text-slate-400 group-hover:text-indigo-600 uppercase tracking-widest transition-colors duration-300">View Details</span>
+                    <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white transition-[background-color,border-color,color] duration-300">
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform duration-300" />
                     </div>
                   </div>
                 </motion.div>
@@ -238,7 +240,7 @@ const InterviewDashboard = () => {
               title="Performance Chronicle"
               subtitle="Historical data from your previous simulations."
               actionLabel="View Full History"
-              onAction={() => navigate('/dashboard/history')}
+              onAction={() => navigate('/dashboard/all-previous-interviews')}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -250,11 +252,12 @@ const InterviewDashboard = () => {
                   return (
                     <motion.div
                       key={interview.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.05 }}
-                      className="group relative bg-white border border-slate-100 rounded-[2.5rem] p-8 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 flex flex-col justify-between"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={index < 3 ? { opacity: 1, scale: 1 } : undefined}
+                      whileInView={index >= 3 ? { opacity: 1, scale: 1 } : undefined}
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: index * 0.05, duration: 0.3 }}
+                      className="group relative bg-white border border-slate-100 rounded-[2.5rem] p-8 hover:shadow-xl hover:shadow-indigo-500/5 transition-[transform,shadow,border-color] duration-300 flex flex-col justify-between"
                     >
                       <div className="flex items-start justify-between mb-8">
                         <div className="flex items-center gap-4">

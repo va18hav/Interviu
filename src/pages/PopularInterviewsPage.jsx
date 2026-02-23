@@ -231,77 +231,13 @@ const PopularInterviewsPage = () => {
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                     >
                         {filteredInterviews.length > 0 ? filteredInterviews.map((interview) => (
-                            <motion.div
+                            <InterviewCard
                                 key={interview.id}
-                                variants={itemVariants}
-                                whileHover={{ y: -8 }}
-                                onClick={() => navigate(`/dashboard/interview-details/${interview.id}?type=${interview.type}`)}
-                                className={`group relative rounded-[2.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col p-8 space-y-6 overflow-hidden ${colorClasses[getCompanyColor(interview.company)].glow}`}
-                            >
-                                {/* Glass Decorative Overlay */}
-                                <div className={`absolute top-0 right-0 w-32 h-32 ${colorClasses[getCompanyColor(interview.company)].light} rounded-bl-[5rem] translate-x-8 -translate-y-8 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-700`} />
-
-                                <div className="relative flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-16 h-16 rounded-2xl bg-white shadow-lg border border-slate-100 flex items-center justify-center p-3 group-hover:scale-110 transition-all duration-500 ${colorClasses[getCompanyColor(interview.company)].border} group-hover:border-opacity-100`}>
-                                            <img src={interview.icon_url} alt="" className="w-full h-full object-contain" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <h4 className="text-xl font-black text-slate-900 leading-tight">
-                                                {interview.role}
-                                            </h4>
-                                            <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">{interview.company}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-2">
-                                    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${(() => {
-                                        const l = (interview.level || '').toLowerCase();
-                                        if (l.includes('junior') || l.includes('entry')) return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                                        if (l.includes('mid') || l.includes('intermediate')) return 'bg-blue-50 text-blue-700 border-blue-100';
-                                        if (l.includes('senior')) return 'bg-indigo-50 text-indigo-700 border-indigo-100';
-                                        return 'bg-slate-50 text-slate-600 border-slate-100';
-                                    })()}`}>
-                                        {interview.level}
-                                    </span>
-                                    <span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white shadow-sm shadow-slate-200">
-                                        {interview.type}
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center justify-between py-6 border-y border-slate-50">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Duration</p>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className={`w-4 h-4 ${colorClasses[getCompanyColor(interview.company)].text}`} />
-                                            <span className="text-sm font-bold text-slate-700">{interview.total_duration}m</span>
-                                        </div>
-                                    </div>
-                                    <div className="w-[1px] h-8 bg-slate-100" />
-                                    <div className="space-y-1 text-right">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Curriculum</p>
-                                        <div className="flex items-center gap-2 justify-end">
-                                            <Layers className={`w-4 h-4 ${colorClasses[getCompanyColor(interview.company)].text}`} />
-                                            <span className="text-sm font-bold text-slate-700">{interview.rounds?.length || 0} Phases</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="relative pt-4 overflow-hidden rounded-2xl">
-                                    <button
-                                        className={`w-full py-4 rounded-2xl bg-slate-50 hover:bg-opacity-90 group-hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 shadow-sm ${(() => {
-                                            const c = colorClasses[getCompanyColor(interview.company)];
-                                            // Extract the from- part for the hover bg
-                                            const hoverColor = c.accent.split(' ')[0].replace('from-', 'bg-');
-                                            return `group-hover:${hoverColor}`;
-                                        })()}`}
-                                    >
-                                        Initialize Simulation
-                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </button>
-                                </div>
-                            </motion.div>
+                                interview={interview}
+                                onClick={(item) => navigate(`/dashboard/interview-details/${item.id}?type=${item.type}`)}
+                                colorClasses={colorClasses}
+                                getCompanyColor={getCompanyColor}
+                            />
                         )) : (
                             <motion.div
                                 initial={{ opacity: 0 }}
@@ -333,5 +269,86 @@ const PopularInterviewsPage = () => {
         </div>
     );
 };
+
+const InterviewCard = React.memo(({ interview, onClick, colorClasses, getCompanyColor }) => {
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+    };
+
+    const companyColor = getCompanyColor(interview.company);
+    const colors = colorClasses[companyColor];
+
+    return (
+        <motion.div
+            variants={itemVariants}
+            whileHover={{ y: -8 }}
+            onClick={() => onClick(interview)}
+            className={`group relative rounded-[2.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col p-8 space-y-6 overflow-hidden ${colors.glow}`}
+        >
+            {/* Glass Decorative Overlay */}
+            <div className={`absolute top-0 right-0 w-32 h-32 ${colors.light} rounded-bl-[5rem] translate-x-8 -translate-y-8 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-700`} />
+
+            <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 rounded-2xl bg-white shadow-lg border border-slate-100 flex items-center justify-center p-3 group-hover:scale-110 transition-all duration-500 ${colors.border} group-hover:border-opacity-100`}>
+                        <img src={interview.icon_url} alt="" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="space-y-1">
+                        <h4 className="text-xl font-black text-slate-900 leading-tight">
+                            {interview.role}
+                        </h4>
+                        <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">{interview.company}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+                <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${(() => {
+                    const l = (interview.level || '').toLowerCase();
+                    if (l.includes('junior') || l.includes('entry')) return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+                    if (l.includes('mid') || l.includes('intermediate')) return 'bg-blue-50 text-blue-700 border-blue-100';
+                    if (l.includes('senior')) return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+                    return 'bg-slate-50 text-slate-600 border-slate-100';
+                })()}`}>
+                    {interview.level}
+                </span>
+                <span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white shadow-sm shadow-slate-200">
+                    {interview.type}
+                </span>
+            </div>
+
+            <div className="flex items-center justify-between py-6 border-y border-slate-50">
+                <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Duration</p>
+                    <div className="flex items-center gap-2">
+                        <Clock className={`w-4 h-4 ${colors.text}`} />
+                        <span className="text-sm font-bold text-slate-700">{interview.total_duration}m</span>
+                    </div>
+                </div>
+                <div className="w-[1px] h-8 bg-slate-100" />
+                <div className="space-y-1 text-right">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Curriculum</p>
+                    <div className="flex items-center gap-2 justify-end">
+                        <Layers className={`w-4 h-4 ${colors.text}`} />
+                        <span className="text-sm font-bold text-slate-700">{interview.rounds?.length || 0} Phases</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="relative pt-4 overflow-hidden rounded-2xl">
+                <button
+                    className={`w-full py-4 rounded-2xl bg-slate-50 hover:bg-opacity-90 group-hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all duration-500 flex items-center justify-center gap-3 shadow-sm ${(() => {
+                        const hoverColor = colors.accent.split(' ')[0].replace('from-', 'bg-');
+                        return `group-hover:${hoverColor}`;
+                    })()}`}
+                >
+                    Initialize Simulation
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+            </div>
+        </motion.div>
+    );
+});
 
 export default PopularInterviewsPage;

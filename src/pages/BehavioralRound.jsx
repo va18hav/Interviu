@@ -234,7 +234,7 @@ const BehavioralRound = () => {
             }
 
             const input = audioContext.current.createMediaStreamSource(stream);
-            const processor = audioContext.current.createScriptProcessor(4096, 1, 1);
+            const processor = audioContext.current.createScriptProcessor(2048, 1, 1);
 
             input.connect(processor);
             processor.connect(audioContext.current.destination);
@@ -479,9 +479,9 @@ const BehavioralRound = () => {
     return (
         <main className="h-screen bg-slate-50 flex flex-col relative overflow-hidden">
             {/* Header */}
-            <header className="absolute top-0 left-0 right-0 z-50 px-8 py-6 pointer-events-none">
+            <header className="absolute top-0 left-0 right-0 z-50 p-4 md:px-8 md:py-6 pointer-events-none">
                 <div className="flex items-center justify-between mx-auto max-w-8xl">
-                    <div className="flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
+                    <div className="hidden md:flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
                         <div className="flex flex-col leading-tight">
                             <span className="text-sm font-black text-slate-900 tracking-tight">
                                 {company} • {role}
@@ -491,12 +491,12 @@ const BehavioralRound = () => {
                     </div>
 
                     <div className="flex gap-4 pointer-events-auto">
-                        <div className="bg-white/80 backdrop-blur-xl px-5 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-3 transition-all duration-500 hover:scale-[1.02]">
+                        <div className="bg-white/80 backdrop-blur-xl px-4 py-2.5 md:px-5 md:py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-2 md:gap-3 transition-all duration-500 hover:scale-[1.02]">
                             <div className="relative">
                                 <div className={`w-2.5 h-2.5 rounded-full ${isListening ? 'bg-green-500' : 'bg-slate-300'}`}></div>
                                 {isListening && <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>}
                             </div>
-                            <div className="font-mono text-base font-black text-slate-900 tabular-nums tracking-wider">
+                            <div className="font-mono text-sm md:text-base font-black text-slate-900 tabular-nums tracking-wider">
                                 {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
                             </div>
                         </div>
@@ -532,10 +532,10 @@ const BehavioralRound = () => {
                     ) : (
                         <div className="flex gap-4 h-full w-full items-stretch p-4">
                             {/* Video Cards Container - Flex Row Full Width for Hidden Code State */}
-                            <div className="flex gap-4 transition-all duration-500 flex-row w-full h-full">
+                            <div className="flex gap-4 transition-all duration-500 flex-col md:flex-row w-full h-full">
 
                                 {/* Interviewer Card */}
-                                <div className="relative flex-1 min-h-[300px]">
+                                <div className="relative flex-1 min-h-[200px] md:min-h-[300px]">
                                     <InterviewerCard
                                         interviewState={interviewState}
                                     />

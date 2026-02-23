@@ -346,7 +346,9 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
 
                     // Simple accumulation split:
                     // If buffer contains a delimiter, split and send.
-                    let match = sentenceBuffer.match(/([.!?])\s+/);
+                    // Aggressive Splitting for Low Latency:
+                    // Standard punctuation [.!?] OR substantial natural pauses [,,;] followed by space.
+                    let match = sentenceBuffer.match(/([.!?,,;])\s+/);
                     if (match) {
                         const index = match.index + match[0].length;
                         const sentence = sentenceBuffer.substring(0, index).trim();
