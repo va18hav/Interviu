@@ -101,7 +101,7 @@ const PopularInterviewsPage = () => {
         sky: { bg: "bg-sky-50", text: "text-sky-600", accent: "from-sky-500 to-sky-600", border: "border-sky-100", light: "bg-sky-50/50", glow: "shadow-sky-200" },
         emerald: { bg: "bg-emerald-50", text: "text-emerald-600", accent: "from-emerald-500 to-emerald-600", border: "border-emerald-100", light: "bg-emerald-50/50", glow: "shadow-emerald-200" },
         indigo: { bg: "bg-indigo-50", text: "text-indigo-600", accent: "from-indigo-500 to-indigo-600", border: "border-indigo-100", light: "bg-indigo-50/50", glow: "shadow-indigo-200" },
-        slate: { bg: "bg-slate-50", text: "text-slate-600", accent: "from-slate-600 to-slate-800", border: "border-slate-200", light: "bg-slate-50/50", glow: "shadow-slate-200" }
+        slate: { bg: "bg-slate-50", text: "text-slate-600", accent: "from-slate-600 to-slate-800", border: "border-slate-200", light: "bg-slate-50/50", glow: "shadow-slate-400" }
     };
 
     const filteredInterviews = interviews.filter(interview => {
@@ -291,7 +291,7 @@ const InterviewCard = React.memo(({ interview, onClick, colorClasses, getCompany
 
             <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div className={`w-16 h-16 rounded-2xl bg-white shadow-lg border border-slate-100 flex items-center justify-center p-3 group-hover:scale-110 transition-all duration-500 ${colors.border} group-hover:border-opacity-100`}>
+                    <div className={`w-16 h-16 rounded-2xl ${colors.light} shadow-lg border border-slate-100 flex items-center justify-center p-3 group-hover:scale-110 transition-all duration-500 ${colors.border} group-hover:border-opacity-100`}>
                         <img src={interview.icon_url} alt="" className="w-full h-full object-contain" />
                     </div>
                     <div className="space-y-1">

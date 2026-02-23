@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
 import ResumeHero from '../components/ResumeHero';
 import { sanitizeInput } from '../utils/sanitize';
 
@@ -356,76 +358,102 @@ const Resume = () => {
     return (
         <>
             <Navbar />
-            <div className='min-h-screen bg-gray-50 selection:bg-blue-500/30'>
-                <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24'>
+            <div className='min-h-screen bg-[#fafafa] selection:bg-indigo-500/30 overflow-x-hidden relative'>
+                {/* Cinematic Background Orbs */}
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/5 rounded-full blur-3xl opacity-50" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/5 rounded-full blur-3xl opacity-50" />
+                </div>
+
+                <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24 relative z-10'>
 
                     {/* Hero Section */}
                     <ResumeHero onButtonClick={() => setAtsPopupEnabled(true)} buttonText="Check Resume Score" />
 
                     {/* Past Resume Cards Section */}
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                            <FileText className="w-6 h-6 text-blue-600" />
-                            Past Analysis
-                        </h2>
+                    <div className="space-y-10">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Archive Protocol</p>
+                                <h1 className="text-4xl font-black text-slate-900 tracking-tight">Previous Scans</h1>
+                            </div>
+                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {pastResumes.length > 0 ? (
                                 pastResumes.map((item, index) => (
-                                    <div key={item.id || index} className="group relative rounded-2xl border border-gray-200 bg-white overflow-hidden hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md">
-                                        <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-blue-500/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
-                                        <div className="p-6 space-y-4">
+                                    <motion.div
+                                        key={item.id || index}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.5, delay: index * 0.05 }}
+                                        className="group relative rounded-[2rem] border border-white/60 bg-white/70 backdrop-blur-md overflow-hidden hover:border-indigo-400/50 transition-all duration-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(79,70,229,0.1)] hover:-translate-y-1 will-change-transform"
+                                    >
+                                        <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-indigo-500/5 rounded-full blur-[50px] -translate-y-1/2 translate-x-1/2 group-hover:bg-indigo-500/10 transition-colors" />
+
+                                        <div className="p-8 space-y-6">
                                             <div className="flex justify-between items-start">
-                                                <div className="space-y-1">
-                                                    <h3 className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                                            {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
                                                         {item.job_role}
                                                     </h3>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-sm text-slate-500">
-                                                            {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                        <FileIcon className="w-4 h-4" />
-                                                        <span className="truncate max-w-[120px]">{item.file_name}</span>
+                                                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                                                        <FileIcon className="w-3.5 h-3.5" />
+                                                        <span className="truncate max-w-[150px]">{item.file_name}</span>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center justify-center">
+
+                                                <div className="shrink-0">
                                                     {item.ats_score && (
-                                                        <span className={`text-xs font-bold px-4 py-2 rounded-lg ${item.ats_score >= 80 ? 'bg-green-50 text-green-700 border border-green-100' :
-                                                            item.ats_score >= 60 ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                                                                'bg-amber-50 text-amber-700 border border-amber-100'
+                                                        <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg ${item.ats_score >= 80 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50' :
+                                                            item.ats_score >= 60 ? 'bg-indigo-50 text-indigo-600 border border-indigo-100/50' :
+                                                                'bg-rose-50 text-rose-600 border border-rose-100/50'
                                                             }`}>
-                                                            {item.ats_score}%
-                                                        </span>
+                                                            {item.ats_score}
+                                                            <span className="text-[8px] absolute -bottom-1 -right-1 bg-white border border-inherit px-1 rounded-sm">%</span>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                                            <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
                                                 <button
                                                     onClick={() => {
                                                         setAnalysisResult(item.analysis_result);
                                                         setAtsPopupEnabled(true);
                                                     }}
-                                                    className="text-sm font-medium text-slate-500 hover:text-blue-600 flex items-center gap-1 transition-colors z-20"
+                                                    className="text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 flex items-center gap-2 transition-all group/btn"
                                                 >
-                                                    View Details
-                                                    <ArrowRight className="w-4 h-4" />
+                                                    View Protocol
+                                                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                                                 </button>
 
-                                                <button className='cursor-pointer text-sm font-medium text-slate-400 hover:text-red-600 rounded-sm p-2 z-20' onClick={() => handleDelete(item.id)}>
-                                                    Delete
+                                                <button
+                                                    className='text-xs font-black uppercase tracking-widest text-slate-300 hover:text-rose-500 transition-colors p-2'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(item.id);
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} />
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))
                             ) : (
-                                <div className="col-span-full py-12 text-center rounded-2xl border border-dashed border-gray-300 bg-gray-50/50">
-                                    <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-slate-900 mb-1">No Past Analyses</h3>
-                                    <p className="text-slate-500 max-w-sm mx-auto text-sm">Upload a resume to get your first analysis!</p>
+                                <div className="col-span-full py-20 text-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/50 backdrop-blur-sm">
+                                    <div className="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6">
+                                        <FilePlus className="w-8 h-8 text-slate-300" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-900 mb-2">Zero Data Detected</h3>
+                                    <p className="text-slate-500 max-w-sm mx-auto text-sm font-medium">Initialize your first scan to populate this archive protocol.</p>
                                 </div>
                             )}
                         </div>
@@ -434,380 +462,358 @@ const Resume = () => {
 
 
 
-                    {atsPopupEnabled && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-                            <div className={`animate-scale-up w-full ${analysisResult ? 'max-w-5xl' : 'max-w-2xl'} bg-gray-50 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-all duration-500`}>
-                                {/* Header */}
-                                <div className="px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between sticky top-0 z-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
-                                            <BarChart3 className="w-5 h-5" />
+                    <AnimatePresence>
+                        {atsPopupEnabled && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className={`w-full ${analysisResult ? 'max-w-6xl' : 'max-w-3xl'} bg-white/95 backdrop-blur-lg rounded-[3rem] shadow-[0_40px_100px_-12px_rgba(0,0,0,0.25)] border border-white/60 overflow-hidden flex flex-col max-h-[90vh] relative will-change-transform`}
+                                >
+                                    {/* Modal Header */}
+                                    <div className="px-8 md:px-12 py-8 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20 bg-white/50 backdrop-blur-xl">
+                                        <div className="flex items-center gap-5">
+                                            <div className="w-14 h-14 rounded-[1.25rem] bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                                                {analysisResult ? <BarChart3 className="w-7 h-7" /> : <Upload className="w-7 h-7" />}
+                                            </div>
+                                            <div>
+                                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                                                    {analysisResult ? 'Analysis Protocol' : 'Initialize Analysis'}
+                                                </h2>
+                                                <p className="text-xs text-indigo-600 font-black uppercase tracking-[0.2em]">
+                                                    {analysisResult ? 'Automated Diagnostic Suite v2.0' : 'Secure Document Uplink'}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h2 className="text-xl font-bold text-slate-900">
-                                                {analysisResult ? 'Resume Analysis Report' : 'New Resume Analysis'}
-                                            </h2>
-                                            <p className="text-xs text-slate-500 font-medium">
-                                                {analysisResult ? 'Automated ATS Scanning & Feedback' : 'Upload your resume for detailed insights'}
-                                            </p>
-                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setAtsPopupEnabled(false);
+                                                setAnalysisResult(null);
+                                            }}
+                                            className="w-12 h-12 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center group/close"
+                                        >
+                                            <X className="w-6 h-6 group-hover/close:rotate-90 transition-transform" />
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            setAtsPopupEnabled(false);
-                                            setAnalysisResult(null);
-                                        }}
-                                        className="p-2 rounded-lg hover:bg-gray-100 text-slate-400 hover:text-slate-600 transition-colors"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
 
-                                {/* Content */}
-                                {analysisResult ? (
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                        <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    {/* Modal Content */}
+                                    {analysisResult ? (
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12">
+                                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-                                            {/* Sidebar - Score & Quick Stats */}
-                                            <div className="lg:col-span-1 space-y-6">
-                                                {/* Overall Score */}
-                                                <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-                                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">ATS Compatibility Score</p>
-
-                                                    <div className="relative w-48 h-48 mx-auto mb-6">
-                                                        <svg className="w-full h-full transform -rotate-90">
+                                                {/* Left Column: Scores & Metrics */}
+                                                <div className="lg:col-span-4 space-y-10">
+                                                    {/* Cinematic Score Ring */}
+                                                    <div className="relative aspect-square w-full max-w-[280px] mx-auto group">
+                                                        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_15px_rgba(79,70,229,0.1)]">
                                                             <circle
-                                                                cx="96"
-                                                                cy="96"
-                                                                r="88"
-                                                                stroke="currentColor"
-                                                                strokeWidth="12"
-                                                                fill="none"
-                                                                className="text-slate-100"
+                                                                cx="50%" cy="50%" r="44%"
+                                                                stroke="currentColor" strokeWidth="6" fill="none"
+                                                                className="text-slate-50"
                                                             />
-                                                            <circle
-                                                                cx="96"
-                                                                cy="96"
-                                                                r="88"
-                                                                stroke="currentColor"
-                                                                strokeWidth="12"
-                                                                fill="none"
-                                                                strokeDasharray={`${2 * Math.PI * 88}`}
-                                                                strokeDashoffset={`${2 * Math.PI * 88 * (1 - analysisResult.atsScore / 100)}`}
-                                                                className={`${analysisResult.atsScore >= 80 ? 'text-emerald-500' : analysisResult.atsScore >= 60 ? 'text-blue-500' : 'text-amber-500'} transition-all duration-1000 ease-out`}
+                                                            <motion.circle
+                                                                cx="50%" cy="50%" r="44%"
+                                                                stroke="currentColor" strokeWidth="8" fill="none"
+                                                                initial={{ strokeDasharray: "277", strokeDashoffset: "277" }}
+                                                                animate={{ strokeDashoffset: 277 - (277 * analysisResult.atsScore / 100) }}
+                                                                transition={{ duration: 2, ease: "circOut", delay: 0.5 }}
+                                                                className={`${analysisResult.atsScore >= 80 ? 'text-emerald-500' : analysisResult.atsScore >= 60 ? 'text-indigo-600' : 'text-rose-500'}`}
                                                                 strokeLinecap="round"
                                                             />
                                                         </svg>
                                                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                            <span className={`text-5xl font-bold tracking-tighter ${analysisResult.atsScore >= 80 ? 'text-emerald-700' : analysisResult.atsScore >= 60 ? 'text-blue-700' : 'text-amber-700'}`}>
+                                                            <motion.span
+                                                                initial={{ opacity: 0, scale: 0.5 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                transition={{ delay: 0.8 }}
+                                                                className={`text-7xl font-black tracking-tighter ${analysisResult.atsScore >= 80 ? 'text-emerald-600' : analysisResult.atsScore >= 60 ? 'text-indigo-600' : 'text-rose-600'}`}
+                                                            >
                                                                 {analysisResult.atsScore}
-                                                            </span>
-                                                            <span className="text-sm font-medium text-slate-400 mt-1">out of 100</span>
+                                                            </motion.span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] -mt-1">Compatibility %</span>
                                                         </div>
                                                     </div>
 
-                                                    <div className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold border ${analysisResult.atsScore >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                                        analysisResult.atsScore >= 60 ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                                            'bg-amber-50 text-amber-700 border-amber-100'
-                                                        }`}>
-                                                        {analysisResult.atsScore >= 80 ? 'Excellent Match' : analysisResult.atsScore >= 60 ? 'Good Match' : 'Needs Improvement'}
+                                                    {/* Metrics breakdown */}
+                                                    <div className="space-y-6">
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100 pb-2">Sub-Metric Diagnostics</p>
+                                                        <div className="grid gap-6">
+                                                            {[
+                                                                { label: 'Keyword Density', value: analysisResult.keywordMatch, color: 'bg-indigo-600' },
+                                                                { label: 'Structural Format', value: analysisResult.formatting, color: 'bg-cyan-500' },
+                                                                { label: 'Domain Authority', value: analysisResult.experience, color: 'bg-emerald-500' },
+                                                                { label: 'Competency Mapping', value: analysisResult.skills, color: 'bg-purple-500' }
+                                                            ].map((stat, i) => (
+                                                                <div key={i} className="space-y-2">
+                                                                    <div className="flex justify-between items-end">
+                                                                        <span className="text-xs font-black text-slate-600 uppercase tracking-tight">{stat.label}</span>
+                                                                        <span className="text-xs font-black text-slate-900">{stat.value}%</span>
+                                                                    </div>
+                                                                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                                        <motion.div
+                                                                            initial={{ width: 0 }}
+                                                                            animate={{ width: `${stat.value}%` }}
+                                                                            transition={{ duration: 1.5, ease: "circOut", delay: 1 + (i * 0.1) }}
+                                                                            className={`h-full rounded-full ${stat.color}`}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                {/* Key Metrics */}
-                                                <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
-                                                    <h3 className="font-bold text-slate-900 text-sm">Category Breakdown</h3>
-                                                    <div className="space-y-4">
-                                                        {[
-                                                            { label: 'Keywords', value: analysisResult.keywordMatch, color: 'text-purple-600', bg: 'bg-purple-50' },
-                                                            { label: 'Formatting', value: analysisResult.formatting, color: 'text-pink-600', bg: 'bg-pink-50' },
-                                                            { label: 'Experience', value: analysisResult.experience, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                                                            { label: 'Skills', value: analysisResult.skills, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                                                        ].map((stat, i) => (
-                                                            <div key={i} className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className={`w-8 h-8 rounded-lg ${stat.bg} ${stat.color} flex items-center justify-center font-bold text-xs`}>
-                                                                        {stat.value}%
-                                                                    </div>
-                                                                    <span className="text-sm text-slate-600 font-medium">{stat.label}</span>
-                                                                </div>
-                                                                <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                                    <div
-                                                                        className={`h-full rounded-full ${stat.color.replace('text', 'bg')}`}
-                                                                        style={{ width: `${stat.value}%` }}
-                                                                    />
-                                                                </div>
+                                                {/* Right Column: Insights & Content */}
+                                                <div className="lg:col-span-8 space-y-12">
+                                                    {/* Strategy Section */}
+                                                    <div className="bg-slate-900 rounded-[2rem] p-8 md:p-10 relative overflow-hidden group">
+                                                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[80px] rounded-full pointer-events-none" />
+                                                        <div className="flex items-center gap-4 mb-6 relative z-10">
+                                                            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                                                <Sparkles size={20} />
                                                             </div>
-                                                        ))}
+                                                            <h3 className="text-xl font-black text-white tracking-tight">AI Enhancement Strategy</h3>
+                                                        </div>
+                                                        <p className="text-slate-300 leading-relaxed font-medium relative z-10">
+                                                            {analysisResult.recommendations}
+                                                        </p>
                                                     </div>
+
+                                                    <div className="grid md:grid-cols-2 gap-8">
+                                                        {/* Strengths */}
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-3 border-b border-emerald-100 pb-4">
+                                                                <ThumbsUp className="w-5 h-5 text-emerald-500" />
+                                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Protocol Strengths</h3>
+                                                            </div>
+                                                            <ul className="space-y-4">
+                                                                {(analysisResult.strengths || []).map((item, i) => (
+                                                                    <li key={i} className="flex gap-3 items-start group">
+                                                                        <div className="w-5 h-5 rounded-md bg-emerald-50 flex items-center justify-center text-emerald-600 mt-0.5 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                                                            <Check size={12} strokeWidth={4} />
+                                                                        </div>
+                                                                        <span className="text-sm font-medium text-slate-600 leading-snug">{item}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+
+                                                        {/* Improvements */}
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-3 border-b border-amber-100 pb-4">
+                                                                <ArrowDown className="w-5 h-5 text-amber-500" />
+                                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Optimization Needed</h3>
+                                                            </div>
+                                                            <ul className="space-y-4">
+                                                                {(analysisResult.improvements || []).map((item, i) => (
+                                                                    <li key={i} className="flex gap-3 items-start group">
+                                                                        <div className="w-5 h-5 rounded-md bg-amber-50 flex items-center justify-center text-amber-600 mt-0.5 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                                                                            <AlertCircle size={12} strokeWidth={3} />
+                                                                        </div>
+                                                                        <span className="text-sm font-medium text-slate-600 leading-snug">{item}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Missing Keywords */}
+                                                    {analysisResult.missingKeywords?.length > 0 && (
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-3 border-b border-rose-100 pb-4">
+                                                                <Target className="w-5 h-5 text-rose-500" />
+                                                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Target Keywords Missing</h3>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {analysisResult.missingKeywords.map((tag, i) => (
+                                                                    <span key={i} className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[11px] font-black uppercase tracking-widest hover:border-rose-300 hover:text-rose-600 transition-all cursor-default">
+                                                                        {tag}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-
-                                            {/* Main Content - Findings */}
-                                            <div className="lg:col-span-2 space-y-6">
-
-                                                {/* Recommendations / Summary */}
-                                                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <Sparkles className="w-5 h-5 text-blue-600" />
-                                                        <h3 className="font-bold text-slate-900">AI Enhancement Strategy</h3>
+                                        </div>
+                                    ) : (
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-16 bg-white shrink-0">
+                                            <div className="max-w-3xl mx-auto space-y-12">
+                                                {/* Form Inputs */}
+                                                <div className="grid md:grid-cols-2 gap-8">
+                                                    <div className="space-y-3 relative" ref={dropdownRef}>
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pl-1">Target Designation</label>
+                                                        <div
+                                                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                            className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-sm font-black text-slate-900 focus:outline-none cursor-pointer hover:bg-white hover:border-indigo-600 transition-all flex items-center justify-between"
+                                                        >
+                                                            <span className={jobRole ? "text-slate-900" : "text-slate-400"}>
+                                                                {jobRole || "SELECT ROLE..."}
+                                                            </span>
+                                                            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                                        </div>
+                                                        <AnimatePresence>
+                                                            {isDropdownOpen && (
+                                                                <motion.div
+                                                                    initial={{ opacity: 0, y: 10 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    exit={{ opacity: 0, y: 10 }}
+                                                                    className="absolute z-50 mt-2 w-full rounded-2xl border border-slate-100 bg-white shadow-2xl overflow-hidden max-h-60 flex flex-col"
+                                                                >
+                                                                    <div className="p-3 border-b border-slate-50 bg-slate-50/50">
+                                                                        <div className="relative">
+                                                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                                            <input
+                                                                                type="text"
+                                                                                value={searchTerm}
+                                                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                                                placeholder="SEARCH PROTOCOLS..."
+                                                                                className="w-full rounded-xl bg-white border-none pl-10 pr-4 py-2.5 text-xs font-black text-slate-900 uppercase tracking-widest focus:outline-none"
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="overflow-y-auto custom-scrollbar">
+                                                                        {filteredRoles.map((role) => (
+                                                                            <button
+                                                                                key={role}
+                                                                                onClick={() => handleRoleSelect(role)}
+                                                                                className="w-full text-left px-5 py-3 text-xs font-black text-slate-600 uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-colors"
+                                                                            >
+                                                                                {role}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
                                                     </div>
-                                                    <div className="prose prose-slate prose-sm max-w-none">
-                                                        <p className="text-slate-600 leading-relaxed bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                                                            {analysisResult.recommendations || "No specific recommendations available. Process more resumes to get better insights."}
-                                                        </p>
+
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pl-1">Project Metadata <span className="text-slate-300 font-medium lowercase">(optional)</span></label>
+                                                        <textarea
+                                                            value={jobDescription}
+                                                            onChange={(e) => setJobDescription(e.target.value)}
+                                                            rows={1}
+                                                            placeholder="PASTE JOB DESCRIPTION..."
+                                                            className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-sm font-black text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-indigo-600 transition-all min-h-[56px]"
+                                                        />
                                                     </div>
                                                 </div>
 
-                                                <div className="grid md:grid-cols-2 gap-6">
-                                                    {/* Strengths */}
-                                                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm h-full">
-                                                        <div className="flex items-center gap-3 mb-4">
-                                                            <ThumbsUp className="w-5 h-5 text-emerald-600" />
-                                                            <h3 className="font-bold text-slate-900">Key Strengths</h3>
+                                                {/* Upload Area */}
+                                                {!resume ? (
+                                                    <label className="relative flex flex-col items-center justify-center w-full h-80 rounded-[3rem] border-2 border-dashed border-slate-200 bg-slate-50/50 hover:bg-white hover:border-indigo-600 transition-all cursor-pointer group">
+                                                        <div className="flex flex-col items-center gap-6 text-center">
+                                                            <div className="w-24 h-24 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-indigo-500/10 transition-all duration-500">
+                                                                <Upload className="w-10 h-10 text-indigo-600" />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <p className="text-xl font-black text-slate-900 tracking-tight">Deployment Input</p>
+                                                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">PDF / DOCX protocol only • Standard 10MB</p>
+                                                            </div>
                                                         </div>
-                                                        <ul className="space-y-3">
-                                                            {(analysisResult.strengths || []).map((strength, i) => (
-                                                                <li key={i} className="flex gap-3 text-sm text-slate-600 items-start">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                                                                    <span className="leading-relaxed">{strength}</span>
-                                                                </li>
-                                                            ))}
-                                                            {(!analysisResult.strengths || analysisResult.strengths.length === 0) && (
-                                                                <li className="text-slate-400 text-sm italic">No strengths identified.</li>
+                                                        <input
+                                                            ref={fileInputRef}
+                                                            type="file"
+                                                            className="hidden"
+                                                            accept=".pdf,.docx,.doc"
+                                                            onChange={handleResumeChange}
+                                                        />
+                                                    </label>
+                                                ) : (
+                                                    <div className="w-full h-96 rounded-[3rem] border border-slate-200 bg-slate-50 overflow-hidden flex flex-col shadow-inner relative">
+                                                        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white z-10">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                                                                    <FileText className="w-6 h-6" />
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <p className="text-sm font-black text-slate-900 uppercase tracking-tight truncate max-w-[200px]">{resume.name}</p>
+                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{(resume.size / 1024 / 1024).toFixed(2)} MEGABYTES</p>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    clearResume();
+                                                                }}
+                                                                className="w-10 h-10 rounded-full hover:bg-rose-50 text-slate-300 hover:text-rose-600 transition-all flex items-center justify-center group/del"
+                                                            >
+                                                                <X className="w-5 h-5 group-hover/del:scale-110" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex-1 bg-slate-100 relative overflow-hidden">
+                                                            {resumePreviewUrl ? (
+                                                                <iframe
+                                                                    src={resumePreviewUrl}
+                                                                    className="w-full h-full"
+                                                                    title="Protocol Preview"
+                                                                />
+                                                            ) : (
+                                                                <div className="absolute inset-0 flex items-center justify-center text-slate-300 flex-col gap-4">
+                                                                    <FileIcon className="w-16 h-16 opacity-30" />
+                                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">Visualizer Unavailable</p>
+                                                                </div>
                                                             )}
-                                                        </ul>
-                                                    </div>
-
-                                                    {/* Improvements */}
-                                                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm h-full">
-                                                        <div className="flex items-center gap-3 mb-4">
-                                                            <ArrowDown className="w-5 h-5 text-amber-600" />
-                                                            <h3 className="font-bold text-slate-900">Areas for Improvement</h3>
                                                         </div>
-                                                        <ul className="space-y-3">
-                                                            {(analysisResult.improvements || []).map((improvement, i) => (
-                                                                <li key={i} className="flex gap-3 text-sm text-slate-600 items-start">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                                                                    <span className="leading-relaxed">{improvement}</span>
-                                                                </li>
-                                                            ))}
-                                                            {(!analysisResult.improvements || analysisResult.improvements.length === 0) && (
-                                                                <li className="text-slate-400 text-sm italic">No improvements suggested.</li>
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-
-                                                {/* Missing Keywords */}
-                                                {analysisResult.missingKeywords && analysisResult.missingKeywords.length > 0 && (
-                                                    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                                                        <div className="flex items-center gap-3 mb-4">
-                                                            <Target className="w-5 h-5 text-red-500" />
-                                                            <h3 className="font-bold text-slate-900">Missing Keywords</h3>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {analysisResult.missingKeywords.map((keyword, i) => (
-                                                                <span key={i} className="px-3 py-1.5 rounded-full bg-red-50 border border-red-100 text-red-700 text-sm font-medium">
-                                                                    {keyword}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                        <p className="mt-3 text-xs text-slate-400">
-                                                            Running these keywords through your resume could significantly improve ATS detection rates.
-                                                        </p>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
+                                    )}
 
-                                        {/* Action Footer */}
-                                        <div className="p-4 md:p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10">
-                                            <button
-                                                onClick={() => setAnalysisResult(null)}
-                                                className="px-5 py-2.5 rounded-lg border border-gray-200 bg-white text-slate-700 font-medium text-sm hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                                            >
-                                                Analyze Another Resume
-                                            </button>
-                                            <button
-                                                onClick={() => setAtsPopupEnabled(false)}
-                                                className="px-5 py-2.5 rounded-lg bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-all shadow-sm"
-                                            >
-                                                Close Report
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-8 overflow-y-auto custom-scrollbar bg-white h-full">
-                                        <div className="max-w-2xl mx-auto space-y-8">
-
-                                            {/* Dropdown & Description */}
-                                            <div className="grid md:grid-cols-2 gap-6">
-                                                {/* Job Role */}
-                                                <div className="space-y-2 relative" ref={dropdownRef}>
-                                                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                                                        <Briefcase className="w-4 h-4 text-slate-400" />
-                                                        Target Job Role
-                                                        <span className="text-red-500 text-xs">*</span>
-                                                    </label>
-
-                                                    <div
-                                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-slate-900 focus:outline-none cursor-pointer hover:border-blue-500 hover:ring-1 hover:ring-blue-200 transition-all flex items-center justify-between"
-                                                    >
-                                                        <span className={jobRole ? "text-slate-900 font-medium" : "text-slate-400"}>
-                                                            {jobRole || "Select a role..."}
-                                                        </span>
-                                                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                                                    </div>
-
-                                                    {isDropdownOpen && (
-                                                        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden max-h-60 flex flex-col animate-fade-in-up">
-                                                            <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
-                                                                <div className="relative">
-                                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                                                                    <input
-                                                                        type="text"
-                                                                        value={searchTerm}
-                                                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                                                        placeholder="Search roles..."
-                                                                        autoFocus
-                                                                        className="w-full rounded-lg bg-gray-50 border-none pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <div className="overflow-y-auto max-h-48 custom-scrollbar">
-                                                                {filteredRoles.length > 0 ? (
-                                                                    filteredRoles.map((role) => (
-                                                                        <button
-                                                                            key={role}
-                                                                            onClick={() => handleRoleSelect(role)}
-                                                                            className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors border-b border-gray-50 last:border-0"
-                                                                        >
-                                                                            {role}
-                                                                        </button>
-                                                                    ))
-                                                                ) : (
-                                                                    <div className="px-4 py-3 text-sm text-slate-400 text-center italic">
-                                                                        No roles found
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Job Description */}
-                                                <div className="space-y-2">
-                                                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                                                        <FileText className="w-4 h-4 text-slate-400" />
-                                                        Job Description
-                                                        <span className="text-slate-400 text-xs font-normal">(Optional)</span>
-                                                    </label>
-                                                    <textarea
-                                                        value={jobDescription}
-                                                        onChange={(e) => setJobDescription(e.target.value)}
-                                                        rows={1}
-                                                        placeholder="Paste job description for better analysis..."
-                                                        className="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all shadow-sm min-h-[48px]"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* Upload Zone */}
-                                            {!resume ? (
-                                                <label className="relative flex flex-col items-center justify-center w-full h-64 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50/50 hover:bg-blue-50/30 hover:border-blue-400 transition-all cursor-pointer group overflow-hidden">
-                                                    <div className="absolute inset-0 bg-blue-50/0 group-hover:bg-blue-50/30 transition-colors duration-300" />
-                                                    <div className="relative flex flex-col items-center gap-4 text-center p-8">
-                                                        <div className="w-20 h-20 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:border-blue-300 group-hover:shadow-md transition-all">
-                                                            <Upload className="w-8 h-8 text-blue-500" />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-lg font-semibold text-slate-900">
-                                                                Click to upload or drag & drop
-                                                            </p>
-                                                            <p className="text-sm text-slate-500">
-                                                                Supported formats: PDF, DOCX (Max 10MB)
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <input
-                                                        ref={fileInputRef}
-                                                        type="file"
-                                                        className="hidden"
-                                                        accept=".pdf,.docx,.doc"
-                                                        onChange={handleResumeChange}
-                                                    />
-                                                </label>
+                                    {/* Modal Footer */}
+                                    <div className="px-8 md:px-12 py-8 bg-slate-50 flex justify-end gap-6 sticky bottom-0 z-20 border-t border-slate-200/50">
+                                        <button
+                                            onClick={() => {
+                                                setAtsPopupEnabled(false);
+                                                setAnalysisResult(null);
+                                            }}
+                                            className="px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors"
+                                        >
+                                            {analysisResult ? 'Dismiss' : 'Cancel Uplink'}
+                                        </button>
+                                        <button
+                                            onClick={analysisResult ? () => setAnalysisResult(null) : handleAnalyzeResume}
+                                            disabled={!analysisResult && (!resume || !jobRole || isAnalyzing)}
+                                            className={`px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl transition-all flex items-center gap-3 ${analysisResult
+                                                ? 'bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 hover:shadow-lg'
+                                                : isAnalyzing
+                                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                                    : 'bg-slate-900 text-white hover:bg-indigo-600 hover:shadow-indigo-500/20 active:translate-y-0.5'
+                                                }`}
+                                        >
+                                            {isAnalyzing ? (
+                                                <>
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    <span>Diagnostic In Progress...</span>
+                                                </>
+                                            ) : analysisResult ? (
+                                                <>
+                                                    <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                                                    <span>Analyze New Protocol</span>
+                                                </>
                                             ) : (
-                                                <div className="w-full h-96 rounded-xl border border-gray-200 bg-slate-100 overflow-hidden flex flex-col shadow-inner">
-                                                    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm z-10">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-500 border border-red-100">
-                                                                <FileIcon className="w-5 h-5" />
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <p className="text-sm font-semibold text-slate-900 truncate max-w-[200px]">{resume.name}</p>
-                                                                <p className="text-xs text-slate-500">{(resume.size / 1024 / 1024).toFixed(2)} MB</p>
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            onClick={clearResume}
-                                                            className="p-2 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
-                                                        >
-                                                            <Trash2 className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex-1 bg-slate-200 mt-0 relative">
-                                                        {resumePreviewUrl ? (
-                                                            <iframe
-                                                                src={resumePreviewUrl}
-                                                                className="w-full h-full"
-                                                                title="Resume Preview"
-                                                            />
-                                                        ) : (
-                                                            <div className="absolute inset-0 flex items-center justify-center text-slate-400 flex-col gap-2">
-                                                                <FileText className="w-12 h-12 opacity-50" />
-                                                                <p>Preview not available</p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                <>
+                                                    <Wand2 className="w-3.5 h-3.5" />
+                                                    <span>Initialize Diagnostic</span>
+                                                </>
                                             )}
-
-                                            {/* Actions */}
-                                            <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">
-                                                <button
-                                                    onClick={() => setAtsPopupEnabled(false)}
-                                                    className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    onClick={handleAnalyzeResume}
-                                                    disabled={!resume || !jobRole || isAnalyzing}
-                                                    className={`px-8 py-2.5 rounded-lg bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2 ${(!resume || !jobRole || isAnalyzing) ? 'opacity-50 cursor-not-allowed transform-none shadow-none text-slate-200 bg-slate-400' : ''}`}
-                                                >
-                                                    {isAnalyzing ? (
-                                                        <>
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                                            <span>Analyzing...</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Sparkles className="w-4 h-4 text-yellow-300" />
-                                                            Run Analysis
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
+                                        </button>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                 </main>
             </div>
         </>

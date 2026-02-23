@@ -2,7 +2,7 @@ import React from 'react'
 import { ChevronRight, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import bot from "../assets/images/techbanner1.png"
+import techBanner from "../assets/images/techbanner1.png"
 
 const DashboardHeroBanner = ({ firstName }) => {
     const navigate = useNavigate()
@@ -70,7 +70,7 @@ const DashboardHeroBanner = ({ firstName }) => {
                 className="hidden md:block absolute right-0 top-0 bottom-0 w-[40%] z-0"
             >
                 <img
-                    src={bot}
+                    src={techBanner}
                     alt=""
                     className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_30px_rgba(79,70,229,0.15)] group-hover:scale-105 transition-transform duration-700"
                 />
