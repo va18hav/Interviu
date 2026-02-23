@@ -22,6 +22,15 @@ const DesignRound = () => {
         evaluation_intelligence,
         candidate_reasoning_signals
     } = location.state || {};
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 1024);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // ============================================================================
     //  LOGIC & STATE
@@ -1041,6 +1050,54 @@ const DesignRound = () => {
                                         Return to Dashboard
                                     </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Mobile Restriction Overlay */}
+            <AnimatePresence>
+                {isMobile && !initError && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-10 border border-white/20 text-center overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 rounded-full blur-[80px] -mr-24 -mt-24 opacity-60" />
+
+                            <div className="relative space-y-8">
+                                <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto ring-8 ring-indigo-50/50 transform rotate-3">
+                                    <Layout className="w-10 h-10 text-indigo-600" />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase leading-tight">Desktop Protocol Required</h3>
+                                    <p className="text-slate-500 font-medium leading-relaxed">
+                                        The <span className="text-indigo-600 font-bold">Design Canvas Protocol</span> is a high-fidelity environment that requires a desktop display for precision architecture.
+                                    </p>
+                                    <div className="py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <p className="text-xs font-bold text-slate-600 flex items-center justify-center gap-2">
+                                            <Sparkles className="w-4 h-4 text-indigo-500" />
+                                            Please switch to a larger screen to proceed.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => navigate('/dashboard')}
+                                    className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase tracking-[0.2em] text-xs active:scale-95"
+                                >
+                                    Return to Dashboard
+                                </button>
                             </div>
                         </motion.div>
                     </div>

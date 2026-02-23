@@ -145,6 +145,12 @@ const InterviewDetails = () => {
             slug: round.slug || round.questionSlug
         };
 
+        // Mobile Restriction for Design Round
+        if (round.type === 'design' && window.innerWidth < 1024) {
+            alert('The Design Canvas requires a larger screen (Desktop) for the best experience. Please switch to a desktop device to start this round.');
+            return;
+        }
+
         try {
             const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
             if (!userCreds?.id) {
@@ -460,8 +466,8 @@ const InterviewDetails = () => {
                     {/* Right Panel: Side Stats / Quick Action */}
                     <aside className="space-y-8">
                         <div className="sticky top-24 space-y-8">
-                            <div className="p-8 rounded-[2rem] bg-indigo-500 text-white space-y-6 shadow-2xl shadow-indigo-100">
-                                <Zap className="w-10 h-10 text-indigo-300" />
+                            <div className="p-8 rounded-[2rem] bg-gradient-to-br from-violet-500 to-indigo-600 text-white space-y-6 shadow-2xl shadow-indigo-100">
+                                <Zap className="w-10 h-10 text-yellow-500" />
                                 <div className="space-y-4">
                                     <h4 className="text-2xl font-black leading-tight uppercase tracking-tight">Key Competencies</h4>
                                     <p className="text-indigo-100/80 text-sm leading-relaxed">

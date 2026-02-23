@@ -239,7 +239,7 @@ const Navbar = ({ credits: propCredits }) => {
                                     onClick={() => setShowProfile(prev => !prev)}
                                     className="group flex items-center gap-2 cursor-pointer focus:outline-none"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white transition-all duration-300 group-hover:scale-105 group-hover:ring-indigo-500/50 text-xs">
+                                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white transition-all duration-300 group-hover:scale-105 group-hover:ring-indigo-500/50 text-xs">
                                         {firstName?.charAt(0).toUpperCase() + lastName?.charAt(0).toUpperCase() || 'U'}
                                     </div>
                                 </button>
@@ -255,8 +255,9 @@ const Navbar = ({ credits: propCredits }) => {
                                             <div className="p-6 border-b border-slate-100 bg-slate-50/40">
                                                 <div className="flex items-center gap-4">
                                                     <div className="relative">
-                                                        <div className="w-14 h-14 rounded-full bg-slate-900 flex items-center justify-center text-xl text-white font-black shadow-xl ring-4 ring-white">
+                                                        <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-xl text-white font-black shadow-xl ring-4 ring-white">
                                                             {firstName?.charAt(0).toUpperCase() || 'U'}
+                                                            {lastName?.charAt(0).toUpperCase() || ''}
                                                         </div>
                                                         <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
                                                     </div>
