@@ -35,6 +35,13 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
+app.use(cors({
+    origin: ['https://intervyu-virid.vercel.app', 'https://www.interviu.pro', 'http://localhost:5173', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
 // H-5: Small global body limit — only the resume endpoint needs more
 app.use(express.json({ limit: '100kb' }));
 
@@ -63,13 +70,6 @@ const aiLimiter = rateLimit({
     legacyHeaders: false,
     message: 'Too many AI requests. Please wait before trying again.'
 });
-
-app.use(cors({
-    origin: ['https://intervyu-virid.vercel.app', 'https://www.interviu.pro', 'http://localhost:5173', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
 
 
 
