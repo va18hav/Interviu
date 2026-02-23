@@ -62,7 +62,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 app.use(cors({
-    origin: ['https://intervyu-virid.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
+    origin: ['https://intervyu-virid.vercel.app', 'https://www.interviu.pro', 'http://localhost:5173', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
