@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Award, Mic, Target, Pen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import heroImage from '../../assets/images/landingbot.png';
 import logo from '../../assets/images/logo.png';
 
@@ -15,8 +15,16 @@ const NewHeroSection = () => {
         offset: ["start start", "end start"]
     });
 
-    const y = useTransform(scrollYProgress, [0, 1], [0, 200]);
-    const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+    const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+
+    const yTransform = useTransform(scrollYProgress, [0, 1], [0, 200]);
+    const opacityTransform = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+    const y = useSpring(yTransform, springConfig);
+    const opacity = useSpring(opacityTransform, springConfig);
+
+    const glowY1 = useSpring(useTransform(scrollYProgress, [0, 1], [0, 100]), springConfig);
+    const glowY2 = useSpring(useTransform(scrollYProgress, [0, 1], [0, 150]), springConfig);
 
     const [text, setText] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
@@ -137,17 +145,17 @@ const NewHeroSection = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                             </span>
-                            <span>Early Access: Coding | System Design | Behavioral Rounds For SDE/DevOps</span>
+                            <span>Early Access: 3+ Round types For SDE/DevOps</span>
                         </motion.div>
 
                         {/* Main Headline */}
                         <motion.h1
                             variants={itemVariants}
-                            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-black tracking-tighter mb-6 leading-[1.1] px-2 sm:px-0"
+                            className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-black tracking-tighter mb-6 leading-[1.1] px-2 sm:px-0"
                         >
                             <span>Practice Real Interviews</span>
                             <br className="hidden sm:block" />
-                            <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-500 bg-clip-text text-transparent">With an AI Interviewer</span>
+                            <span className="text-black">With an <span className="bg-gradient-to-r from-indigo-500 via-blue-500 to-indigo-400 bg-clip-text text-transparent">AI Interviewer</span></span>
                         </motion.h1>
 
                         {/* Subheadline */}
@@ -163,11 +171,8 @@ const NewHeroSection = () => {
                             variants={itemVariants}
                             className="text-xs sm:text-sm md:text-base text-gray-600 max-w-lg mb-10 md:mb-12 leading-relaxed px-4 sm:px-0 flex items-center flex-wrap justify-center lg:justify-start gap-4"
                         >
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-100 text-orange-700 font-bold text-[10px] uppercase tracking-wider">
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 font-bold text-[10px] uppercase tracking-wider">
                                 <Target className="w-3.5 h-3.5" /> Trained on real hiring patterns
-                            </span>
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 border border-cyan-100 text-cyan-700 font-bold text-[10px] uppercase tracking-wider">
-                                <Pen className="w-3.5 h-3.5" /> Built with real interview signals
                             </span>
                         </motion.p>
 
@@ -199,22 +204,24 @@ const NewHeroSection = () => {
                     <div className="absolute inset-0 -z-10 flex items-center justify-center">
                         <motion.div
                             animate={{
-                                scale: [1, 1.2, 1],
-                                opacity: [0.3, 0.5, 0.3]
+                                scale: [1, 1.1, 1],
+                                opacity: [0.3, 0.4, 0.3]
                             }}
-                            style={{ y: useTransform(scrollYProgress, [0, 1], [0, 100]) }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute w-[400px] h-[400px] bg-indigo-500/20 blur-[100px] rounded-full"
+                            style={{ y: glowY1 }}
+                            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute w-[500px] h-[500px] bg-indigo-500/15 blur-[120px] rounded-full will-change-transform"
                         />
                         <motion.div
                             animate={{
-                                scale: [1.2, 1, 1.2],
-                                opacity: [0.2, 0.4, 0.2]
+                                scale: [1.1, 1, 1.1],
+                                opacity: [0.2, 0.3, 0.2]
                             }}
-                            style={{ y: useTransform(scrollYProgress, [0, 1], [0, 150]) }}
-                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                            className="absolute w-[350px] h-[350px] bg-violet-500/20 blur-[100px] rounded-full"
+                            style={{ y: glowY2 }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                            className="absolute w-[450px] h-[450px] bg-blue-500/10 blur-[100px] rounded-full will-change-transform"
                         />
+                        {/* Core Atmospheric Glow */}
+                        <div className="absolute w-[300px] h-[300px] bg-indigo-600/20 blur-[80px] rounded-full" />
                     </div>
 
                     <motion.img
@@ -224,7 +231,7 @@ const NewHeroSection = () => {
                         transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
                         src={heroImage}
                         alt="Intervyu Platform Interface"
-                        className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[500px] lg:max-w-none lg:w-[450px] xl:w-[550px] h-auto drop-shadow-2xl"
+                        className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[500px] lg:max-w-none lg:w-[450px] xl:w-[550px] h-auto drop-shadow-[0_25px_50px_rgba(0,0,0,0.15)] filter saturate-[1.1] will-change-transform"
                     />
                 </div>
             </div>

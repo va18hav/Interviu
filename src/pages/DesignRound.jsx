@@ -231,7 +231,15 @@ const DesignRound = () => {
 
                     // Live User Feedback
                     const { text, isFinal } = msg.payload;
-                    setCurrentAnswer(text);
+
+                    // Implement Sliding Window for STT
+                    const limit = window.innerWidth < 768 ? 5 : 20;
+                    const words = text.split(' ');
+                    const truncatedText = words.length > limit
+                        ? '... ' + words.slice(-limit).join(' ')
+                        : text;
+
+                    setCurrentAnswer(truncatedText);
                     setInterviewState('user-speaking');
                     setIsListening(true);
 
@@ -516,13 +524,12 @@ const DesignRound = () => {
                         let currentCount = displayedWordCountRef.current;
 
                         // Process one by one to handle pagination logic correctly
+                        const karaokeLimit = window.innerWidth < 768 ? 5 : 20;
                         for (const word of wordsToDisplay) {
-                            if (currentCount >= 20) {
-                                // Reset for next "page"
+                            if (currentCount >= karaokeLimit) {
                                 newText = word;
                                 currentCount = 1;
                             } else {
-                                // Append with space if needed
                                 newText = newText ? (newText + ' ' + word) : word;
                                 currentCount++;
                             }

@@ -264,7 +264,7 @@ const ProfileSettings = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="space-y-6 sticky top-24 self-start"
+                        className="space-y-6 lg:sticky lg:top-24 self-start"
                     >
                         <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 text-center relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-[40px] -mr-16 -mt-16" />

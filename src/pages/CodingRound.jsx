@@ -294,7 +294,15 @@ ${formatList(critical_requirements)}
                     }
 
                     const { text, isFinal } = msg.payload;
-                    setCurrentAnswer(text);
+
+                    // Implement Sliding Window for STT
+                    const limit = window.innerWidth < 768 ? 5 : 20;
+                    const words = text.split(' ');
+                    const truncatedText = words.length > limit
+                        ? '... ' + words.slice(-limit).join(' ')
+                        : text;
+
+                    setCurrentAnswer(truncatedText);
                     setInterviewState('user-speaking');
                     setIsListening(true);
 
@@ -534,8 +542,9 @@ ${formatList(critical_requirements)}
                     setCurrentQuestion(prev => {
                         let newText = prev || '';
                         let currentCount = displayedWordCountRef.current;
+                        const karaokeLimit = window.innerWidth < 768 ? 5 : 20;
                         for (const word of wordsToDisplay) {
-                            if (currentCount >= 20) {
+                            if (currentCount >= karaokeLimit) {
                                 newText = word;
                                 currentCount = 1;
                             } else {
