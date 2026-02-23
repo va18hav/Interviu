@@ -134,20 +134,20 @@ const PopularInterviewsHero = () => {
                 <div className="relative">
                     <div className="flex flex-col items-center scale-90 sm:scale-100 lg:scale-110">
                         {/* Row 1 */}
-                        <div className="flex mb-[-24px] md:mb-[-32px]">
+                        <div className="flex mb-[-18px] md:mb-[-22px] gap-2">
                             <Hexagon logo={logos[0]} delay={0.4} />
                             <Hexagon logo={logos[1]} delay={0.5} />
                         </div>
 
                         {/* Row 2 */}
-                        <div className="flex mb-[-24px] md:mb-[-32px]">
+                        <div className="flex mb-[-18px] md:mb-[-22px] gap-2">
                             <Hexagon logo={logos[2]} delay={0.6} />
                             <Hexagon logo={logos[3]} delay={0.3} />
                             <Hexagon logo={logos[4]} delay={0.7} />
                         </div>
 
                         {/* Row 3 */}
-                        <div className="flex">
+                        <div className="flex gap-2">
                             <Hexagon logo={logos[5]} delay={0.8} />
                             <Hexagon logo={logos[6]} delay={0.9} />
                         </div>
