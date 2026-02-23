@@ -155,7 +155,7 @@ const NewHeroSection = () => {
                         >
                             <span>Practice Real Interviews</span>
                             <br className="hidden sm:block" />
-                            <span className="text-black">With an <span className="bg-gradient-to-r from-indigo-500 via-blue-500 to-indigo-400 bg-clip-text text-transparent">AI Interviewer</span></span>
+                            <span className="text-black">With an <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">AI Interviewer</span></span>
                         </motion.h1>
 
                         {/* Subheadline */}
@@ -171,7 +171,7 @@ const NewHeroSection = () => {
                             variants={itemVariants}
                             className="text-xs sm:text-sm md:text-base text-gray-600 max-w-lg mb-10 md:mb-12 leading-relaxed px-4 sm:px-0 flex items-center flex-wrap justify-center lg:justify-start gap-4"
                         >
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 font-bold text-[10px] uppercase tracking-wider">
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-700 font-bold text-[10px] uppercase tracking-wider">
                                 <Target className="w-3.5 h-3.5" /> Trained on real hiring patterns
                             </span>
                         </motion.p>
@@ -221,7 +221,7 @@ const NewHeroSection = () => {
                             className="absolute w-[450px] h-[450px] bg-blue-500/10 blur-[100px] rounded-full will-change-transform"
                         />
                         {/* Core Atmospheric Glow */}
-                        <div className="absolute w-[300px] h-[300px] bg-indigo-600/20 blur-[80px] rounded-full" />
+                        <div className="absolute w-[500px] h-[500px] bg-indigo-600/25 blur-[80px] rounded-full" />
                     </div>
 
                     <motion.img
@@ -231,7 +231,7 @@ const NewHeroSection = () => {
                         transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
                         src={heroImage}
                         alt="Intervyu Platform Interface"
-                        className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[500px] lg:max-w-none lg:w-[450px] xl:w-[550px] h-auto drop-shadow-[0_25px_50px_rgba(0,0,0,0.15)] filter saturate-[1.1] will-change-transform"
+                        className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[500px] lg:max-w-none lg:w-[450px] xl:w-[550px] h-auto drop-shadow-[0_25px_50px_rgba(0,0,0,0.2)] filter saturate-[1.1] will-change-transform"
                     />
                 </div>
             </div>
