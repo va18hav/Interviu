@@ -28,6 +28,13 @@ export function setupWebSocket(server) {
         console.log('[WS] New Client Connected');
         const sessionId = `session-${crypto.randomUUID()}`;
 
+        // --- H-2: Per-connection rate limiting ---
+        const RATE_LIMIT_MAX = 120;        // JSON messages per window (increased from 60)
+        const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+        const MAX_MESSAGE_BYTES = 100_000;   // 100 KB
+        let messageCount = 0;
+        const rateLimitTimer = setInterval(() => { messageCount = 0; }, RATE_LIMIT_WINDOW_MS);
+
         const session = {
             id: sessionId,
             ws,
@@ -37,6 +44,7 @@ export function setupWebSocket(server) {
             turnParts: [],
             utteranceEndTimer: null,
             isProcessingResponse: false,
+            startedAt: Date.now(), // H-3: server-side timestamp for duration calculation
 
             // Azure STT State
             pushStream: null,
@@ -55,6 +63,21 @@ export function setupWebSocket(server) {
         sendData(session, { type: 'session_info', payload: { sessionId } });
 
         ws.on('message', async (message) => {
+            // H-2: Rate limit check (Apply ONLY to JSON control messages, not binary audio)
+            const isBinary = Buffer.isBuffer(message) || message instanceof ArrayBuffer;
+            if (!isBinary) {
+                if (++messageCount > RATE_LIMIT_MAX) {
+                    console.warn(`[WS] Rate limit exceeded for session ${sessionId}. Closing.`);
+                    ws.close(1008, 'Rate limit exceeded');
+                    return;
+                }
+            }
+            // H-2: Message size cap
+            if (message.length > MAX_MESSAGE_BYTES) {
+                console.warn(`[WS] Message too large (${message.length} bytes) for session ${sessionId}. Dropping.`);
+                return;
+            }
+
             const session = sessions.get(wsToSessionId.get(ws));
             if (!session) return;
             try {
@@ -152,8 +175,14 @@ export function setupWebSocket(server) {
                     handleCandidateResponse(session, message);
                 }
                 else if (msg.type === 'inject_system_message') {
-                    console.log(`[${session.id}] 🤫 Injecting System Message: "${msg.payload.text}"`);
-                    session.history.push({ role: 'user', content: `SYSTEM: ${msg.payload.text}` });
+                    // M-4: Validate payload — only accept short, known-safe strings
+                    const rawText = msg.payload?.text;
+                    if (!rawText || typeof rawText !== 'string') return;
+                    const safeText = rawText.slice(0, 500); // cap at 500 chars
+                    // Strip any attempt to escape the SYSTEM prefix context
+                    const sanitized = safeText.replace(/[<>]/g, '');
+                    console.log(`[${session.id}] 🤫 Injecting System Message: "${sanitized}"`);
+                    session.history.push({ role: 'user', content: `SYSTEM: ${sanitized}` });
                 }
                 else if (msg.type === 'reconnect') {
                     const { sessionId: oldSessionId } = msg.payload;
@@ -197,9 +226,22 @@ export function setupWebSocket(server) {
         ws.on('close', () => {
             const sessionId = wsToSessionId.get(ws);
             console.log(`[WS] Client Disconnected (${sessionId})`);
-            // We don't cleanup immediately to allow reconnection for report
-            // sessions.delete(sessionId); // Delay this or keep it
+            clearInterval(rateLimitTimer);
             wsToSessionId.delete(ws);
+
+            // H-1: TTL-based cleanup — allow 5 minutes for reconnect before disposing
+            // If the client reconnects within that window, the session is preserved.
+            setTimeout(() => {
+                const staleSession = sessions.get(sessionId);
+                if (staleSession && staleSession.ws !== ws) {
+                    // Client already reconnected with a new socket — don't clean up
+                    return;
+                }
+                if (staleSession) {
+                    console.log(`[WS] TTL expired for ${sessionId}. Cleaning up session.`);
+                    cleanupSession(staleSession);
+                }
+            }, 5 * 60 * 1000); // 5-minute grace window
         });
 
         ws.on('error', (err) => {

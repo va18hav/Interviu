@@ -165,9 +165,13 @@ const CreateInterview = () => {
           candidate_weaknesses: formatVal(formData.candidateWeaknesses),
         }
 
+        const token = localStorage.getItem('authToken');
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/compile-scenario`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({
             role: formData.role,
             roundType: formData.roundType,

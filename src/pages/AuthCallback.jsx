@@ -1,45 +1,88 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 /**
- * AuthCallback handles the redirect from Supabase Google OAuth.
- * Supabase uses the implicit flow and delivers the token in the URL hash: 
- *   /auth/callback#access_token=...&refresh_token=...
+ * AuthCallback handles two flows:
+ *
+ * 1. Backend Google OAuth (PKCE/code exchange):
+ *    - Backend redirects here with ?code=<one-time-opaque-code>
+ *    - We POST that code to /api/auth/exchange to receive the real session
+ *
+ * 2. Supabase implicit flow (hash fragment):
+ *    - Supabase delivers #access_token=... directly in the URL hash
  */
 const AuthCallback = () => {
     const navigate = useNavigate();
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Parse the hash fragment (#access_token=...&refresh_token=...&...)
-        const hash = window.location.hash.substring(1); // Remove the leading #
-        const params = new URLSearchParams(hash);
+        const queryParams = new URLSearchParams(window.location.search);
+        const oauthCode = queryParams.get('code');
+        const queryError = queryParams.get('error');
 
-        const accessToken = params.get('access_token');
-        const errorCode = params.get('error');
-        const errorDescription = params.get('error_description');
-
-        if (errorCode) {
-            console.error('[AuthCallback] OAuth error:', errorCode, errorDescription);
-            setError(errorDescription || 'Google login failed. Please try again.');
+        // --- Flow 1: Backend one-time code exchange ---
+        if (oauthCode) {
+            exchangeCode(oauthCode);
             return;
         }
 
-        if (!accessToken) {
-            // Also check query params (fallback)
-            const queryParams = new URLSearchParams(window.location.search);
-            const queryError = queryParams.get('error');
-            if (queryError) {
-                setError('Google login failed: ' + queryError);
-            } else {
-                setError('No authentication token received. Please try again.');
-            }
+        // --- Error in query string (e.g. oauth_failed) ---
+        if (queryError) {
+            setError('Google login failed: ' + queryError);
             return;
         }
 
+        // --- Flow 2: Supabase implicit flow via hash fragment ---
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
+        const accessToken = hashParams.get('access_token');
+        const hashError = hashParams.get('error');
+
+        if (hashError) {
+            setError(hashParams.get('error_description') || 'Google login failed. Please try again.');
+            return;
+        }
+
+        if (accessToken) {
+            processImplicitToken(accessToken);
+            return;
+        }
+
+        setError('No authentication token received. Please try again.');
+    }, [navigate]);
+
+    async function exchangeCode(code) {
         try {
-            // Decode the JWT to extract user metadata  
-            // (no Supabase client needed — the payload is just base64)
+            const response = await fetch(`${API_URL}/api/auth/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Exchange failed');
+            }
+
+            const { token, user } = await response.json();
+
+            // Store credentials — token was delivered over HTTPS body, never in any URL
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('userCredentials', JSON.stringify(user));
+
+            // Clear the code from the URL bar immediately for hygiene
+            window.history.replaceState({}, '', '/dashboard');
+            navigate('/dashboard', { replace: true });
+        } catch (e) {
+            console.error('[AuthCallback] Code exchange failed:', e);
+            setError('Failed to complete login. Please try again.');
+        }
+    }
+
+    function processImplicitToken(accessToken) {
+        try {
             const payloadBase64 = accessToken.split('.')[1];
             const payload = JSON.parse(atob(payloadBase64));
 
@@ -60,10 +103,10 @@ const AuthCallback = () => {
 
             navigate('/dashboard', { replace: true });
         } catch (e) {
-            console.error('[AuthCallback] Failed to parse token:', e);
+            console.error('[AuthCallback] Failed to parse implicit token:', e);
             setError('Failed to process login. Please try again.');
         }
-    }, [navigate]);
+    }
 
     if (error) {
         return (

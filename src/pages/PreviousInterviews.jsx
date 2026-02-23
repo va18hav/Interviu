@@ -42,10 +42,12 @@ const PreviousInterviews = () => {
                 navigate('/login');
                 return;
             }
+            const token = localStorage.getItem('authToken');
+            const fetchParams = { headers: { 'Authorization': `Bearer ${token}` } };
 
             const [curatedRes, customRes] = await Promise.all([
-                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}`),
-                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${userCreds.id}`)
+                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}`, fetchParams),
+                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${userCreds.id}`, fetchParams)
             ]);
 
             const curatedData = curatedRes.ok ? await curatedRes.json() : [];
@@ -97,8 +99,10 @@ const PreviousInterviews = () => {
         if (!confirm("Are you sure you want to delete this interview record?")) return;
 
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
@@ -212,8 +216,8 @@ const PreviousInterviews = () => {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab
-                                        ? "bg-white text-indigo-600 shadow-lg shadow-indigo-500/10 scale-[1.02]"
-                                        : "text-slate-500 hover:text-slate-900"
+                                    ? "bg-white text-indigo-600 shadow-lg shadow-indigo-500/10 scale-[1.02]"
+                                    : "text-slate-500 hover:text-slate-900"
                                     }`}
                             >
                                 {tab} ({
@@ -283,8 +287,8 @@ const PreviousInterviews = () => {
                                         <div className="flex-1 space-y-3 min-w-0">
                                             <div className="flex flex-wrap items-center gap-3">
                                                 <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${interview.category === 'curated'
-                                                        ? 'bg-indigo-50 text-indigo-700 border-indigo-100 underline decoration-indigo-200 decoration-2 underline-offset-4'
-                                                        : 'bg-emerald-50 text-emerald-700 border-emerald-100 underline decoration-emerald-200 decoration-2 underline-offset-4'
+                                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-100 underline decoration-indigo-200 decoration-2 underline-offset-4'
+                                                    : 'bg-emerald-50 text-emerald-700 border-emerald-100 underline decoration-emerald-200 decoration-2 underline-offset-4'
                                                     }`}>
                                                     {interview.category}
                                                 </span>

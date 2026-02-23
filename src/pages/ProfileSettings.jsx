@@ -99,7 +99,12 @@ const ProfileSettings = () => {
                 return;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile?userId=${userCreds.id}`);
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile?userId=${userCreds.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const profile = await response.json();
 
             setFormData({
@@ -126,9 +131,13 @@ const ProfileSettings = () => {
             const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
             if (!userCreds?.id) throw new Error("User not found");
 
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     userId: userCreds.id,
                     updates: {

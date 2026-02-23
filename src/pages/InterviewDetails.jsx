@@ -25,9 +25,14 @@ const InterviewDetails = () => {
 
                 const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
 
+                const token = localStorage.getItem('authToken');
                 const [detailsRes, progressRes] = await Promise.all([
-                    fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}?type=${type || 'sde'}`),
-                    userCreds?.id ? fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}&interviewId=${id}`) : Promise.resolve({ ok: false })
+                    fetch(`${import.meta.env.VITE_API_URL}/api/interviews/${id}?type=${type || 'sde'}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    userCreds?.id ? fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}&interviewId=${id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }) : Promise.resolve({ ok: false })
                 ]);
 
                 const [detailsData, progressData] = await Promise.all([
@@ -158,9 +163,13 @@ const InterviewDetails = () => {
                 return;
             }
 
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/start-interview`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ userId: userCreds.id, context: commonState }),
             });
 

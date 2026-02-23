@@ -65,9 +65,19 @@ const InterviewReport = () => {
             const generateAndFetchReport = async () => {
                 try {
                     console.log("[Report] Calling API for end-interview and report generation...");
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        console.error('[Report] No auth token available');
+                        setLoading(false);
+                        return;
+                    }
+
                     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify(endInterviewParams)
                     });
 

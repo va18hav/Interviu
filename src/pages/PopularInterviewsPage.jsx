@@ -36,7 +36,10 @@ const PopularInterviewsPage = () => {
     useEffect(() => {
         const fetchInterviews = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews`);
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/interviews`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 const allData = await response.json();
 
                 if (!response.ok) throw new Error(allData.error || "Failed to fetch interviews");

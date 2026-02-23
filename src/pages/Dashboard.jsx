@@ -53,14 +53,17 @@ const InterviewDashboard = () => {
 
       setUserCredentials(storedUser);
 
-      const [dashboardRes, customRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard?userId=${storedUser.id}`),
-        fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${storedUser.id}`)
+      const token = localStorage.getItem('authToken');
+      const fetchParams = { headers: { 'Authorization': `Bearer ${token}` } };
+
+      const [dashboardRes, customInterviewsRes] = await Promise.all([
+        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard?userId=${storedUser.id}`, fetchParams),
+        fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${storedUser.id}`, fetchParams)
       ]);
 
       const [dashboardData, customData] = await Promise.all([
         dashboardRes.json(),
-        customRes.ok ? customRes.json() : Promise.resolve([])
+        customInterviewsRes.ok ? customInterviewsRes.json() : Promise.resolve([])
       ]);
 
       if (!dashboardRes.ok) throw new Error(dashboardData.error || "Failed to load dashboard data");
@@ -87,8 +90,10 @@ const InterviewDashboard = () => {
 
     try {
       setPastInterviews(prev => prev.filter(i => i.id !== id));
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (!response.ok) {

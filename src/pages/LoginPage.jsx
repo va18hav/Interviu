@@ -19,6 +19,72 @@ const LoginPage = () => {
     });
 
     const [errors, setErrors] = React.useState({});
+    const [sessionExpired, setSessionExpired] = React.useState(false);
+    const [signupSuccess, setSignupSuccess] = React.useState(false);
+
+
+    // Step 4 (Option C): Initialize Google Identity Services
+    useEffect(() => {
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        if (!clientId) {
+            console.warn("VITE_GOOGLE_CLIENT_ID not found in .env. Google login may fail.");
+            return;
+        }
+
+        /* global google */
+        if (typeof google !== 'undefined') {
+            google.accounts.id.initialize({
+                client_id: clientId,
+                callback: handleGoogleCredentialResponse,
+                ux_mode: 'popup',
+                itp_support: true, // Improved support for Intelligent Tracking Prevention
+            });
+
+            // Render the official Google button into the container
+            google.accounts.id.renderButton(
+                document.getElementById("google-branded-button"),
+                {
+                    theme: "outline",
+                    size: "large",
+                    width: "220", // Specific width for better alignment
+                    text: "signin_with",
+                    shape: "pill",
+                    logo_alignment: "left"
+                }
+            );
+        }
+    }, []);
+
+    const handleGoogleCredentialResponse = async (response) => {
+        setLoading(true);
+        try {
+            const apiRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google-id-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: response.credential })
+            });
+
+            const data = await apiRes.json();
+            if (!apiRes.ok) throw new Error(data.error || "Google exchange failed");
+
+            // Store User Data & Token (Same as standard login)
+            localStorage.setItem("authToken", data.token);
+            localStorage.setItem("userCredentials", JSON.stringify(data.user));
+            navigate('/dashboard');
+        } catch (error) {
+            console.error("Google Auth Error:", error.message);
+            setErrors(prev => ({ ...prev, auth: error.message }));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('expired') === 'true') {
+            setSessionExpired(true);
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,7 +95,13 @@ const LoginPage = () => {
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
+        // Trigger the Google Identity Services popup
+        if (typeof google !== 'undefined') {
+            google.accounts.id.prompt();
+        } else {
+            // Fallback to managed flow if script failed to load
+            window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
+        }
     };
 
     const validateEmail = (email) => {
@@ -87,6 +159,13 @@ const LoginPage = () => {
                 // Store User Data & Token
                 const user = data.user;
                 const session = data.session;
+
+                // Handle email confirmation UX flow
+                if (isSignUp && !session) {
+                    setSignupSuccess(true);
+                    setLoading(false);
+                    return;
+                }
 
                 const userMeta = user?.user_metadata || {};
                 const safeUser = {
@@ -170,140 +249,175 @@ const LoginPage = () => {
                                 <img src={logo} alt="Logo" className="w-16 h-20 relative z-10 drop-shadow-2xl" />
                             </motion.div>
                             <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Interviu</h1>
-                            {isSignUp ? "Create your professional signature" : "Welcome back to the terminal"}
+                            {isSignUp ? "Create your account" : "Welcome back to Interviu"}
                         </div>
 
-                        <AnimatePresence mode="wait">
+                        {signupSuccess ? (
                             <motion.div
-                                key={isSignUp ? 'signup' : 'login'}
-                                initial={{ x: 20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                exit={{ x: -20, opacity: 0 }}
-                                transition={{ duration: 0.4, ease: "circOut" }}
-                                className="space-y-5"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col items-center justify-center text-center py-4"
                             >
-                                <form onSubmit={handleSubmit} className="space-y-5">
-                                    {isSignUp && (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">First Name</label>
-                                                <div className="relative group">
-                                                    <input
-                                                        type="text"
-                                                        name="firstName"
-                                                        value={formData.firstName}
-                                                        onChange={handleChange}
-                                                        className="w-full rounded-2xl border border-slate-200/60 bg-white/50 px-4 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300"
-                                                        placeholder="Vaibhav"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Last Name</label>
-                                                <div className="relative group">
-                                                    <input
-                                                        type="text"
-                                                        name="lastName"
-                                                        value={formData.lastName}
-                                                        onChange={handleChange}
-                                                        className="w-full rounded-2xl border border-slate-200/60 bg-white/50 px-4 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300"
-                                                        placeholder="K"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                    <Mail className="w-8 h-8" />
+                                </div>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Check your email</h2>
+                                <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed mb-6">
+                                    We've sent a secure confirmation link to <br /><span className="font-bold text-slate-900">{formData.email}</span>. Click it to activate your account.
+                                </p>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Protocol Address</label>
-                                        <div className="relative group">
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                className={`w-full rounded-2xl border ${errors.email ? 'border-red-200 bg-red-50/10' : 'border-slate-200/60 bg-white/50'} px-4 py-4 pr-12 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300`}
-                                                placeholder="name@example.com"
-                                            />
-                                            <Mail className={`absolute right-4 top-4 w-5 h-5 ${errors.email ? 'text-red-400' : 'text-slate-300 group-hover:text-slate-400'} transition-colors`} />
-                                        </div>
-                                        {errors.email && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider ml-1 mt-1">Invalid email protocol</p>}
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Secure Credential</label>
-                                        <div className="relative group">
-                                            <input
-                                                type="password"
-                                                name="password"
-                                                value={formData.password}
-                                                onChange={handleChange}
-                                                className={`w-full rounded-2xl border ${errors.password ? 'border-red-200 bg-red-50/10' : 'border-slate-200/60 bg-white/50'} px-4 py-4 pr-12 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300`}
-                                                placeholder="••••••••"
-                                            />
-                                            <Lock className={`absolute right-4 top-4 w-5 h-5 ${errors.password ? 'text-red-400' : 'text-slate-300 group-hover:text-slate-400'} transition-colors`} />
-                                        </div>
-                                        {errors.password && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider ml-1 mt-1">Minimum 6 characters required</p>}
-                                    </div>
-
-                                    {errors.auth && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 5 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 flex items-center gap-3 text-red-600 text-[11px] font-black uppercase tracking-wider"
-                                        >
-                                            <AlertCircle size={16} />
-                                            {errors.auth}
-                                        </motion.div>
-                                    )}
-
+                                <div className="w-full flex justify-center mb-6">
                                     <button
-                                        type="submit"
-                                        disabled={loading || !canSubmit}
-                                        className="w-full relative group"
+                                        onClick={() => window.open('https://mail.google.com/mail/u/0/#search/from%3Ainterviu', '_blank')}
+                                        className="w-full relative group h-[48px]"
                                     >
-                                        <div className="absolute inset-0 bg-indigo-600 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-                                        <div className="relative bg-slate-900 group-hover:bg-indigo-600 text-white px-4 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 disabled:opacity-50 flex items-center justify-center gap-3 group-active:scale-[0.98]">
-                                            {loading ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    {isSignUp ? "Authorize Account" : "Access Terminal"}
-                                                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                                </>
-                                            )}
+                                        <div className="absolute inset-0 bg-blue-600 rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+                                        <div className="relative bg-white border border-slate-200 group-hover:bg-slate-50 text-slate-700 h-full rounded-full font-black text-[11px] uppercase tracking-[0.1em] transition-all duration-300 flex items-center justify-center gap-3 shadow-sm group-active:scale-[0.98]">
+                                            <Mail size={16} className="text-blue-600" />
+                                            Open Gmail
                                         </div>
                                     </button>
-                                </form>
-
-                                <div className="relative py-2">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-slate-100" />
-                                    </div>
-                                    <div className="relative flex justify-center text-xs">
-                                        <span className="bg-white/80 backdrop-blur-sm px-4 text-slate-400 font-bold uppercase tracking-widest text-[9px]">Protocol Linkage</span>
-                                    </div>
                                 </div>
 
                                 <button
-                                    onClick={handleGoogleLogin}
-                                    disabled={loading}
-                                    className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-4 flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98] group shadow-sm"
+                                    onClick={() => {
+                                        setSignupSuccess(false);
+                                        setIsSignUp(false);
+                                        setFormData(prev => ({ ...prev, password: "" }));
+                                    }}
+                                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
                                 >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                                    </svg>
-                                    <span className="text-sm font-bold text-slate-700">Continue with Google Service</span>
+                                    Back to Login
                                 </button>
+                            </motion.div>
+                        ) : (
+                            <>
+                                <form onSubmit={handleSubmit} className="space-y-5">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={isSignUp ? 'signup' : 'login'}
+                                            initial={{ x: 20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            exit={{ x: -20, opacity: 0 }}
+                                            transition={{ duration: 0.4, ease: "circOut" }}
+                                            className="space-y-5"
+                                        >
+                                            {isSignUp && (
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">First Name</label>
+                                                        <div className="relative group">
+                                                            <input
+                                                                type="text"
+                                                                name="firstName"
+                                                                value={formData.firstName}
+                                                                onChange={handleChange}
+                                                                className="w-full rounded-2xl border border-slate-200/60 bg-white/50 px-4 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300"
+                                                                placeholder="Vaibhav"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Last Name</label>
+                                                        <div className="relative group">
+                                                            <input
+                                                                type="text"
+                                                                name="lastName"
+                                                                value={formData.lastName}
+                                                                onChange={handleChange}
+                                                                className="w-full rounded-2xl border border-slate-200/60 bg-white/50 px-4 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300"
+                                                                placeholder="K"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                <div className="text-center">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
+                                                <div className="relative group">
+                                                    <input
+                                                        type="email"
+                                                        name="email"
+                                                        value={formData.email}
+                                                        onChange={handleChange}
+                                                        className={`w-full rounded-2xl border ${errors.email ? 'border-red-200 bg-red-50/10' : 'border-slate-200/60 bg-white/50'} px-4 py-4 pr-12 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300`}
+                                                        placeholder="name@example.com"
+                                                    />
+                                                    <Mail className={`absolute right-4 top-4 w-5 h-5 ${errors.email ? 'text-red-400' : 'text-slate-300 group-hover:text-slate-400'} transition-colors`} />
+                                                </div>
+                                                {errors.email && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider ml-1 mt-1">Invalid email protocol</p>}
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Password</label>
+                                                <div className="relative group">
+                                                    <input
+                                                        type="password"
+                                                        name="password"
+                                                        value={formData.password}
+                                                        onChange={handleChange}
+                                                        className={`w-full rounded-2xl border ${errors.password ? 'border-red-200 bg-red-50/10' : 'border-slate-200/60 bg-white/50'} px-4 py-4 pr-12 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300`}
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <Lock className={`absolute right-4 top-4 w-5 h-5 ${errors.password ? 'text-red-400' : 'text-slate-300 group-hover:text-slate-400'} transition-colors`} />
+                                                </div>
+                                                {errors.password && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider ml-1 mt-1">Minimum 6 characters required</p>}
+                                            </div>
+
+                                            {sessionExpired && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="mb-2 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3 text-amber-600 text-[11px] font-black uppercase tracking-wider mb-2"
+                                                >
+                                                    <AlertCircle size={16} />
+                                                    Session Expired. Please log in again.
+                                                </motion.div>
+                                            )}
+
+                                            {errors.auth && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 5 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 flex items-center gap-3 text-red-600 text-[11px] font-black uppercase tracking-wider"
+                                                >
+                                                    <AlertCircle size={16} />
+                                                    {errors.auth}
+                                                </motion.div>
+                                            )}
+                                        </motion.div>
+                                    </AnimatePresence>
+
+                                    <div className="flex flex-row gap-3 items-center mt-6 w-full">
+                                        <button
+                                            type="submit"
+                                            disabled={loading || !canSubmit}
+                                            className="flex-1 relative group h-[40px]"
+                                        >
+                                            <div className="absolute inset-0 bg-indigo-600 rounded-full blur-lg opacity-10 group-hover:opacity-30 transition-opacity" />
+                                            <div className="relative bg-slate-900 group-hover:bg-indigo-600 text-white px-4 h-full rounded-full font-black text-[10px] uppercase tracking-[0.1em] transition-all duration-500 disabled:opacity-50 flex items-center justify-center gap-2 group-active:scale-[0.98]">
+                                                {loading ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                                        <div className="w-1 h-1 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                                        <div className="w-1 h-1 bg-white rounded-full animate-bounce" />
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        {isSignUp ? "Join" : "Sign in"}
+                                                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                                    </>
+                                                )}
+                                            </div>
+                                        </button>
+
+                                        {/* Branded Google Login Container */}
+                                        <div id="google-branded-button" className="flex-1 flex justify-center items-center h-[40px]"></div>
+                                    </div>
+                                </form>
+
+                                <div className="text-center mt-6">
                                     <button
                                         onClick={() => {
                                             setIsSignUp(!isSignUp);
@@ -311,11 +425,11 @@ const LoginPage = () => {
                                         }}
                                         className="text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors py-2 px-4 rounded-full hover:bg-indigo-50"
                                     >
-                                        {isSignUp ? "Already recognized? Log In" : "New candidate? Initialize Session"}
+                                        {isSignUp ? "Already recognized? Log In" : "New candidate? Create Account"}
                                     </button>
                                 </div>
-                            </motion.div>
-                        </AnimatePresence>
+                            </>
+                        )}
                     </div>
                 </div>
 

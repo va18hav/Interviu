@@ -6,12 +6,13 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
-import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseAdmin } from './utils/supabase.js';
 import { getSystemPrompt } from './prompts/index.js';
 import { generateInterviewReport } from './utils/reportGenerator.js';
 import { compileScenario } from './utils/aiClient.js';
 import devopsScenarioCompilerPrompt from './prompts/devopsScenarioCompiler.js';
 import softwareScenarioCompilerPrompt from './prompts/softwareScenarioCompiler.js';
+import { requireAuth } from './middleware/auth.js';
 
 async function extractTextFromPDF(pdfBuffer) {
     const data = new Uint8Array(pdfBuffer);
@@ -34,32 +35,34 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Initialize Supabase
-const supabaseUrl = process.env.SUPABASE_URL || 'https://nfgforfzxarpjauiycar.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'sb_publishable_3jcEXhWkwMXxLHIyzP2b9w_90EUHSUf';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Admin client using service role key — bypasses RLS for backend-only operations
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = supabaseServiceKey
-    ? createClient(supabaseUrl, supabaseServiceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-    : supabase;
+// H-5: Small global body limit — only the resume endpoint needs more
+app.use(express.json({ limit: '100kb' }));
 
 // Initialize Groq with your API Key
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-app.use(express.json({ limit: '50mb' })); // Add JSON body parser at the top
+// H-5: Small global body limit — only the resume endpoint needs more
+app.use(express.json({ limit: '100kb' }));
 app.use(helmet());
 
-// Rate Limiting
+// Global rate limiter (public-facing API)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 150,
     standardHeaders: true,
     legacyHeaders: false,
     message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api', limiter);
+
+// M-1: Tighter rate limiter for expensive AI endpoints
+const aiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many AI requests. Please wait before trying again.'
+});
 
 app.use(cors({
     origin: ['https://intervyu-virid.vercel.app', 'https://www.interviu.pro', 'http://localhost:5173', 'http://localhost:3000'],
@@ -119,13 +122,41 @@ const resumeSchema = z.object({
     jobDescription: z.string().optional()
 });
 
+const startInterviewSchema = z.object({
+    userId: z.string().optional(),
+    context: z.record(z.any())
+});
+
+const compileScenarioSchema = z.object({
+    role: z.string().optional(),
+    roundType: z.string().optional(),
+    formatContext: z.record(z.any())
+});
+
+const runCodeSchema = z.object({
+    code: z.string().min(1, "Code is required"),
+    language: z.string().min(1, "Language is required"),
+    problemData: z.record(z.any()).optional()
+});
+
+const endInterviewSchema = z.object({
+    sessionId: z.string().optional(),
+    history: z.array(z.record(z.any())).optional(),
+    context: z.record(z.any()).optional(),
+    generateReport: z.boolean().optional(),
+    durationInMinutes: z.union([z.number(), z.string()]).optional()
+});
+
 // Validation Middleware
 const validate = (schema) => (req, res, next) => {
     try {
         schema.parse(req.body);
         next();
     } catch (err) {
-        return res.status(400).json({ error: err.errors });
+        console.error(`[Validation Error] Schema validation failed for ${req.path}`);
+        console.error('Request Body:', JSON.stringify(req.body, null, 2));
+        console.error('Errors:', err.errors || err);
+        return res.status(400).json({ error: err.errors || err.message });
     }
 };
 
@@ -184,6 +215,44 @@ app.post('/api/auth/logout', async (req, res) => {
     res.json({ message: "Logged out successfully" });
 });
 
+// Step 4 (Option C): Exchange a Google ID Token (from GIS popup) for a Supabase session
+app.post('/api/auth/google-id-token', async (req, res) => {
+    const { id_token } = req.body;
+    if (!id_token) return res.status(400).json({ error: 'Missing ID Token' });
+
+    try {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: id_token
+        });
+
+        if (error || !data?.session) {
+            console.error('[OAuth] ID Token exchange failed:', error);
+            return res.status(401).json({ error: 'Session exchange failed' });
+        }
+
+        const { session, user } = data;
+        const userMeta = user?.user_metadata || {};
+
+        const safeUser = {
+            id: user.id,
+            firstName: userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User',
+            lastName: userMeta.full_name?.split(' ').slice(1).join(' ') || '',
+            email: user.email,
+            avatarUrl: userMeta.avatar_url || null
+        };
+
+        res.json({
+            token: session.access_token,
+            refresh_token: session.refresh_token,
+            user: safeUser
+        });
+    } catch (err) {
+        console.error('[OAuth] ID Token error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/auth/user', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ error: "No token provided" });
@@ -227,6 +296,18 @@ app.get('/api/auth/google', async (req, res) => {
     }
 });
 
+// One-time code store: code -> { session, user, expiresAt }
+// In a multi-instance deployment, replace this with Redis.
+const oauthCodeStore = new Map();
+
+// Cleanup expired codes every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [code, entry] of oauthCodeStore.entries()) {
+        if (entry.expiresAt < now) oauthCodeStore.delete(code);
+    }
+}, 5 * 60 * 1000);
+
 // Step 2: Supabase/Google redirects back here with ?code=
 app.get('/api/auth/callback', async (req, res) => {
     const { code, error: oauthError } = req.query;
@@ -253,26 +334,56 @@ app.get('/api/auth/callback', async (req, res) => {
         const { session, user } = data;
         const userMeta = user?.user_metadata || {};
 
-        // Build a safe user object matching what email/password login returns
-        const safeUser = JSON.stringify({
+        // Build a safe user object
+        const safeUser = {
             id: user.id,
             firstName: userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User',
             lastName: userMeta.full_name?.split(' ').slice(1).join(' ') || '',
             email: user.email,
             avatarUrl: userMeta.avatar_url || null
+        };
+
+        // Store session under a random one-time code (TTL: 60s)
+        // The JWT never touches the URL query string.
+        const { randomUUID } = await import('crypto');
+        const oauthCode = randomUUID();
+        oauthCodeStore.set(oauthCode, {
+            session,
+            user: safeUser,
+            expiresAt: Date.now() + 60_000 // 60 seconds
         });
 
-        // Redirect the browser to the frontend callback page with token embedded in URL
-        const params = new URLSearchParams({
-            token: session.access_token,
-            user: safeUser
-        });
-
-        res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
+        // Send only the short-lived, opaque code in the URL redirect
+        res.redirect(`${frontendUrl}/auth/callback?code=${oauthCode}`);
     } catch (err) {
         console.error('[OAuth] Callback processing error:', err);
         res.redirect(`${frontendUrl}/login?error=internal_error`);
     }
+});
+
+// Step 3: Frontend POSTs the one-time code here to exchange for the real session
+app.post('/api/auth/exchange', async (req, res) => {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+        return res.status(400).json({ error: 'Missing code' });
+    }
+
+    const entry = oauthCodeStore.get(code);
+
+    if (!entry || entry.expiresAt < Date.now()) {
+        oauthCodeStore.delete(code); // Clean up if expired
+        return res.status(401).json({ error: 'Invalid or expired OAuth code' });
+    }
+
+    // Consume — one-time use
+    oauthCodeStore.delete(code);
+
+    // Return session and user data over an authenticated channel (HTTPS only)
+    res.json({
+        token: entry.session.access_token,
+        refresh_token: entry.session.refresh_token,
+        user: entry.user
+    });
 });
 
 // ==========================================
@@ -280,8 +391,8 @@ app.get('/api/auth/callback', async (req, res) => {
 // ==========================================
 
 // Dashboard Data
-app.get('/api/dashboard', async (req, res) => {
-    const userId = req.query.userId;
+app.get('/api/dashboard', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
@@ -356,8 +467,8 @@ app.get('/api/dashboard', async (req, res) => {
 });
 
 // Credits
-app.get('/api/credits', async (req, res) => {
-    const userId = req.query.userId;
+app.get('/api/credits', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
@@ -375,8 +486,8 @@ app.get('/api/credits', async (req, res) => {
 });
 
 // Profile
-app.get('/api/profile', async (req, res) => {
-    const userId = req.query.userId;
+app.get('/api/profile', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
@@ -392,27 +503,47 @@ app.get('/api/profile', async (req, res) => {
     }
 });
 
-app.put('/api/profile', async (req, res) => {
-    const { userId, updates } = req.body;
+app.put('/api/profile', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
+    const { updates } = req.body;
     if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    // Whitelist: only permit known, non-privileged columns
+    const ALLOWED_FIELDS = [
+        'first_name', 'last_name', 'bio', 'avatar_url',
+        'skills', 'experience_level', 'role', 'target_companies',
+        'phone', 'linkedin_url', 'github_url', 'website_url'
+    ];
+    const safeUpdates = {};
+    if (updates && typeof updates === 'object') {
+        for (const key of ALLOWED_FIELDS) {
+            if (Object.prototype.hasOwnProperty.call(updates, key)) {
+                safeUpdates[key] = updates[key];
+            }
+        }
+    }
+    if (Object.keys(safeUpdates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+    }
 
     try {
         const { data, error } = await supabase
             .from('profiles')
-            .update(updates)
+            .update(safeUpdates)
             .eq('id', userId)
             .select();
 
         if (error) throw error;
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('[PUT /api/profile] Error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
     }
 });
 
 // Interviews
 // Fetch all interviews (SDE & DevOps)
-app.get('/api/interviews', async (req, res) => {
+app.get('/api/interviews', requireAuth(), async (req, res) => {
     try {
         const [sdeResponse, devopsResponse] = await Promise.all([
             supabase.from('sde_interviews').select('*'),
@@ -433,7 +564,7 @@ app.get('/api/interviews', async (req, res) => {
 });
 
 // Fetch user interview progress
-app.get('/api/interviews/progress', async (req, res) => {
+app.get('/api/interviews/progress', requireAuth(), async (req, res) => {
     const { userId, role } = req.query;
     if (!userId || !role) return res.status(400).json({ error: "User ID and Role required" });
 
@@ -452,7 +583,7 @@ app.get('/api/interviews/progress', async (req, res) => {
 });
 
 // Fetch single interview details
-app.get('/api/interviews/:id', async (req, res) => {
+app.get('/api/interviews/:id', requireAuth(), async (req, res) => {
     const { id } = req.params;
     const { type } = req.query; // 'sde' or 'devops'
 
@@ -479,8 +610,9 @@ app.get('/api/interviews/:id', async (req, res) => {
 // ==============================================================
 
 // GET /api/completed-interviews/curated?userId=...
-app.get('/api/completed-interviews/curated', async (req, res) => {
-    const { userId, interviewId } = req.query;
+app.get('/api/completed-interviews/curated', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
+    const { interviewId } = req.query;
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
     try {
@@ -504,8 +636,8 @@ app.get('/api/completed-interviews/curated', async (req, res) => {
 });
 
 // GET /api/recent-interviews?userId=...
-app.get('/api/recent-interviews', async (req, res) => {
-    const { userId } = req.query;
+app.get('/api/recent-interviews', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
     try {
@@ -580,8 +712,8 @@ app.get('/api/recent-interviews', async (req, res) => {
 
 
 // GET /api/completed-interviews/custom?userId=...
-app.get('/api/completed-interviews/custom', async (req, res) => {
-    const { userId } = req.query;
+app.get('/api/completed-interviews/custom', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: 'userId is required' });
 
     try {
@@ -599,31 +731,33 @@ app.get('/api/completed-interviews/custom', async (req, res) => {
     }
 });
 
-// DELETE /api/completed-interviews/:id
-app.delete('/api/completed-interviews/:id', async (req, res) => {
+// DELETE /api/completed-interviews/:id — M-2: enforces ownership
+app.delete('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
     const { id } = req.params;
+    const userId = req.userId; // Sourced from verified JWT
     try {
-        // 1. Try deleting from curated interviews
+        // 1. Try deleting from curated — filtered by both record id AND user_id
         const { error: curatedError } = await supabaseAdmin
             .from('completed_curated_interviews')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', userId); // M-2: ensures caller owns this record
 
-        // 2. Try deleting from custom interviews (even if curated failed, curated is usually what 'id' would match)
+        // 2. Try deleting from custom — same ownership filter
         const { error: customError } = await supabaseAdmin
             .from('completed_custom_interviews')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', userId); // M-2: ensures caller owns this record
 
-        // Check if at least one succeeded or both failed
         if (curatedError && customError) {
-            throw new Error(`Failed to delete from both tables: ${curatedError.message} | ${customError.message}`);
+            throw new Error('Failed to delete record from both tables');
         }
 
         res.json({ message: "Interview record deleted successfully" });
     } catch (error) {
         console.error('[DELETE completed-interview]', error.message);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Failed to delete interview record' });
     }
 });
 
@@ -676,8 +810,9 @@ app.delete('/api/interviews/:id', async (req, res) => {
 });
 
 // Onboarding
-app.post('/api/onboarding', async (req, res) => {
-    const { userId, onboardingData } = req.body;
+app.post('/api/onboarding', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
+    const { onboardingData } = req.body;
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
@@ -762,8 +897,8 @@ app.get('/api/onboarding-interviews', async (req, res) => {
 
 
 // Resume (GET)
-app.get('/api/resume', async (req, res) => {
-    const userId = req.query.userId;
+app.get('/api/resume', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
@@ -782,8 +917,8 @@ app.get('/api/resume', async (req, res) => {
     }
 });
 
-app.get('/api/resume-analyses', async (req, res) => {
-    const userId = req.query.userId;
+app.get('/api/resume-analyses', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
@@ -846,11 +981,13 @@ app.delete('/api/resume-analyses/:id', async (req, res) => {
 
 
 // SECURE: Start Interview Endpoint
-app.post('/api/start-interview', async (req, res) => {
+app.post('/api/start-interview', requireAuth(), validate(startInterviewSchema), async (req, res) => {
     try {
-        const { userId, context } = req.body;
+        const userId = req.userId; // Sourced from verified JWT, not client input
+        const { context } = req.body;
 
         if (!userId || !context) {
+            console.warn(`[start-interview] Missing fields: userId=${userId}, context=${!!context}`);
             return res.status(400).json({ error: "Missing required fields: userId, context" });
         }
 
@@ -887,12 +1024,27 @@ app.post('/api/start-interview', async (req, res) => {
 });
 
 // SECURE: End Interview & Generate Report
-app.post('/api/end-interview', async (req, res) => {
+app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), async (req, res) => {
     try {
-        const { userId, durationInMinutes, history, context, generateReport = true, sessionId } = req.body;
+        const userId = req.userId; // Sourced from verified JWT, not client input
+        const { history, context, generateReport = true, sessionId } = req.body;
 
-        if (!userId || durationInMinutes === undefined) {
-            return res.status(400).json({ error: "Missing required fields: userId, durationInMinutes" });
+        // H-3: Prefer server-side duration from the active WS session.
+        // Only fall back to client-reported value when no server session exists (e.g. page reload).
+        const activeWsSession = sessionId ? sessions.get(sessionId) : null;
+        let durationInMinutes;
+        if (activeWsSession?.startedAt) {
+            durationInMinutes = (Date.now() - activeWsSession.startedAt) / 60_000;
+            console.log(`[EndInterview] Server-computed duration: ${durationInMinutes.toFixed(2)}m`);
+        } else {
+            // Client-provided fallback — cap at a sane maximum (120 min)
+            const clientDuration = parseFloat(req.body.durationInMinutes);
+            durationInMinutes = isNaN(clientDuration) ? 1 : Math.min(Math.max(clientDuration, 0), 120);
+            console.log(`[EndInterview] Client-reported duration (capped): ${durationInMinutes.toFixed(2)}m`);
+        }
+
+        if (!userId) {
+            return res.status(400).json({ error: "Missing required fields: userId" });
         }
 
         // 1. Calculate Credits to Deduct (1 min = 1 credit, rounded up)
@@ -933,10 +1085,10 @@ app.post('/api/end-interview', async (req, res) => {
             context: context
         };
 
-        const activeWsSession = sessionId ? sessions.get(sessionId) : null;
-        if (activeWsSession) {
+        const endWsSession = sessionId ? sessions.get(sessionId) : null;
+        if (endWsSession) {
             console.log(`[EndInterview] Found active WebSocket session for ${sessionId}, using real history.`);
-            sessionData = activeWsSession; // Pass the whole real session
+            sessionData = endWsSession; // Pass the whole real session
         } else if (!history || history.length === 0) {
             console.warn("[EndInterview] No history provided and no active WS session found for report generation.");
         }
@@ -1040,8 +1192,9 @@ app.post('/api/end-interview', async (req, res) => {
 });
 
 // Standalone Credit Deduction (for aborts/leaves)
-app.post('/api/deduct-credits', async (req, res) => {
-    const { userId, durationSeconds } = req.body;
+app.post('/api/deduct-credits', requireAuth(), async (req, res) => {
+    const userId = req.userId; // Sourced from verified JWT, not client input
+    const { durationSeconds } = req.body;
     if (!userId || durationSeconds === undefined) return res.status(400).json({ error: "Missing fields" });
 
     const durationInMinutes = durationSeconds / 60;
@@ -1064,7 +1217,7 @@ app.post('/api/deduct-credits', async (req, res) => {
 });
 
 // SCENARIO COMPILATION ENDPOINT
-app.post('/api/compile-scenario', async (req, res) => {
+app.post('/api/compile-scenario', requireAuth({ checkUserId: false }), validate(compileScenarioSchema), aiLimiter, async (req, res) => {
     const { role, roundType, formatContext } = req.body;
 
     if (!formatContext) {
@@ -1116,35 +1269,40 @@ app.post('/api/compile-scenario', async (req, res) => {
     }
 });
 
-app.post('/api/analyze-resume', validate(resumeSchema), async (req, res) => {
-    try {
-        const { pdfBase64, jobRole, jobDescription } = req.body;
-        if (!pdfBase64) return res.status(400).json({ error: "No PDF data provided" })
-        // Convert base64 to buffer
-        const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
-        const pdfBuffer = Buffer.from(cleanBase64, 'base64');
+app.post('/api/analyze-resume',
+    requireAuth({ checkUserId: false }),
+    express.json({ limit: '10mb' }), // H-5: larger limit only for this endpoint
+    validate(resumeSchema),
+    aiLimiter,               // M-1: AI rate limit
+    async (req, res) => {
+        try {
+            const { pdfBase64, jobRole, jobDescription } = req.body;
+            if (!pdfBase64) return res.status(400).json({ error: "No PDF data provided" })
+            // Convert base64 to buffer
+            const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
+            const pdfBuffer = Buffer.from(cleanBase64, 'base64');
 
-        // Extract text from PDF
-        const resumeText = await extractTextFromPDF(pdfBuffer);
+            // Extract text from PDF
+            const resumeText = await extractTextFromPDF(pdfBuffer);
 
-        console.log('Extracted text:', resumeText.substring(0, 200)); // Log first 200 chars
+            console.log('Extracted text:', resumeText.substring(0, 200)); // Log first 200 chars
 
-        // Construct context string based on optional inputs
-        let contextInstruction = "";
-        if (jobRole) {
-            contextInstruction += `\nTARGET ROLE: ${jobRole}\n`;
-        }
-        if (jobDescription) {
-            contextInstruction += `\nTARGET JOB DESCRIPTION: ${jobDescription}\nEvaluate how well the resume matches this specific job description.\n`;
-        }
+            // Construct context string based on optional inputs
+            let contextInstruction = "";
+            if (jobRole) {
+                contextInstruction += `\nTARGET ROLE: ${jobRole}\n`;
+            }
+            if (jobDescription) {
+                contextInstruction += `\nTARGET JOB DESCRIPTION: ${jobDescription}\nEvaluate how well the resume matches this specific job description.\n`;
+            }
 
-        // Call Groq API for analysis
+            // Call Groq API for analysis
 
-        const chatCompletion = await groq.chat.completions.create({
-            model: 'groq/compound-mini',
-            messages: [{
-                role: 'user',
-                content: `You are an ATS (Applicant Tracking System) parser, not a human recruiter. You must score based on how well a MACHINE can parse and match this resume, not how impressive it looks to humans.
+            const chatCompletion = await groq.chat.completions.create({
+                model: 'groq/compound-mini',
+                messages: [{
+                    role: 'user',
+                    content: `You are an ATS (Applicant Tracking System) parser, not a human recruiter. You must score based on how well a MACHINE can parse and match this resume, not how impressive it looks to humans.
 ${contextInstruction}
 IMPORTANT: Look at these REAL examples to calibrate your scoring:
 
@@ -1251,22 +1409,22 @@ Respond with ONLY valid JSON in this exact format:
 }
 FINAL CHECK: If your atsScore is above 75, review the resume again and find at least 3 major issues that should lower the score. A score above 75 means this resume is better than 75% of all resumes - is that really true?
 All scores must be between 0-100. Provide exactly 3 strengths, 3 improvements, and up to 5 missing keywords.`
-            }],
-            temperature: 0.3,
-            response_format: { type: "json_object" }
-        })
+                }],
+                temperature: 0.3,
+                response_format: { type: "json_object" }
+            })
 
-        const analysis = JSON.parse(chatCompletion.choices[0].message.content);
-        res.json(analysis);
+            const analysis = JSON.parse(chatCompletion.choices[0].message.content);
+            res.json(analysis);
 
-    } catch (error) {
-        console.error('Error analyzing resume:', error);
-        res.status(500).json({ error: 'Failed to analyze resume' });
-    }
-});
+        } catch (error) {
+            console.error('Error analyzing resume:', error);
+            res.status(500).json({ error: 'Failed to analyze resume' });
+        }
+    });
 
 // SECURE: Execute Code via Piston API (Multi-Language Support)
-app.post('/api/run-code', async (req, res) => {
+app.post('/api/run-code', requireAuth({ checkUserId: false }), validate(runCodeSchema), async (req, res) => {
     try {
         const { language, code, files, stdin } = req.body;
 
@@ -1312,6 +1470,9 @@ app.post('/api/run-code', async (req, res) => {
             }];
         }
 
+        // L-3: Cap run_timeout server-side — never trust client-provided timeouts
+        const safeRunTimeout = Math.min(Math.max(parseInt(req.body.run_timeout) || 3000, 1000), 10000);
+
         console.log(`[Piston] Executing ${config.language} with ${pistonFiles.length} file(s)...`);
 
         const response = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -1324,7 +1485,7 @@ app.post('/api/run-code', async (req, res) => {
                 stdin: stdin || "",
                 args: req.body.args || [],
                 compile_timeout: 10000,
-                run_timeout: req.body.run_timeout || 3000
+                run_timeout: safeRunTimeout
             })
         });
 

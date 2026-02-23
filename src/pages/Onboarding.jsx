@@ -864,9 +864,13 @@ const Onboarding = ({ onComplete }) => {
         try {
             const userCredentials = JSON.parse(localStorage.getItem('userCredentials'));
             if (!userCredentials?.id) return;
+            const token = localStorage.getItem('authToken');
             await fetch(`${import.meta.env.VITE_API_URL}/api/onboarding`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ userId: userCredentials.id, onboardingData: { onboarding_completed: true } })
             });
         } catch (err) {
@@ -884,9 +888,13 @@ const Onboarding = ({ onComplete }) => {
         try {
             const userCredentials = JSON.parse(localStorage.getItem('userCredentials'));
             if (!userCredentials?.id) return;
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/onboarding`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ userId: userCredentials.id, onboardingData: dataToSave })
             });
             if (!response.ok) throw new Error('Failed to update profile');

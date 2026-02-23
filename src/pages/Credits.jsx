@@ -23,7 +23,10 @@ const CreditsPage = () => {
             try {
                 const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
                 if (userCreds?.id) {
-                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/credits?userId=${userCreds.id}`);
+                    const token = localStorage.getItem('authToken');
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/credits?userId=${userCreds.id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
                     const data = await response.json();
                     if (response.ok) {
                         setCredits(data.credits);

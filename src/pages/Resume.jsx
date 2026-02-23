@@ -182,7 +182,10 @@ const Resume = () => {
                 setUser(userCreds);
 
                 // Fetch past resumes
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses?userId=${userCreds.id}`);
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses?userId=${userCreds.id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 const data = await response.json();
 
                 if (response.ok) {
@@ -257,9 +260,13 @@ const Resume = () => {
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1]; // Remove data:application/pdf;base64,
 
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/analyze-resume`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     pdfBase64: base64,
                     jobRole: sanitizeInput(jobRole),
@@ -284,9 +291,13 @@ const Resume = () => {
             // Save to Backend
             if (user?.id) {
                 try {
+                    const token = localStorage.getItem('authToken');
                     const saveResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify({
                             userId: user.id,
                             jobRole: jobRole,
@@ -324,8 +335,10 @@ const Resume = () => {
         if (!confirm("Are you sure you want to delete this analysis?")) return;
 
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/resume-analyses/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) {

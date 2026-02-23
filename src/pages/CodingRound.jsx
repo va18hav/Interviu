@@ -754,10 +754,12 @@ ${formatList(critical_requirements)}
         }
 
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/run-code`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     files: sortedFiles,
@@ -875,9 +877,13 @@ ${formatList(critical_requirements)}
                 });
             } else {
                 // No report, just deduct credits in background and navigate
+                const token = localStorage.getItem('authToken');
                 fetch(`${import.meta.env.VITE_API_URL}/api/end-interview`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         userId: userCreds.id,
                         durationInMinutes,
