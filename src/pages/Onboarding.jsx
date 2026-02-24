@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import {
     ArrowRight, ArrowLeft, Code2, Cpu, Brain, Bug, Terminal,
     Clock, Users, Star, Sparkles, CheckCircle2, X,
-    Loader2, MessageSquare, BarChart3, Layers, Zap
+    Loader2, MessageSquare, BarChart3, Layers, Zap, Camera
 } from 'lucide-react';
 import { sanitizeInput } from '../utils/sanitize';
 import bot from '../assets/images/bot.png';
+import ImageCropper from '../components/ImageCropper';
 import fullLogo from '../assets/images/logo.png';
 import uiInterview from '../assets/images/UI/interview.png';
 import uiCoding from '../assets/images/UI/codinground.png';
@@ -427,6 +428,12 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
     const [fetchLoading, setFetchLoading] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
     const [isFallback, setIsFallback] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState(() => {
+        const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+        const url = userCreds?.avatarUrl || userCreds?.avatar_url || '';
+        return (url !== 'null' && url !== 'undefined') ? url : '';
+    });
+    const [uploading, setUploading] = useState(false);
     const debounceRef = useRef(null);
 
     // Level → DB level mapping
@@ -497,11 +504,98 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
         return () => clearTimeout(debounceRef.current);
     }, []);
 
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+                if (!userCreds?.id) return;
+
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile?userId=${userCreds.id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) return;
+                const profile = await response.json();
+
+                if (profile?.avatar_url) {
+                    setAvatarUrl(profile.avatar_url);
+                    // Update localStorage so other tabs/components see the fresh avatar
+                    const updatedCreds = { ...userCreds, avatar_url: profile.avatar_url, avatarUrl: profile.avatar_url };
+                    localStorage.setItem("userCredentials", JSON.stringify(updatedCreds));
+                }
+            } catch (error) {
+                console.error("[Onboarding] Error fetching profile avatar:", error);
+            }
+        };
+        fetchProfile();
+    }, []);
+
+    const [tempImage, setTempImage] = useState(null);
+    const [showCropper, setShowCropper] = useState(false);
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Image must be less than 2MB");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setTempImage(reader.result);
+            setShowCropper(true);
+        };
+        reader.readAsDataURL(file);
+
+        // Clear input value so same file can be selected again
+        e.target.value = '';
+    };
+
+    const onCropComplete = async (croppedBlob) => {
+        setShowCropper(false);
+        try {
+            setUploading(true);
+            const token = localStorage.getItem('authToken');
+
+            const formData = new FormData();
+            formData.append('avatar', croppedBlob, 'avatar.png');
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/avatar`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Failed to upload avatar");
+
+            const publicUrl = data.publicUrl;
+            setAvatarUrl(publicUrl);
+
+            // Update localStorage
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+            const updatedCreds = { ...userCreds, avatar_url: publicUrl };
+            localStorage.setItem("userCredentials", JSON.stringify(updatedCreds));
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert(error.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleSubmit = () => {
         const formData = {
             role: sanitizeInput(role),
             experience_level: sanitizeInput(level),
-            skills: sanitizeInput(skills.join(', '))
+            skills: sanitizeInput(skills.join(', ')),
+            avatar_url: avatarUrl
         };
         onNextSlide(formData, interviews);
     };
@@ -522,6 +616,36 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
 
                     {/* Left: Form */}
                     <div className="px-8 py-6 space-y-8">
+                        <div className="flex justify-center mb-4">
+                            <div className="relative w-24 h-24">
+                                <div className="w-full h-full rounded-[2.5rem] bg-slate-100 border-2 border-slate-200 overflow-hidden flex items-center justify-center text-slate-400">
+                                    {avatarUrl && avatarUrl !== 'null' && avatarUrl !== 'undefined' ? (
+                                        <img
+                                            src={avatarUrl}
+                                            alt="Avatar"
+                                            referrerPolicy="no-referrer"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                setAvatarUrl('');
+                                            }}
+                                        />
+                                    ) : (
+                                        <Users className="w-10 h-10" />
+                                    )}
+                                    {uploading && (
+                                        <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                                        </div>
+                                    )}
+                                </div>
+                                <label className="absolute bottom-0 right-0 w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center border-4 border-white shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                                    <Camera className="w-4 h-4" />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                                </label>
+                            </div>
+                        </div>
+
                         <div>
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-4">
                                 Target Role
@@ -628,6 +752,17 @@ const SlideProfile = ({ onBack, onNextSlide }) => {
                     Save & Next <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
+
+            {/* Image Cropper Modal */}
+            <AnimatePresence>
+                {showCropper && (
+                    <ImageCropper
+                        image={tempImage}
+                        onCropComplete={onCropComplete}
+                        onCancel={() => setShowCropper(false)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

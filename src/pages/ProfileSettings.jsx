@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { sanitizeInput } from "../utils/sanitize";
+import ImageCropper from "../components/ImageCropper";
 
 // ─── Skill Tag Input (Standardized with Onboarding) ───────────────────────────
 const SkillTagInput = ({ tags, onChange }) => {
@@ -69,15 +70,19 @@ const ProfileSettings = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [tempImage, setTempImage] = useState(null);
+    const [showCropper, setShowCropper] = useState(false);
     const [message, setMessage] = useState(null);
 
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
+        first_name: "",
+        last_name: "",
         email: "",
         role: "",
         experience_level: "",
-        skills: ""
+        skills: "",
+        avatar_url: ""
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -108,12 +113,13 @@ const ProfileSettings = () => {
             const profile = await response.json();
 
             setFormData({
-                firstName: userCreds.firstName || "",
-                lastName: userCreds.lastName || "",
+                first_name: profile?.first_name || userCreds.first_name || userCreds.firstName || "",
+                last_name: profile?.last_name || userCreds.last_name || userCreds.lastName || "",
                 email: userCreds.email,
                 role: profile?.role || "",
                 experience_level: profile?.experience_level || "",
-                skills: profile?.skills || ""
+                skills: profile?.skills || "",
+                avatar_url: profile?.avatar_url || ""
             });
         } catch (error) {
             console.error("Error loading user data:", error);
@@ -138,19 +144,17 @@ const ProfileSettings = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    userId: userCreds.id,
-                    updates: {
-                        role: sanitizeInput(formData.role),
-                        experience_level: sanitizeInput(formData.experience_level),
-                        skills: sanitizeInput(formData.skills)
-                    }
-                })
+                body: JSON.stringify({ updates: formData })
             });
 
             if (!response.ok) throw new Error("Failed to update profile details");
 
-            const updatedCreds = { ...userCreds, firstName: formData.firstName, lastName: formData.lastName };
+            const updatedCreds = {
+                ...userCreds,
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                avatar_url: formData.avatar_url
+            };
             localStorage.setItem("userCredentials", JSON.stringify(updatedCreds));
 
             setMessage({ type: "success", text: "Profile updated successfully!" });
@@ -202,6 +206,66 @@ const ProfileSettings = () => {
             setMessage({ type: "error", text: error.message });
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Limit to 2MB
+        if (file.size > 2 * 1024 * 1024) {
+            setMessage({ type: "error", text: "Image must be less than 2MB" });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setTempImage(reader.result);
+            setShowCropper(true);
+        };
+        reader.readAsDataURL(file);
+
+        // Clear input value so same file can be selected again
+        e.target.value = '';
+    };
+
+    const onCropComplete = async (croppedBlob) => {
+        setShowCropper(false);
+        try {
+            setUploading(true);
+            const token = localStorage.getItem('authToken');
+
+            const formData = new FormData();
+            formData.append('avatar', croppedBlob, 'avatar.png');
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/avatar`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Failed to upload avatar");
+
+            const publicUrl = data.publicUrl;
+            setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+
+            // Update localStorage
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+            const updatedCreds = { ...userCreds, avatar_url: publicUrl };
+            localStorage.setItem("userCredentials", JSON.stringify(updatedCreds));
+
+            setMessage({ type: "success", text: "Profile picture updated!" });
+            setTimeout(() => setMessage(null), 3000);
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            setMessage({ type: "error", text: error.message });
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -280,14 +344,30 @@ const ProfileSettings = () => {
 
                             <div className="relative">
                                 <div className="relative w-24 h-24 mx-auto mb-6">
-                                    <div className="w-full h-full rounded-[2.5rem] bg-slate-900 flex items-center justify-center text-white text-3xl font-black border-4 border-white shadow-2xl relative z-10">
-                                        {formData.firstName?.[0]}{formData.lastName?.[0]}
+                                    <div className="w-full h-full rounded-[2.5rem] bg-slate-900 flex items-center justify-center text-white text-3xl font-black border-4 border-white shadow-2xl relative z-10 overflow-hidden">
+                                        {formData.avatar_url && formData.avatar_url !== 'null' && formData.avatar_url !== 'undefined' ? (
+                                            <img src={formData.avatar_url} alt="Profile" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span>{formData.first_name?.[0]}{formData.last_name?.[0]}</span>
+                                        )}
+                                        {uploading && (
+                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                                                <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                            </div>
+                                        )}
                                     </div>
-                                    <button className="absolute bottom-0 right-0 w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center border-4 border-white shadow-lg transform translate-x-1 translate-y-1 hover:scale-110 transition-transform z-20">
+                                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center border-4 border-white shadow-lg transform translate-x-1 translate-y-1 hover:scale-110 transition-transform z-20 cursor-pointer">
                                         <Camera className="w-4 h-4" />
-                                    </button>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleAvatarUpload}
+                                            disabled={uploading}
+                                        />
+                                    </label>
                                 </div>
-                                <h2 className="text-xl font-black text-slate-900 truncate">{formData.firstName} {formData.lastName}</h2>
+                                <h2 className="text-xl font-black text-slate-900 truncate">{formData.first_name} {formData.last_name}</h2>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">{formData.role || 'Unspecified Role'}</p>
 
                                 <div className="mt-8 pt-8 border-t border-slate-50 grid grid-cols-2 gap-4">
@@ -349,8 +429,8 @@ const ProfileSettings = () => {
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">First Name</label>
                                                 <input
                                                     type="text"
-                                                    value={formData.firstName}
-                                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                    value={formData.first_name}
+                                                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                                                     className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase tracking-widest"
                                                 />
                                             </div>
@@ -358,8 +438,8 @@ const ProfileSettings = () => {
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Last Name</label>
                                                 <input
                                                     type="text"
-                                                    value={formData.lastName}
-                                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                    value={formData.last_name}
+                                                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                                                     className="w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase tracking-widest"
                                                 />
                                             </div>
@@ -518,6 +598,17 @@ const ProfileSettings = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Image Cropper Modal */}
+            <AnimatePresence>
+                {showCropper && (
+                    <ImageCropper
+                        image={tempImage}
+                        onCropComplete={onCropComplete}
+                        onCancel={() => setShowCropper(false)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

@@ -13,15 +13,24 @@ const DesignRound = () => {
     const navigate = useNavigate();
     const {
         role,
-        firstName,
-        lastName,
-        roundProblemData,
+        ttsProvider = 'azure',
         company,
         level,
         type,
-        evaluation_intelligence,
-        candidate_reasoning_signals
+        slug,
+        roundNum,
+        domain
     } = location.state || {};
+
+    // User Data from localStorage (Latest Name & Avatar)
+    const [userData, setUserData] = useState(() => {
+        const creds = JSON.parse(localStorage.getItem("userCredentials")) || {};
+        return {
+            first_name: creds.first_name || location.state?.firstName || "Candidate",
+            last_name: creds.last_name || location.state?.lastName || "",
+            avatar_url: creds.avatar_url || ""
+        };
+    });
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
     useEffect(() => {
@@ -201,7 +210,8 @@ const DesignRound = () => {
                 type: 'init',
                 payload: {
                     ...sessionContext,
-                    ttsProvider: 'azure' // Explicitly use Azure
+                    firstName: userData.first_name, // Use latest from localStorage
+                    ttsProvider: 'azure'
                 }
             }));
 
@@ -297,7 +307,7 @@ const DesignRound = () => {
             stopAudioServices();
             if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         };
-    }, []);
+    }, [userData]); // Added userData to dependency array to ensure init payload uses latest
 
     // 1.2 Initialization Timeout Watchdog
     useEffect(() => {
@@ -499,9 +509,6 @@ const DesignRound = () => {
                 const start = w.start !== undefined ? w.start : (w.offset || 0);
                 // Convert from potential microseconds (if applicable) - usually seconds or milliseconds
                 // Assuming `start` is in SECONDS from backend (or need conversion?)
-                // Azure returns 100ns ticks. Provider converts?
-
-                // Let's assume provider normalizes to SECONDS. If not, we might need /1000 etc.
                 // Checks on w.start usually show e.g. 0.5 for 500ms.
 
                 const word = w.word || w.text || '';
@@ -860,11 +867,12 @@ const DesignRound = () => {
                                 <div className={`relative flex-1 ${!showCanvas ? 'min-h-[200px] md:min-h-[400px]' : 'min-h-[220px]'}`}>
                                     <UserCard
                                         interviewState={interviewState}
-                                        firstName={firstName}
-                                        lastName={lastName}
+                                        first_name={userData.first_name}
+                                        last_name={userData.last_name}
+                                        avatar_url={userData.avatar_url}
                                     />
                                     <div className="absolute bottom-6 left-6 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 z-20 shadow-2xl">
-                                        <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">{firstName || "Candidate"} {lastName || ""}</p>
+                                        <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">{userData.first_name || "Candidate"} {userData.last_name || ""}</p>
                                     </div>
                                 </div>
                             </div>

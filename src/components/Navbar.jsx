@@ -9,7 +9,9 @@ const Navbar = ({ credits: propCredits }) => {
     const navigate = useNavigate()
     const location = useLocation()
     const userCredentials = JSON.parse(localStorage.getItem("userCredentials"));
-    const { firstName, lastName, email } = userCredentials || {};
+    const { first_name, last_name, firstName, lastName, email, avatar_url } = userCredentials || {};
+    const effectiveFirstName = first_name || firstName;
+    const effectiveLastName = last_name || lastName;
     const [showProfile, setShowProfile] = React.useState(false);
     const [showMobileMenu, setShowMobileMenu] = React.useState(false);
     const [fetchedCredits, setCredits] = useState(0);
@@ -246,8 +248,12 @@ const Navbar = ({ credits: propCredits }) => {
                                     onClick={() => setShowProfile(prev => !prev)}
                                     className="group flex items-center gap-2 cursor-pointer focus:outline-none"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white transition-all duration-300 group-hover:scale-105 group-hover:ring-indigo-500/50 text-xs">
-                                        {firstName?.charAt(0).toUpperCase() + lastName?.charAt(0).toUpperCase() || 'U'}
+                                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white transition-all duration-300 group-hover:scale-105 group-hover:ring-indigo-500/50 text-xs overflow-hidden">
+                                        {avatar_url && avatar_url !== 'null' && avatar_url !== 'undefined' ? (
+                                            <img src={avatar_url} alt="Profile" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span>{effectiveFirstName?.charAt(0).toUpperCase() + effectiveLastName?.charAt(0).toUpperCase() || 'U'}</span>
+                                        )}
                                     </div>
                                 </button>
                             </div>
@@ -262,15 +268,21 @@ const Navbar = ({ credits: propCredits }) => {
                                             <div className="p-6 border-b border-slate-100 bg-slate-50/40">
                                                 <div className="flex items-center gap-4">
                                                     <div className="relative">
-                                                        <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-xl text-white font-black shadow-xl ring-4 ring-white">
-                                                            {firstName?.charAt(0).toUpperCase() || 'U'}
-                                                            {lastName?.charAt(0).toUpperCase() || ''}
+                                                        <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-xl text-white font-black shadow-xl ring-4 ring-white overflow-hidden">
+                                                            {avatar_url && avatar_url !== 'null' && avatar_url !== 'undefined' ? (
+                                                                <img src={avatar_url} alt="Profile" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <span>
+                                                                    {effectiveFirstName?.charAt(0).toUpperCase() || 'U'}
+                                                                    {effectiveLastName?.charAt(0).toUpperCase() || ''}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <p className="text-slate-900 font-black truncate text-lg tracking-tight">
-                                                            {firstName && lastName ? `${firstName} ${lastName}` : 'User'}
+                                                            {effectiveFirstName && effectiveLastName ? `${effectiveFirstName} ${effectiveLastName}` : 'User'}
                                                         </p>
                                                         <p className="text-xs text-slate-400 font-medium truncate mb-2">{email}</p>
 
@@ -361,8 +373,12 @@ const Navbar = ({ credits: propCredits }) => {
                     </button>
                     <div ref={addToRefs} className="flex items-center gap-4">
                         <div className="relative">
-                            <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center text-2xl text-white font-black shadow-xl ring-4 ring-white">
-                                {firstName?.charAt(0).toUpperCase() || 'U'}
+                            <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center text-2xl text-white font-black shadow-xl ring-4 ring-white overflow-hidden">
+                                {avatar_url ? (
+                                    <img src={avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span>{firstName?.charAt(0).toUpperCase() || 'U'}</span>
+                                )}
                             </div>
                             <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 bg-green-500 rounded-full border-2 border-white" />
                         </div>

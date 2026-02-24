@@ -14,8 +14,6 @@ const CodingRound = () => {
     const navigate = useNavigate();
     const {
         role,
-        firstName,
-        lastName,
         ttsProvider = 'azure',
         problemDescription,
         codeContext,
@@ -28,6 +26,16 @@ const CodingRound = () => {
         evaluation_intelligence,
         candidate_reasoning_signals
     } = location.state || {};
+
+    // User Data from localStorage (Latest Name & Avatar)
+    const [userData, setUserData] = useState(() => {
+        const creds = JSON.parse(localStorage.getItem("userCredentials")) || {};
+        return {
+            first_name: creds.first_name || location.state?.firstName || "Candidate",
+            last_name: creds.last_name || location.state?.lastName || "",
+            avatar_url: creds.avatar_url || ""
+        };
+    });
 
     console.log('[CodingRound] Location State:', location.state);
     console.log('[CodingRound] Slug:', slug);
@@ -253,6 +261,7 @@ ${formatList(critical_requirements)}
                 type: 'init',
                 payload: {
                     ...sessionContext,
+                    firstName: userData.first_name, // Use latest from localStorage
                     ttsProvider: 'azure' // Explicitly force Azure
                 }
             }));
@@ -983,11 +992,12 @@ ${formatList(critical_requirements)}
                                 <div className={`relative flex-1 ${!showCode ? 'min-h-[200px] md:min-h-[400px]' : 'min-h-[220px]'}`}>
                                     <UserCard
                                         interviewState={interviewState}
-                                        firstName={firstName}
-                                        lastName={lastName}
+                                        first_name={userData.first_name}
+                                        last_name={userData.last_name}
+                                        avatar_url={userData.avatar_url}
                                     />
                                     <div className="absolute bottom-6 left-6 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 z-20 shadow-2xl">
-                                        <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">{firstName || "Candidate"} {lastName || ""}</p>
+                                        <p className="text-white text-[10px] font-black uppercase tracking-widest text-center">{userData.first_name || "Candidate"} {userData.last_name || ""}</p>
                                     </div>
                                 </div>
                             </div>

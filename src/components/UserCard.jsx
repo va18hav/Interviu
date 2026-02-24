@@ -1,9 +1,13 @@
 import React from 'react'
 
-const UserCard = ({ interviewState, firstName, lastName }) => {
+const UserCard = ({ interviewState, firstName, lastName, first_name, last_name, avatar_url }) => {
+    // Standardize names (handle both prop variants for safety)
+    const fName = first_name || firstName || '';
+    const lName = last_name || lastName || '';
+
     const getInitials = () => {
-        const first = firstName?.trim()?.charAt(0) || '';
-        const last = lastName?.trim()?.charAt(0) || '';
+        const first = fName?.trim()?.charAt(0) || '';
+        const last = lName?.trim()?.charAt(0) || '';
         return (first + last).toUpperCase() || 'U';
     };
 
@@ -24,12 +28,21 @@ const UserCard = ({ interviewState, firstName, lastName }) => {
 
             <div className="flex flex-col items-center justify-center gap-6 p-6 relative z-10 w-full">
                 <div className="relative">
-                    {/* Initials-based Avatar Container */}
+                    {/* Avatar Container */}
                     <div className={`relative h-32 w-32 sm:h-40 sm:w-40 rounded-full shadow-2xl flex items-center justify-center overflow-hidden border-4 transition-all duration-500 transform group-hover:scale-105 ${interviewState === "user-speaking" ? "bg-slate-900 border-green-500" : "bg-slate-900 border-white"
                         }`}>
-                        <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
-                            {getInitials()}
-                        </span>
+                        {avatar_url && avatar_url !== 'null' && avatar_url !== 'undefined' ? (
+                            <img
+                                src={avatar_url}
+                                alt="User"
+                                referrerPolicy="no-referrer"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
+                                {getInitials()}
+                            </span>
+                        )}
 
                         {/* Overlay Gradient */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent pointer-events-none" />

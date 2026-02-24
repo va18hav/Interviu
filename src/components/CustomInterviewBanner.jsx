@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight, Workflow } from 'lucide-react'
 import { motion } from 'framer-motion'
 import bot from "../assets/images/bot.png"
-import configure from "../assets/images/configure.png"
+import configure from "../assets/images/custominterview2.png"
 
 const CustomInterviewBanner = ({ firstName }) => {
     const navigate = useNavigate()
@@ -59,9 +59,9 @@ const CustomInterviewBanner = ({ firstName }) => {
 
                 <div className="relative w-full md:w-auto flex justify-center md:block">
                     <img
-                        src={bot}
+                        src={configure}
                         alt=""
-                        className="relative z-10 w-48 md:w-64 object-contain drop-shadow-[0_0_40px_rgba(79,70,229,0.2)] group-hover:scale-105 transition-all duration-700"
+                        className="relative z-10 w-48 md:w-134 object-contain drop-shadow-[0_0_40px_rgba(79,70,229,0.2)] group-hover:scale-105 transition-all duration-700"
                     />
                     <div className="absolute inset-0 bg-indigo-500/10 blur-[80px] rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
                 </div>

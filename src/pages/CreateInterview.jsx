@@ -14,6 +14,7 @@ import {
   CANDIDATE_WEAKNESSES, FAILURE_INTENSITY, AMBIGUITY_LEVEL, INTERVIEW_STRICTNESS,
   ROUND_SPECIFIC_CONFIG
 } from "../utils/interviewConstants"
+import configure from "../assets/images/custominterview2.png"
 
 const CreateInterview = () => {
   const navigate = useNavigate()
@@ -341,7 +342,7 @@ const CreateInterview = () => {
       <Navbar />
 
       {/* Cinematic Header */}
-      <div className="relative w-full overflow-hidden bg-slate-950 px-6 py-24 md:px-16 md:py-32 mb-12 rounded-b-[4rem]">
+      <div className="relative flex items-center gap-5 w-full overflow-hidden bg-slate-950 px-6 py-24 md:px-16 md:py-32 mb-12 rounded-b-[4rem]">
         <div className="absolute inset-0">
           <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 mix-blend-screen" />
           <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 mix-blend-screen" />
@@ -369,6 +370,14 @@ const CreateInterview = () => {
               Architect your interview environment. Define stack constraints, inject failure vectors, and calibrate evaluating stressors.
             </p>
           </motion.div>
+        </div>
+        <div className="relative w-full md:w-auto flex justify-center md:block">
+          <img
+            src={configure}
+            alt=""
+            className="relative z-10 w-48 md:w-134 object-contain drop-shadow-[0_0_40px_rgba(79,70,229,0.2)] group-hover:scale-105 transition-all duration-700"
+          />
+          <div className="absolute inset-0 bg-indigo-500/10 blur-[80px] rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
         </div>
       </div>
 
@@ -614,11 +623,11 @@ const CreateInterview = () => {
 
                   <div className="space-y-4 pt-4">
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol</span>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Round</span>
                       <span className="text-sm font-black text-white">{ROUND_TYPES.find(r => r.id === formData.roundType)?.label || 'Awaiting Selection'}</span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Interface</span>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Domain</span>
                       <span className="text-sm font-black text-white">{ROLES.find(r => r.id === formData.role)?.label || 'N/A'}</span>
                     </div>
                     <div className="flex flex-col gap-1">

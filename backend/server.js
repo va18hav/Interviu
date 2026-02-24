@@ -13,6 +13,8 @@ import { compileScenario } from './utils/aiClient.js';
 import devopsScenarioCompilerPrompt from './prompts/devopsScenarioCompiler.js';
 import softwareScenarioCompilerPrompt from './prompts/softwareScenarioCompiler.js';
 import { requireAuth } from './middleware/auth.js';
+import multer from 'multer';
+import path from 'path';
 
 async function extractTextFromPDF(pdfBuffer) {
     const data = new Uint8Array(pdfBuffer);
@@ -62,6 +64,23 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// H-6: Multer configuration for avatar uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 2 * 1024 * 1024 // 2MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|webp/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        }
+        cb(new Error('Only images (jpeg, jpg, png, webp) are allowed'));
+    }
+});
+
 // M-1: Tighter rate limiter for expensive AI endpoints
 const aiLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
@@ -73,31 +92,16 @@ const aiLimiter = rateLimit({
 
 
 
-app.post('/api/auth/password', async (req, res) => {
+app.post('/api/auth/password', requireAuth({ checkUserId: false }), async (req, res) => {
     const { password } = req.body;
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: "No token provided" });
+    const { id: userId } = req.user;
 
     try {
-        const { error } = await supabase.auth.updateUser(token, { password }); // This might not work if createClient doesn't have context. 
-        // Actually, supabase-js `updateUser` usually works if you pass the JWT to `getUser` but for `updateUser`?
-        // If we use the standard client, we need to set the session first.
-
-        // Alternatively, since we are moving logic to backend, we might need to rely on the client sending the request to Supabase directly OR
-        // we set the session on the backend client.
-        // For now, let's try setting session or assume the token is enough? 
-        // Supabase `updateUser` on a generic client updates the logged in user.
-        // We probably need to use `supabase.auth.admin.updateUserById` with service key OR 
-        // create a client for this user: createClient(url, key, { global: { headers: { Authorization: `Bearer ${token}` } } })
-
-        // I will use the "create client for user" approach.
-        const userSupabase = createClient(supabaseUrl, supabaseKey, {
-            global: { headers: { Authorization: `Bearer ${token}` } }
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            password: password
         });
 
-        const { error: updateError } = await userSupabase.auth.updateUser({ password });
-
-        if (updateError) throw updateError;
+        if (error) throw error;
         res.json({ message: "Password updated" });
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -165,19 +169,33 @@ const validate = (schema) => (req, res, next) => {
 // ==========================================
 
 app.post('/api/auth/signup', async (req, res) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, first_name, last_name } = req.body;
     try {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
-                    first_name: firstName,
-                    last_name: lastName,
+                    first_name: first_name,
+                    last_name: last_name,
                 },
             },
         });
         if (error) throw error;
+
+        // Return standardized user object if session exists
+        if (data.user) {
+            const userMeta = data.user.user_metadata || {};
+            const safeUser = {
+                id: data.user.id,
+                first_name: userMeta.first_name || first_name || "User",
+                last_name: userMeta.last_name || last_name || "",
+                email: data.user.email,
+                avatar_url: userMeta.avatar_url || null
+            };
+            return res.json({ user: safeUser, session: data.session });
+        }
+
         res.json(data);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -202,7 +220,16 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(500).json({ error: "No user returned from provider" });
         }
 
-        res.json(data);
+        const userMeta = data.user.user_metadata || {};
+        const safeUser = {
+            id: data.user.id,
+            first_name: userMeta.first_name || "User",
+            last_name: userMeta.last_name || "",
+            email: data.user.email,
+            avatar_url: userMeta.avatar_url || null
+        };
+
+        res.json({ user: safeUser, session: data.session });
     } catch (error) {
         console.error("Login Server Error:", error);
         res.status(500).json({ error: "Internal Server Error during login" });
@@ -234,12 +261,62 @@ app.post('/api/auth/google-id-token', async (req, res) => {
         const { session, user } = data;
         const userMeta = user?.user_metadata || {};
 
+        // Google often provides 'picture', but Supabase sometimes maps to 'avatar_url'
+        const googleAvatar = userMeta.avatar_url || userMeta.picture || userMeta.picture_url || userMeta.avatar;
+
+        console.log(`[GoogleAuth] User: ${user.email}, googleAvatar: ${googleAvatar}`);
+        if (!googleAvatar) {
+            console.log('[GoogleAuth] userMeta contents:', JSON.stringify(userMeta));
+        }
+
+        let firstName = 'User';
+        let lastName = '';
+
+        firstName = userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User';
+        lastName = userMeta.full_name?.split(' ').slice(1).join(' ') || '';
+
+        // Perform background sync of profile details
+        try {
+            const { data: existingProfile, error: profileFetchError } = await supabaseAdmin
+                .from('profiles')
+                .select('avatar_url')
+                .eq('id', user.id)
+                .single();
+
+            if (profileFetchError && profileFetchError.code !== 'PGRST116') {
+                console.error('[GoogleAuth] Error fetching existing profile:', profileFetchError);
+            }
+
+            const updates = {
+                id: user.id,
+                first_name: firstName,
+                last_name: lastName,
+            };
+
+            // Only sync Google avatar if they don't have one set in Intervyu
+            if (googleAvatar && (!existingProfile || !existingProfile.avatar_url)) {
+                updates.avatar_url = googleAvatar;
+                console.log(`[GoogleAuth] Syncing avatar for ${user.email}: ${googleAvatar}`);
+            }
+
+            const { error: upsertError } = await supabaseAdmin
+                .from('profiles')
+                .upsert(updates, { onConflict: 'id' });
+
+            if (upsertError) {
+                console.error('[GoogleAuth] Upsert error:', upsertError);
+            }
+
+        } catch (syncError) {
+            console.error('[GoogleAuth] Profile sync failed:', syncError);
+        }
+
         const safeUser = {
             id: user.id,
-            firstName: userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User',
-            lastName: userMeta.full_name?.split(' ').slice(1).join(' ') || '',
+            first_name: firstName,
+            last_name: lastName,
             email: user.email,
-            avatarUrl: userMeta.avatar_url || null
+            avatar_url: googleAvatar || null
         };
 
         res.json({
@@ -271,14 +348,12 @@ app.get('/api/auth/user', async (req, res) => {
 // ==========================================
 
 // Step 1: Redirect browser to Google via Supabase
-// After auth, Supabase sends tokens directly to the frontend via hash fragment (implicit flow)
 app.get('/api/auth/google', async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     try {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                // Supabase implicit flow delivers #access_token directly to this URL
                 redirectTo: `${frontendUrl}/auth/callback`,
                 skipBrowserRedirect: true,
             }
@@ -297,7 +372,6 @@ app.get('/api/auth/google', async (req, res) => {
 });
 
 // One-time code store: code -> { session, user, expiresAt }
-// In a multi-instance deployment, replace this with Redis.
 const oauthCodeStore = new Map();
 
 // Cleanup expired codes every 5 minutes
@@ -333,18 +407,57 @@ app.get('/api/auth/callback', async (req, res) => {
 
         const { session, user } = data;
         const userMeta = user?.user_metadata || {};
+        const googleAvatar = userMeta.avatar_url || userMeta.picture || userMeta.picture_url || userMeta.avatar;
+
+        console.log(`[GoogleAuthCallback] User: ${user.email}, googleAvatar: ${googleAvatar}`);
+
+        let firstName = userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User';
+        let lastName = userMeta.full_name?.split(' ').slice(1).join(' ') || '';
+
+        // Sync profile
+        try {
+            const { data: existingProfile, error: profileFetchError } = await supabaseAdmin
+                .from('profiles')
+                .select('avatar_url, first_name, last_name')
+                .eq('id', user.id)
+                .single();
+
+            if (profileFetchError && profileFetchError.code !== 'PGRST116') {
+                console.error('[GoogleAuthCallback] Error fetching existing profile:', profileFetchError);
+            }
+
+            const updates = {
+                id: user.id,
+                first_name: firstName,
+                last_name: lastName,
+            };
+
+            if (googleAvatar && (!existingProfile || !existingProfile.avatar_url)) {
+                updates.avatar_url = googleAvatar;
+                console.log(`[GoogleAuthCallback] Syncing avatar for ${user.email}: ${googleAvatar}`);
+            }
+
+            const { error: upsertError } = await supabaseAdmin
+                .from('profiles')
+                .upsert(updates, { onConflict: 'id' });
+
+            if (upsertError) {
+                console.error('[GoogleAuthCallback] Upsert error:', upsertError);
+            }
+        } catch (syncError) {
+            console.error('[OAuth Callback] Profile sync failed:', syncError);
+        }
 
         // Build a safe user object
         const safeUser = {
             id: user.id,
-            firstName: userMeta.full_name?.split(' ')[0] || userMeta.name?.split(' ')[0] || 'User',
-            lastName: userMeta.full_name?.split(' ').slice(1).join(' ') || '',
+            first_name: firstName,
+            last_name: lastName,
             email: user.email,
-            avatarUrl: userMeta.avatar_url || null
+            avatar_url: googleAvatar || null
         };
 
         // Store session under a random one-time code (TTL: 60s)
-        // The JWT never touches the URL query string.
         const { randomUUID } = await import('crypto');
         const oauthCode = randomUUID();
         oauthCodeStore.set(oauthCode, {
@@ -762,14 +875,17 @@ app.delete('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
 });
 
 // Fetch completed interview details (specifically feedback) — wildcard AFTER specific routes
-app.get('/api/completed-interviews/:id', async (req, res) => {
+app.get('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
     const { id } = req.params;
+    const userId = req.userId; // M-2: Enforce ownership
+
     try {
         // Try finding in curated first
         let { data, error } = await supabase
             .from('completed_curated_interviews')
             .select('*')
             .eq('id', id)
+            .eq('user_id', userId) // Check ownership
             .single();
 
         if (error || !data) {
@@ -778,6 +894,7 @@ app.get('/api/completed-interviews/:id', async (req, res) => {
                 .from('completed_custom_interviews')
                 .select('*')
                 .eq('id', id)
+                .eq('user_id', userId) // Check ownership
                 .single();
 
             if (customError) throw customError;
@@ -787,20 +904,23 @@ app.get('/api/completed-interviews/:id', async (req, res) => {
         // Return normalized data structure if needed, or just raw
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(404).json({ error: "Interview record not found or access denied" });
     }
 });
 
 
 
 
-app.delete('/api/interviews/:id', async (req, res) => {
+// SECURE: Legacy interview deletion - restricted to admin client or protected
+app.delete('/api/interviews/:id', requireAuth(), async (req, res) => {
     const { id } = req.params;
+    const userId = req.userId;
     try {
         const { error } = await supabase
             .from('interviews')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', userId);
 
         if (error) throw error;
         res.json({ message: "Interview deleted successfully" });
@@ -828,6 +948,102 @@ app.post('/api/onboarding', requireAuth(), async (req, res) => {
         if (updateError) throw updateError;
         res.json({ success: true });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Profile Avatar Upload Handle
+app.post('/api/profile/avatar', requireAuth({ checkUserId: false }), upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const userId = req.userId;
+        const file = req.file;
+        const fileExt = path.extname(file.originalname).toLowerCase();
+        const fileName = `${userId}/avatar-${Date.now()}${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // 1. Fetch current profile to get old avatar_url
+        const { data: profile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', userId)
+            .single();
+
+        if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is code for no rows found
+            console.error('[Avatar Upload] Profile fetch error:', profileError);
+        }
+
+        // 2. Delete old avatar if it exists
+        if (profile?.avatar_url) {
+            try {
+                // Extract relative path from URL
+                // URL format: https://.../storage/v1/object/public/avatars/userId/fileName
+                const urlParts = profile.avatar_url.split('/avatars/');
+                if (urlParts.length > 1) {
+                    const oldFilePath = urlParts[1];
+                    console.log(`[Avatar Upload] Deleting old file: ${oldFilePath}`);
+                    await supabaseAdmin.storage
+                        .from('avatars')
+                        .remove([oldFilePath]);
+                }
+            } catch (deleteError) {
+                console.error('[Avatar Upload] Error deleting old avatar:', deleteError);
+                // Continue with upload even if deletion fails
+            }
+        }
+
+        // 3. Upload to Supabase Storage using admin client
+        const { data, error: uploadError } = await supabaseAdmin.storage
+            .from('avatars')
+            .upload(filePath, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true
+            });
+
+        if (uploadError) throw uploadError;
+
+        // 4. Get Public URL
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+
+        // 5. Update Profile Table
+        const { error: updateError } = await supabaseAdmin
+            .from('profiles')
+            .update({ avatar_url: publicUrl })
+            .eq('id', userId);
+
+        if (updateError) throw updateError;
+
+        res.json({ publicUrl });
+    } catch (error) {
+        console.error('[Avatar Upload Error]:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Popular Interviews Fetch
+app.get('/api/popular-interviews', async (req, res) => {
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('popular_interviews')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+
+        const transformedData = data.map(interview => ({
+            ...interview,
+            totalDuration: interview.total_duration,
+            companyTraits: interview.company_traits,
+        }));
+
+        res.json({ popularInterviews: transformedData });
+    } catch (error) {
+        console.error('[Popular Interviews Error]:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -959,13 +1175,16 @@ app.post('/api/resume-analyses', async (req, res) => {
     }
 });
 
-app.delete('/api/resume-analyses/:id', async (req, res) => {
+app.delete('/api/resume-analyses/:id', requireAuth(), async (req, res) => {
     const { id } = req.params;
+    const userId = req.userId;
+
     try {
         const { error } = await supabase
             .from('resume_analyses')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', userId);
 
         if (error) throw error;
         res.json({ message: "Analysis deleted" });

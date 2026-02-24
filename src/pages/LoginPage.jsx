@@ -12,8 +12,8 @@ const LoginPage = () => {
     const [loading, setLoading] = React.useState(false);
 
     const [formData, setFormData] = React.useState({
-        firstName: "",
-        lastName: "",
+        first_name: "",
+        last_name: "",
         email: "",
         password: "" // Added password
     });
@@ -121,8 +121,8 @@ const LoginPage = () => {
 
         // Name validation only for Sign Up
         if (isSignUp) {
-            newErrors.firstName = !formData.firstName.trim();
-            newErrors.lastName = !formData.lastName.trim();
+            newErrors.first_name = !formData.first_name.trim();
+            newErrors.last_name = !formData.last_name.trim();
         }
 
         setErrors(newErrors);
@@ -135,8 +135,8 @@ const LoginPage = () => {
                 const payload = isSignUp ? {
                     email: formData.email,
                     password: formData.password,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName
+                    first_name: formData.first_name,
+                    last_name: formData.last_name
                 } : {
                     email: formData.email,
                     password: formData.password
@@ -170,8 +170,8 @@ const LoginPage = () => {
                 const userMeta = user?.user_metadata || {};
                 const safeUser = {
                     id: user.id, // Important for API calls
-                    firstName: userMeta.first_name || "User",
-                    lastName: userMeta.last_name || "",
+                    first_name: userMeta.first_name || "User",
+                    last_name: userMeta.last_name || "",
                     email: user.email
                 };
 
@@ -225,7 +225,7 @@ const LoginPage = () => {
 
     // Checking submit validity
     const canSubmit = isSignUp
-        ? formData.firstName && formData.lastName && formData.email && formData.password
+        ? formData.first_name && formData.last_name && formData.email && formData.password
         : formData.email && formData.password;
 
     return (
@@ -249,7 +249,9 @@ const LoginPage = () => {
                                 <img src={logo} alt="Logo" className="w-16 h-20 relative z-10 drop-shadow-2xl" />
                             </motion.div>
                             <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Interviu</h1>
-                            {isSignUp ? "Create your account" : "Welcome back to Interviu"}
+                            <p className="text-slate-500 font-medium text-sm">
+                                {isSignUp ? "Create your account" : "Welcome back to Interviu"}
+                            </p>
                         </div>
 
                         {signupSuccess ? (
@@ -304,31 +306,35 @@ const LoginPage = () => {
                                         >
                                             {isSignUp && (
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-1.5">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">First Name</label>
-                                                        <div className="relative group">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">First Name</label>
+                                                        <div className="relative group/field">
                                                             <input
                                                                 type="text"
-                                                                name="firstName"
-                                                                value={formData.firstName}
+                                                                name="first_name"
+                                                                value={formData.first_name}
                                                                 onChange={handleChange}
-                                                                className="w-full rounded-2xl border border-slate-200/60 bg-white/50 px-4 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300"
-                                                                placeholder="Vaibhav"
+                                                                placeholder="VIOLET"
+                                                                className={`w-full bg-slate-50 border ${errors.first_name ? 'border-rose-500 ring-4 ring-rose-500/5' : 'border-slate-100 group-hover/field:border-slate-200'} rounded-2xl p-4 pl-12 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase tracking-widest`}
                                                             />
+                                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/field:text-indigo-500 transition-colors" />
                                                         </div>
+                                                        {errors.first_name && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider ml-1 mt-1">First name is required</p>}
                                                     </div>
-                                                    <div className="space-y-1.5">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Last Name</label>
-                                                        <div className="relative group">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Last Name</label>
+                                                        <div className="relative group/field">
                                                             <input
                                                                 type="text"
-                                                                name="lastName"
-                                                                value={formData.lastName}
+                                                                name="last_name"
+                                                                value={formData.last_name}
                                                                 onChange={handleChange}
-                                                                className="w-full rounded-2xl border border-slate-200/60 bg-white/50 px-4 py-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300"
-                                                                placeholder="K"
+                                                                placeholder="STEELE"
+                                                                className={`w-full bg-slate-50 border ${errors.last_name ? 'border-rose-500 ring-4 ring-rose-500/5' : 'border-slate-100 group-hover/field:border-slate-200'} rounded-2xl p-4 pl-12 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase tracking-widest`}
                                                             />
+                                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/field:text-indigo-500 transition-colors" />
                                                         </div>
+                                                        {errors.last_name && <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider ml-1 mt-1">Last name is required</p>}
                                                     </div>
                                                 </div>
                                             )}
@@ -369,7 +375,7 @@ const LoginPage = () => {
                                                 <motion.div
                                                     initial={{ opacity: 0, y: -10 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    className="mb-2 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3 text-amber-600 text-[11px] font-black uppercase tracking-wider mb-2"
+                                                    className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center gap-3 text-amber-600 text-[11px] font-black uppercase tracking-wider"
                                                 >
                                                     <AlertCircle size={16} />
                                                     Session Expired. Please log in again.
@@ -430,12 +436,12 @@ const LoginPage = () => {
                                 </div>
                             </>
                         )}
-                    </div>
-                </div>
 
-                <div className="mt-8 flex items-center justify-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    <span className="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"><Shield size={12} /> Secure 256-bit</span>
-                    <span className="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"><Zap size={12} /> Instant Sync</span>
+                        <div className="mt-8 flex items-center justify-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            <span className="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"><Shield size={12} /> Secure 256-bit</span>
+                            <span className="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"><Zap size={12} /> Instant Sync</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

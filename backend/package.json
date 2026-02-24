@@ -23,6 +23,7 @@
     "helmet": "^8.1.0",
     "jsonrepair": "^3.13.2",
     "microsoft-cognitiveservices-speech-sdk": "^1.47.0",
+    "multer": "^2.0.2",
     "pdf-parse": "^2.4.5",
     "pdfjs-lib": "^0.0.149",
     "ws": "^8.19.0",

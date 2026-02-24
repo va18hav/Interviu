@@ -78,6 +78,19 @@ const InterviewDashboard = () => {
         }, 500);
       }
 
+      // Sync localStorage with latest profile data
+      if (dashboardData.profile) {
+        const userCreds = JSON.parse(localStorage.getItem("userCredentials")) || {};
+        const updatedCreds = {
+          ...userCreds,
+          first_name: dashboardData.profile.first_name || userCreds.first_name || userCreds.firstName,
+          last_name: dashboardData.profile.last_name || userCreds.last_name || userCreds.lastName,
+          avatar_url: dashboardData.profile.avatar_url
+        };
+        localStorage.setItem("userCredentials", JSON.stringify(updatedCreds));
+        setUserCredentials(updatedCreds);
+      }
+
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -157,7 +170,7 @@ const InterviewDashboard = () => {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
           >
             <div className="lg:col-span-8 h-full">
-              <DashboardHeroBanner firstName={userCredentials?.firstName || "Candidate"} />
+              <DashboardHeroBanner firstName={userCredentials?.first_name || userCredentials?.firstName || "Candidate"} />
             </div>
             <div className="lg:col-span-4 h-full">
               <RecentActivity />
@@ -235,7 +248,7 @@ const InterviewDashboard = () => {
 
           {/* Simulation Blueprint Callout */}
           <div className="relative rounded-[3rem] overflow-hidden">
-            <CustomInterviewBanner firstName={userCredentials?.firstName || "Candidate"} />
+            <CustomInterviewBanner firstName={userCredentials?.first_name || userCredentials?.firstName || "Candidate"} />
           </div>
 
           {/* Performance Chronicle (Past Interviews) */}
