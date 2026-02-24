@@ -78,10 +78,7 @@ const RoleFocus = () => {
                     </motion.div>
 
                     <h2 className="text-4xl md:text-5xl font-black text-slate-950 mb-6 leading-tight tracking-tighter">
-                        Engineering Domains <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
-                            Tailored for Success.
-                        </span>
+                        Available Engineering Domains
                     </h2>
                     <p className="text-lg text-slate-500 max-w-2xl leading-relaxed font-medium">
                         Select a specialized track calibrated to the specific expectations of top-tier engineering organizations.
@@ -100,7 +97,7 @@ const RoleFocus = () => {
                         <motion.div
                             key={role.id}
                             variants={cardVariants}
-                            className="group relative rounded-[2.5rem] bg-white border border-slate-100 p-1 hover:border-indigo-100 transition-all duration-500"
+                            className="group relative rounded-[2.5rem] bg-white border border-slate-300 shadow-lg p-1 hover:border-indigo-100 transition-all duration-500"
                         >
                             <div className="relative h-full bg-slate-50/30 rounded-[2.3rem] p-10 flex flex-col overflow-hidden transition-all duration-500 group-hover:bg-white group-hover:shadow-2xl group-hover:shadow-indigo-500/5">
 
@@ -159,7 +156,7 @@ const RoleFocus = () => {
                     className="mt-20 text-center"
                 >
                     <p className="text-xs text-slate-400 font-black uppercase tracking-[0.3em]">
-                        New Engineering Verticals Under Stabilization
+                        New Engineering Verticals Coming Soon, Stay Tuned!
                     </p>
                 </motion.div>
             </div>

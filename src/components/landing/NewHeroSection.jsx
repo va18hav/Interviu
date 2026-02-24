@@ -145,7 +145,7 @@ const NewHeroSection = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                             </span>
-                            <span>Early Access: 3+ Round types For SDE/DevOps</span>
+                            <span>Early Access: 3+ Round types For SDE & DevOps</span>
                         </motion.div>
 
                         {/* Main Headline */}
@@ -155,7 +155,7 @@ const NewHeroSection = () => {
                         >
                             <span>Practice Real Interviews</span>
                             <br className="hidden sm:block" />
-                            <span className="text-black"> With an <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">AI Interviewer</span></span>
+                            <span className="text-black"> With an <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">AI Interviewer</span></span>
                         </motion.h1>
 
                         {/* Subheadline */}

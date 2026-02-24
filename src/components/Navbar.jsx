@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react'
 import logo from "../assets/images/logo.png"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useState } from 'react'
-import { Zap, User, LogOut, LayoutDashboard, FileText, Menu, X, PlusCircle, History, ChevronRight } from 'lucide-react'
+import { Zap, User, LogOut, LayoutDashboard, FileText, Menu, X, PlusCircle, History, ChevronRight, Users } from 'lucide-react'
 import gsap from 'gsap'
 
 const Navbar = ({ credits: propCredits }) => {
@@ -120,9 +120,9 @@ const Navbar = ({ credits: propCredits }) => {
 
     const navLinks = [
         { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { name: 'Interviews', path: '/dashboard/all-popular-interviews', icon: Users },
         { name: 'Create Interview', path: '/create', icon: PlusCircle },
-        { name: 'My Interviews', path: '/dashboard/all-popular-interviews', icon: History },
-        { name: 'Resume Analysis', path: '/resume', icon: FileText },
+        { name: 'Activity', path: '/dashboard/all-previous-interviews', icon: History },
     ];
 
     const isActive = (path) => location.pathname === path;
@@ -212,7 +212,7 @@ const Navbar = ({ credits: propCredits }) => {
                         <nav ref={navRef} className='hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-full border border-slate-200/60 relative'>
                             {/* Sliding Indicator */}
                             <div
-                                className="absolute top-1 bottom-1 bg-white rounded-full shadow-sm ring-1 ring-black/5 transition-all duration-300 ease-out"
+                                className="absolute top-1 bottom-1 bg-indigo-300/60 rounded-full shadow-sm ring-1 ring-black/5 transition-all duration-300 ease-out"
                                 style={{
                                     left: `${indicatorStyle.left}px`,
                                     width: `${indicatorStyle.width}px`,
@@ -410,7 +410,7 @@ const Navbar = ({ credits: propCredits }) => {
                                 </span>
                                 <span className={`text-[10px] font-medium leading-none mt-1 ${isActive(link.path) ? 'text-white/60' : 'text-slate-400'
                                     }`}>
-                                    {link.name === 'Dashboard' ? 'Overview' : link.name === 'Create Interview' ? 'Start new session' : link.name === 'My Interviews' ? 'History' : 'Expert feedback'}
+                                    {link.name === 'Dashboard' ? 'Overview' : link.name === 'Create Interview' ? 'Customise your interview' : link.name === 'Interviews' ? 'Popular Simulations' : 'Previous activity'}
                                 </span>
                             </div>
                             {isActive(link.path) && (

@@ -81,10 +81,10 @@ const HowItWorks = () => {
                             className="relative group"
                         >
                             {/* Step Card */}
-                            <div className="h-full bg-white rounded-[2.5rem] p-10 border border-slate-100 hover:border-indigo-100 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/5 group-hover:-translate-y-2">
+                            <div className="h-full bg-white rounded-[2.5rem] p-10 border border-slate-200 hover:border-indigo-100 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/5 group-hover:-translate-y-2">
                                 <div className="flex flex-col h-full">
                                     <div className="flex items-center justify-between mb-8">
-                                        <div className="text-4xl font-black text-slate-100 group-hover:text-indigo-50/50 transition-colors">
+                                        <div className="text-4xl font-black text-slate-400 group-hover:text-indigo-50/50 transition-colors">
                                             {step.number}
                                         </div>
                                         <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg shadow-slate-900/10">

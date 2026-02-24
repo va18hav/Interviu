@@ -1010,7 +1010,7 @@ const DebugRound = () => {
                         (interviewState === 'user-speaking' && currentAnswer && currentAnswer.trim().length > 0) ||
                         (interviewState === 'ai-speaking' && (currentQuestion || true))
                     ) && (
-                            <div className="absolute bottom-26 left-0 right-0 px-8 pointer-events-none flex justify-center z-30">
+                            <div className="absolute bottom-16 left-0 right-0 px-8 pointer-events-none flex justify-center z-50">
                                 <div className="w-full max-w-6xl pointer-events-auto">
                                     <StatusBox
                                         interviewState={interviewState}

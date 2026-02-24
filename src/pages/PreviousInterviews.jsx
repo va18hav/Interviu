@@ -155,55 +155,35 @@ const PreviousInterviews = () => {
         <div className="min-h-screen bg-white">
             <Navbar />
 
-            {/* Cinematic Header Section */}
-            <div className="relative w-full overflow-hidden bg-slate-950 px-6 py-20 md:px-16 md:py-32 mb-12 rounded-b-[4rem]">
-                {/* Visual Elements */}
-                <div className="absolute inset-0">
-                    <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 mix-blend-screen animate-pulse" />
-                    <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 mix-blend-screen" />
-                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-overlay" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/50 to-slate-950" />
-                </div>
-
-                <div className="relative max-w-7xl mx-auto space-y-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-4"
-                    >
+            {/* Header Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+                    <div className="space-y-4">
                         <button
                             onClick={() => navigate('/dashboard')}
-                            className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors group mb-4"
+                            className="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors group mb-2"
                         >
-                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                            <span className="font-bold text-xs uppercase tracking-[0.2em]">Return to Hub</span>
+                            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-bold text-[10px] uppercase tracking-widest">Return to Hub</span>
                         </button>
-                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
-                            Performance <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Chronicle.</span>
+                        <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                            Performance<br className="max-md:hidden" /> Chronicle
                         </h1>
-                        <p className="text-slate-400 max-w-xl text-lg font-medium leading-relaxed">
+                        <p className="text-slate-500 max-w-xl text-sm md:text-base font-medium">
                             A historical retrospective of your technical simulations. Review transcripts, analyze scores, and track your engineering trajectory.
                         </p>
-                    </motion.div>
+                    </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex flex-col md:flex-row gap-6 pt-12"
-                    >
-                        <div className="flex-1 relative group">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-hover:text-indigo-400 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search by role or company..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-16 pr-6 py-5 rounded-3xl bg-white/5 border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 backdrop-blur-xl transition-all"
-                            />
-                        </div>
-                    </motion.div>
+                    <div className="w-full lg:w-[400px] relative group shrink-0">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search by role or company..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all font-medium text-sm"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -268,23 +248,23 @@ const PreviousInterviews = () => {
                                                 completedAt: interview.completed_at,
                                             }
                                         })}
-                                        className="group relative flex flex-col md:flex-row items-center gap-8 rounded-[2.5rem] p-8 bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 cursor-pointer overflow-hidden"
+                                        className="group relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8 rounded-3xl md:rounded-[2.5rem] p-6 md:p-8 bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 cursor-pointer overflow-hidden"
                                     >
                                         {/* Background Decoration */}
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[4rem] -translate-y-8 translate-x-8 transition-transform group-hover:translate-x-4 group-hover:-translate-y-4" />
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[4rem] -translate-y-8 translate-x-8 transition-transform group-hover:translate-x-4 group-hover:-translate-y-4 hidden md:block" />
 
                                         {/* Date Segment */}
-                                        <div className="flex flex-col items-center justify-center p-6 rounded-[2rem] bg-slate-50 border border-slate-100 min-w-[100px] shrink-0 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
-                                            <span className="text-xl font-black text-slate-900">
+                                        <div className="flex flex-row md:flex-col items-center justify-center gap-2 md:gap-0 px-4 py-2 md:p-6 rounded-[1rem] md:rounded-[2rem] bg-slate-50 border border-slate-100 min-w-max md:min-w-[100px] shrink-0 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
+                                            <span className="text-base md:text-xl font-black text-slate-900 leading-none">
                                                 {interview.date.getDate()}
                                             </span>
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
                                                 {interview.date.toLocaleDateString(undefined, { month: 'short' })}
                                             </span>
                                         </div>
 
                                         {/* Content Area */}
-                                        <div className="flex-1 space-y-3 min-w-0">
+                                        <div className="flex-1 space-y-3 min-w-0 w-full">
                                             <div className="flex flex-wrap items-center gap-3">
                                                 <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${interview.category === 'curated'
                                                     ? 'bg-indigo-50 text-indigo-700 border-indigo-100 underline decoration-indigo-200 decoration-2 underline-offset-4'
@@ -292,44 +272,44 @@ const PreviousInterviews = () => {
                                                     }`}>
                                                     {interview.category}
                                                 </span>
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                                                     <Clock className="w-3.5 h-3.5" />
                                                     {interview.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
-                                            <h3 className="text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                                            <h3 className="text-lg md:text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
                                                 {interview.displayTitle}
                                             </h3>
-                                            <div className="flex items-center gap-4 text-slate-500">
-                                                <p className="text-sm font-bold truncate max-w-[200px]">{interview.displaySubtitle}</p>
-                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-                                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-                                                    <Timer className="w-3.5 h-3.5 text-indigo-400" />
+                                            <div className="flex flex-wrap items-center gap-2 md:gap-4 text-slate-500">
+                                                <p className="text-xs md:text-sm font-bold truncate max-w-full md:max-w-[200px]">{interview.displaySubtitle}</p>
+                                                <div className="hidden md:block w-1 h-1 rounded-full bg-slate-300" />
+                                                <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-black uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-md md:bg-transparent md:px-0 md:py-0">
+                                                    <Timer className="w-3 h-3 text-indigo-400" />
                                                     {interview.duration_mins || 45}m
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Score Section */}
-                                        <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-slate-50 pt-6 md:pt-0">
-                                            <div className="flex flex-col items-end gap-1">
-                                                <div className={`flex items-center gap-2 px-6 py-3 rounded-2xl border ${styles.bg} ${styles.border} ${styles.color} shadow-lg ${styles.glow} transition-all duration-500 scale-100 group-hover:scale-110`}>
-                                                    <Star className="w-5 h-5 fill-current" />
-                                                    <span className="text-2xl font-black">{interview.score}</span>
-                                                    <span className="text-sm border-l border-current/20 pl-2 opacity-60">/10</span>
+                                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-slate-100 pt-5 md:pt-0 mt-2 md:mt-0">
+                                            <div className="flex flex-col items-start md:items-end gap-1">
+                                                <div className={`flex items-center gap-1.5 px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl border ${styles.bg} ${styles.border} ${styles.color} shadow-sm md:shadow-lg ${styles.glow} transition-all duration-500`}>
+                                                    <Star className="w-4 h-4 md:w-5 md:h-5 fill-current" />
+                                                    <span className="text-xl md:text-2xl font-black leading-none">{interview.score}</span>
+                                                    <span className="text-xs md:text-sm border-l border-current/20 pl-1.5 md:pl-2 opacity-60 leading-none">/10</span>
                                                 </div>
-                                                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 pr-2">Overall Proficiency</p>
+                                                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 pl-1 md:pl-0 md:pr-2">Overall Score</p>
                                             </div>
 
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-2 md:gap-3">
                                                 <button
                                                     onClick={(e) => handleDelete(e, interview.id)}
-                                                    className="p-4 rounded-2xl bg-slate-50 text-slate-400 border border-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all"
+                                                    className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-slate-50 text-slate-400 border border-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all"
                                                 >
-                                                    <Trash className="w-5 h-5" />
+                                                    <Trash className="w-4 h-4 md:w-5 md:h-5" />
                                                 </button>
-                                                <div className="p-4 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
-                                                    <ChevronRight className="w-6 h-6" />
+                                                <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-slate-900 md:bg-indigo-600 text-white shadow-md md:shadow-lg shadow-indigo-200 md:opacity-0 md:-translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 shrink-0">
+                                                    <ChevronRight className="w-4 h-4 md:w-6 md:h-6" />
                                                 </div>
                                             </div>
                                         </div>

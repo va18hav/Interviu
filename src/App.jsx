@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import ScrollToTop from "./components/ScrollToTop"
 import LoginPage from './pages/LoginPage'
 import AuthCallback from './pages/AuthCallback'
 import Dashboard from "./pages/Dashboard"
@@ -23,6 +24,7 @@ import BehavioralRound from "./pages/BehavioralRound"
 import InterviewReport from "./pages/InterviewReport"
 
 import TestDesignUI from "./pages/TestDesignUI"
+import InstagramPost1 from "./pages/InstagramPost1"
 
 
 // Test Pages — removed from production routing
@@ -32,6 +34,7 @@ import TestDesignUI from "./pages/TestDesignUI"
 const App = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -59,6 +62,9 @@ const App = () => {
 
           <Route path="/dashboard/test-design-ui" element={<TestDesignUI />} />
 
+          {/* Test Routes */}
+          <Route path="/dashboard/test-design-ui" element={<TestDesignUI />} />
+          <Route path="/instagram-post-1" element={<InstagramPost1 />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -37,11 +37,11 @@ const LandingPage = () => {
             {/* Company Showcase */}
             <CompanyShowcase />
 
-            {/* Realism & Quality Proof */}
-            <RealismProof />
-
             {/* UI Snapshots (New Features Section) */}
             <UISnapshots />
+
+            {/* Realism & Quality Proof */}
+            <RealismProof />
 
             {/* Two-Role Focus */}
             <RoleFocus />

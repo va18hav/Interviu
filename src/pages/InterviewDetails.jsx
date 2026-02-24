@@ -476,9 +476,11 @@ const InterviewDetails = () => {
                     <aside className="space-y-8">
                         <div className="sticky top-24 space-y-8">
                             <div className="p-8 rounded-[2rem] bg-gradient-to-br from-violet-500 to-indigo-600 text-white space-y-6 shadow-2xl shadow-indigo-100">
-                                <Zap className="w-10 h-10 text-yellow-500" />
-                                <div className="space-y-4">
+                                <div className="flex items-center gap-4">
+                                    <Zap className="w-10 h-10 text-yellow-500" />
                                     <h4 className="text-2xl font-black leading-tight uppercase tracking-tight">Key Competencies</h4>
+                                </div>
+                                <div className="space-y-4">
                                     <p className="text-indigo-100/80 text-sm leading-relaxed">
                                         This session evaluates your mastery over the following technical domains and soft skills.
                                     </p>

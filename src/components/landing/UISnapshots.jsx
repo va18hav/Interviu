@@ -12,7 +12,7 @@ const UISnapshots = () => {
             tag: 'Execution Sandbox',
             tagIcon: <Terminal />,
             title: 'Technical Assessment',
-            description: 'A full IDE with multi-language support. The AI evaluates not just the solution, but your algorithmic efficiency and edge case handling.',
+            description: 'A code interface with multi-language support. The AI evaluates not just the solution, but your algorithmic efficiency and edge case handling.',
             features: ['VS Code Style Interface', 'Language-Aware Evaluation', 'Real-time Complexity Analysis'],
             image: codingRound,
             color: 'blue'
@@ -59,7 +59,7 @@ const UISnapshots = () => {
             <div className="max-w-7xl mx-auto px-6">
 
                 {/* Section Header */}
-                <div className="max-w-3xl mb-32">
+                <div className="max-w-4xl mb-32">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
@@ -71,10 +71,7 @@ const UISnapshots = () => {
                     </motion.div>
 
                     <h2 className="text-4xl md:text-5xl font-black text-slate-950 mb-6 leading-tight tracking-tighter">
-                        Calibrated for the <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
-                            Entire Hiring Loop.
-                        </span>
+                        Calibrated for the<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600"> Entire Hiring Loop.</span>
                     </h2>
                     <p className="text-lg text-slate-500 max-w-2xl leading-relaxed font-medium">
                         Standardized interview formats reimagined with adaptive AI to ensure your preparation matches the rigor of top-tier organizations.

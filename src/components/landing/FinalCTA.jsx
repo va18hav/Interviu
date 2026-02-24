@@ -98,7 +98,7 @@ const FinalCTA = () => {
                     </button>
 
                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.4em] opacity-60">
-                        Early Access Authorization: Phase 02
+                        Early Access Phase
                     </p>
                 </motion.div>
             </div>

@@ -81,14 +81,14 @@ const RealismProof = () => {
                     </motion.div>
 
                     <h2 className="text-4xl md:text-6xl font-black text-slate-950 mb-6 leading-[1.05] tracking-tighter">
-                        Evaluation That Goes <br />
+                        Conversation That Goes <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">
                             Beyond the Surface.
                         </span>
                     </h2>
 
                     <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl">
-                        Traditional practice is scripted. Intervyiu uses proprietary technical signals to probe your systems thinking and architecture reasoning in real-time.
+                        Traditional practice is scripted. Interviu uses proprietary technical signals to probe your systems thinking and architecture reasoning in real-time.
                     </p>
                 </div>
 
@@ -116,8 +116,8 @@ const RealismProof = () => {
                                     className={`flex gap-4 ${exchange.speaker === 'Candidate' ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${exchange.speaker === 'AI'
-                                            ? 'bg-slate-900 border-slate-800 text-white'
-                                            : 'bg-white border-slate-200 text-slate-400'
+                                        ? 'bg-slate-900 border-slate-800 text-white'
+                                        : 'bg-white border-slate-200 text-slate-400'
                                         }`}>
                                         {exchange.speaker === 'AI' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                                     </div>
@@ -127,8 +127,8 @@ const RealismProof = () => {
                                             {exchange.speaker === 'AI' ? 'Interviewer' : 'You'}
                                         </div>
                                         <div className={`rounded-3xl px-6 py-4 text-sm font-medium leading-relaxed shadow-sm ${exchange.speaker === 'AI'
-                                                ? 'bg-slate-900 text-white rounded-tl-sm'
-                                                : 'bg-slate-50 text-slate-700 border border-slate-100 rounded-tr-sm'
+                                            ? 'bg-slate-900 text-white rounded-tl-sm'
+                                            : 'bg-slate-50 text-slate-700 border border-slate-100 rounded-tr-sm'
                                             }`}>
                                             {exchange.text}
                                         </div>
@@ -153,7 +153,7 @@ const RealismProof = () => {
                                 className="group p-8 rounded-[2rem] bg-white border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500"
                             >
                                 <div className="flex items-start gap-6">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 shadow-sm">
+                                    <div className="w-12 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 shadow-sm">
                                         {feature.icon}
                                     </div>
                                     <div className="space-y-2">

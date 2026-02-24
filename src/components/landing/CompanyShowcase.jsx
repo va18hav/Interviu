@@ -13,12 +13,12 @@ const CompanyShowcase = () => {
     const navigate = useNavigate();
 
     const companies = [
-        { logo: googleLogo, name: 'Google' },
         { logo: metaLogo, name: 'Meta' },
         { logo: amazonLogo, name: 'Amazon' },
-        { logo: microsoftLogo, name: 'Microsoft' },
-        { logo: netflixLogo, name: 'Netflix' },
         { logo: appleLogo, name: 'Apple' },
+        { logo: netflixLogo, name: 'Netflix' },
+        { logo: googleLogo, name: 'Google' },
+        { logo: microsoftLogo, name: 'Microsoft' }
     ];
 
     const containerVariants = {
@@ -54,7 +54,7 @@ const CompanyShowcase = () => {
                         </motion.div>
 
                         <h2 className="text-3xl md:text-4xl font-black text-slate-950 tracking-tighter leading-tight">
-                            Modeled After Elite <br />
+                            Simulations Modeled After Elite <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-500">
                                 Engineering Standards.
                             </span>
@@ -92,7 +92,7 @@ const CompanyShowcase = () => {
                             <img
                                 src={company.logo}
                                 alt={company.name}
-                                className="h-8 md:h-10 object-contain grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                                className="h-8 md:h-10 object-contain opacity-80 group-hover:opacity-100 transition-all duration-500"
                             />
                         </motion.div>
                     ))}
