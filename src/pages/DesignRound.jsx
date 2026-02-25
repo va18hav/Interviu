@@ -956,69 +956,65 @@ const DesignRound = () => {
             </div>
 
             {/* Bottom Control Bar */}
-            {!isFullScreen && (
-                <div className="absolute bottom-4 right-4 z-40 flex justify-end">
-                    <div className="inline-flex items-center justify-center gap-3 bg-white/80 backdrop-blur-xl px-4 py-3 rounded-[2rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
+            <div className="absolute bottom-4 right-4 z-[9999] flex justify-end">
+                <div className="inline-flex items-center justify-center gap-3 bg-white/80 backdrop-blur-xl px-4 py-3 rounded-[2rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
 
-                        {/* Microphone Indicator */}
-                        {interviewPhase !== 'design' && (
-                            <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-all duration-500 ${isListening ? 'bg-green-50 text-green-600' : 'bg-slate-50 text-slate-400'
-                                }`}>
-                                <div className="relative">
-                                    <Mic className={`w-5 h-5 ${isListening ? 'animate-pulse' : ''}`} />
-                                    {isListening && <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping"></div>}
-                                </div>
-                                <span className="text-[10px] font-black uppercase tracking-widest">{isListening ? 'Active' : 'Muted'}</span>
+                    {/* Microphone Indicator */}
+                    {interviewPhase !== 'design' && (
+                        <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-all duration-500 ${isListening ? 'bg-green-50 text-green-600' : 'bg-slate-50 text-slate-400'
+                            }`}>
+                            <div className="relative">
+                                <Mic className={`w-5 h-5 ${isListening ? 'animate-pulse' : ''}`} />
+                                {isListening && <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping"></div>}
                             </div>
-                        )}
+                            <span className="text-[10px] font-black uppercase tracking-widest">{isListening ? 'Active' : 'Muted'}</span>
+                        </div>
+                    )}
 
-                        {/* Submit Button - Only in Phase 2 */}
-                        {interviewPhase === 'design' && (
-                            <button
-                                onClick={handleSubmitDesign}
-                                className="group relative px-10 py-4 rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-200 overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="relative flex items-center gap-3">
-                                    <Send className="w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                                    <span className="text-xs font-black uppercase tracking-[0.2em]">Deploy Architecture</span>
-                                </div>
-                            </button>
-                        )}
-
-                        {/* Separator */}
-                        <div className="w-px h-8 bg-slate-100" />
-
-                        {/* View Controls */}
+                    {/* Submit Button - Only in Phase 2 */}
+                    {interviewPhase === 'design' && (
                         <button
-                            onClick={() => setShowCanvas(!showCanvas)}
-                            className={`group relative flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden transition-all duration-500 ${showCanvas ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-900 text-white'
-                                }`}
-                            title={showCanvas ? 'Expand View' : 'Canvas View'}
+                            onClick={handleSubmitDesign}
+                            className="group relative px-10 py-4 rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-200 overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95"
                         >
-                            {showCanvas ? <Layout className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
-                        </button>
-
-                        {/* End Call Button */}
-                        <button
-                            onClick={handleEndInterview}
-                            className="group relative flex items-center justify-start w-14 h-14 rounded-2xl bg-slate-900 overflow-hidden transition-all duration-500 hover:w-44 hover:bg-red-600 shadow-xl"
-                            title="End Interview"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="flex items-center w-full px-4.5 gap-3 relative z-10">
-                                <PhoneOff className="w-5 h-5 text-white flex-shrink-0 transition-transform duration-500 group-hover:rotate-[135deg]" />
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">
-                                    Terminate Session
-                                </span>
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="relative flex items-center gap-3">
+                                <Send className="w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                                <span className="text-xs font-black uppercase tracking-[0.2em]">Deploy Architecture</span>
                             </div>
                         </button>
+                    )}
 
-                    </div>
+                    {/* Separator */}
+                    <div className="w-px h-8 bg-slate-100" />
+
+                    {/* View Controls */}
+                    <button
+                        onClick={() => setShowCanvas(!showCanvas)}
+                        className={`group relative flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden transition-all duration-500 ${showCanvas ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-900 text-white'
+                            }`}
+                        title={showCanvas ? 'Expand View' : 'Canvas View'}
+                    >
+                        {showCanvas ? <Layout className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
+                    </button>
+
+                    {/* End Call Button */}
+                    <button
+                        onClick={handleEndInterview}
+                        className="group relative flex items-center justify-start w-14 h-14 rounded-2xl bg-slate-900 overflow-hidden transition-all duration-500 hover:w-44 hover:bg-red-600 shadow-xl"
+                        title="End Interview"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex items-center w-full px-4.5 gap-3 relative z-10">
+                            <PhoneOff className="w-5 h-5 text-white flex-shrink-0 transition-transform duration-500 group-hover:rotate-[135deg]" />
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">
+                                Terminate Session
+                            </span>
+                        </div>
+                    </button>
+
                 </div>
-            )}
-
-            {/* Premium Connection Error Modal */}
+            </div>
             <AnimatePresence>
                 {initError && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">

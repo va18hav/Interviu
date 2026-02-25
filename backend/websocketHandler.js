@@ -95,6 +95,9 @@ export function setupWebSocket(server) {
                 }
 
                 if (msg.type === 'init') {
+                    // Capture Interview Type and Mode from payload
+                    session.type = (msg.payload.type || 'coding').toLowerCase();
+                    session.customInterview = msg.payload.customInterview || false;
                     handleInit(session, msg.payload);
                 }
                 else if (msg.type === 'start_audio') {
@@ -318,9 +321,20 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         // Only allow phase transition tool if we are in Phase 1 (Clarification)
         const tools = [];
         if (!session.currentPhase || session.currentPhase === 'clarification') {
+            let toolDesc = "Call this tool when you're ready to transition from Phase 1 to Phase 2. Use this ONLY after you have gathered enough requirements and they're clear.";
+
+            const sessionTypeStr = (session.type || '').toLowerCase();
+            if (sessionTypeStr.includes('design')) {
+                toolDesc = "Call this tool when you're ready to transition from Phase 1 (Requirements Gathering) to Phase 2 (Silent Design). Use this ONLY after all requirements are clear.";
+            } else if (sessionTypeStr.includes('debug')) {
+                toolDesc = "Call this tool when you're ready to transition from Phase 1 (Incident Scoping) to Phase 2 (Silent Investigation). Use this ONLY after the candidate explains their hypothesis.";
+            } else {
+                toolDesc = "Call this tool when you're ready to transition from Phase 1 (Problem Clarification) to Phase 2 (Implementation). Use this ONLY after the candidate has explained their approach.";
+            }
+
             tools.push({
                 name: "transition_to_phase2",
-                description: "Call this tool when you're ready to transition from Phase 1 (Problem Clarification) to Phase 2 (Implementation). Use this ONLY after the candidate has explained their approach and you've validated it's reasonable.",
+                description: toolDesc,
                 input_schema: {
                     type: "object",
                     properties: {},
@@ -336,7 +350,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         // 🌊 STREAMING IMPLEMENTATION
         const stream = anthropic.messages.stream({
             model: "claude-sonnet-4-5",
-            max_tokens: 200, // Increased for conversational flow + tool calls
+            max_tokens: 250, // Increased for conversational flow + tool calls
             temperature: 0.1,
             system: [
                 {
@@ -374,8 +388,9 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                 if (toolName === 'transition_to_phase2') {
                     console.log(`[${session.id}] 🎬 Phase 1 → Phase 2 transition initiated`);
 
-                    // Determine phase name based on interview type
-                    const phaseName = (session.type === 'system_design' || session.type === 'design') ? 'design' : 'implementation';
+                    // Determine phase name based on interview type (robustly check for design variants like 'System Design', 'Design', 'system_design')
+                    const sessionTypeStr = (session.type || '').toLowerCase();
+                    const phaseName = sessionTypeStr.includes('design') ? 'design' : 'implementation';
 
                     // Send phase transition message to frontend
                     // Frontend expects 'phase' property to trigger UI changes
@@ -431,11 +446,14 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                         sentenceBuffer = sentenceBuffer.substring(index); // Update buffer immediately
 
                         if (sentence.length > 0) {
-                            // 🧹 CLEANUP: Filter out [DESIGN UPDATE] blocks and JSON Tool leaks from TTS
                             let cleanSentence = sentence.replace(/\[DESIGN UPDATE\][\s\S]*?Risks: \[.*?\]/g, '').trim();
                             cleanSentence = cleanSentence.replace(/<tool_use>[\s\S]*?<\/tool_use>/gi, '').trim();
                             cleanSentence = cleanSentence.replace(/\{[\s\S]*?"name"\s*:\s*"transition_to_phase2"[\s\S]*?\}/gi, '').trim();
                             cleanSentence = cleanSentence.replace(/transition_to_phase2/gi, '').trim();
+
+                            // 🧹 CLEANUP: Strip markdown syntax (backticks, asterisks, hash marks) to prevent TTS from reading them
+                            cleanSentence = cleanSentence.replace(/```[\s\S]*?```/g, ' '); // remove full block content if it leaks
+                            cleanSentence = cleanSentence.replace(/[`*#]/g, ''); // strip inline markdown
 
                             // If the cleanup left nothing, ignore
                             if (cleanSentence.length === 0) {
@@ -490,6 +508,10 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
             finalSentence = finalSentence.replace(/<tool_use>[\s\S]*?<\/tool_use>/gi, '').trim();
             finalSentence = finalSentence.replace(/\{[\s\S]*?"name"\s*:\s*"transition_to_phase2"[\s\S]*?\}/gi, '').trim();
             finalSentence = finalSentence.replace(/transition_to_phase2/gi, '').trim();
+
+            // 🧹 CLEANUP: Strip markdown syntax (backticks, asterisks, hash marks)
+            finalSentence = finalSentence.replace(/```[\s\S]*?```/g, ' ');
+            finalSentence = finalSentence.replace(/[`*#]/g, '');
 
             if (finalSentence.length > 0) {
                 console.log(`[${session.id}] 🗣️ Queueing Final Sentence: "${finalSentence}"`);
