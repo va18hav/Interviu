@@ -248,7 +248,7 @@ Allow at max 6-8 exchanges.
 
 TRANSITION RULE: Once approach is clear and you've validated it addresses the core operational concerns:
 1. Say: "Alright, go ahead and implement it."
-2. IMMEDIATELY call the transition_to_phase2 tool
+2. IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 3. You will NOT hear from the candidate again until they submit their complete solution
 
 **PHASE 2: SILENT IMPLEMENTATION**
@@ -875,7 +875,7 @@ Allow at max 6-8 exchanges.
 TRANSITION RULE: Once hypothesis is formed and candidate has demonstrated they understand the incident:
 1. You must strictly say: "Alright, go ahead and investigate the files."
 2. Do NOT ask additional questions after delivering the above message.
-3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool
+3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 4. You will NOT hear from the candidate again until they submit their complete fix
 
 **PHASE 2: SILENT INVESTIGATION & FIX**
@@ -1393,7 +1393,7 @@ Allow at max 6-8 exchanges.
 
 TRANSITION RULE: Once requirements are clear and you've answered their questions:
 1. Say: "Okay, I think we have a good grasp of the operational requirements. Go ahead and design the high-level infrastructure architecture. Use the design canvas to sketch it out."
-2. IMMEDIATELY call the transition_to_phase2 tool
+2. IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 3. You will NOT hear from the candidate again until they submit their complete design
 
 **PHASE 2: SILENT DESIGN**

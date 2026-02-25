@@ -279,7 +279,7 @@ Allow at max 6-8 exchanges.
 TRANSITION RULE: Once approach is clear and you've validated it's reasonable:
 1. You must strictly say: "Alright, go ahead and implement it."
 2. Do not ask any questions after delivering the above message. Ask them before if needed.
-3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool
+3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 4. You will NOT hear from the candidate again until they submit their complete solution
 
 **PHASE 2: SILENT IMPLEMENTATION**
@@ -897,7 +897,7 @@ Allow at max 6-8 exchanges.
 TRANSITION RULE: Once hypothesis is formed and candidate has demonstrated they understand the incident:
 1. You must strictly say: "Alright, go ahead and investigate the code."
 2. Do NOT ask additional questions after delivering the above message. Ask them before if needed.
-3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool
+3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 4. You will NOT hear from the candidate again until they submit their complete fix
 
 **PHASE 2: SILENT INVESTIGATION & FIX**
@@ -1481,7 +1481,7 @@ Allow at max 6-8 exchanges.
 TRANSITION RULE: Once requirements are sufficiently clear:
 1. You must strictly say: "Okay, I think we have a good grasp of requirements. Go ahead and design the high-level architecture. Use the design canvas to sketch it out."
 2. Do not ask more questions after this message. Ask any last questions BEFORE it.
-3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool
+3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 4. You will NOT hear from the candidate again until they submit their complete design
 
 **PHASE 2: SILENT DESIGN**

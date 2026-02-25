@@ -169,7 +169,7 @@ Allow at max 6-8 exchanges.
 TRANSITION RULE: Once approach is clear and you've validated it's reasonable:
 1. You must strictly Say: "Alright, go ahead and implement it."
 2. Do not ask any questions after delivering the above message. If you have any questions, ask them before delivering the above message.
-3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool
+3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 4. You will NOT hear from the candidate again until they submit their complete solution
 
 **PHASE 2: SILENT IMPLEMENTATION**
@@ -702,7 +702,7 @@ Allow at max 6-8 exchanges.
 TRANSITION RULE: Once the candidate understands the problem and has stated their initial hypothesis:
 1. You must strictly say: "Alright, go ahead and trace through the code. Walk me through what you find."
 2. Do not ask any questions after delivering the above message. If you have any questions, ask them before delivering the above message.
-3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool
+3. After delivering the above message, IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 4. You will NOT hear from the candidate again until they submit their complete diagnosis
 
 **PHASE 2: SILENT INVESTIGATION**
@@ -1177,7 +1177,7 @@ You have access to the following tools:
 You are responsible for adhering to a 3-PHASE INTERVIEW STRUCTURE.
 TRANSITIONS: Phase 1 → 2 is YOUR responsibility via tool call. Phase 2 → 3 is EXTERNALLY CONTROLLED. You do NOT make that move yourself.
 
-**PHASE 1: REQUIREMENTS GATHERING (6-8 EXCHANGES)**
+**PHASE 1: REQUIREMENTS GATHERING (4-6 EXCHANGES)**
 
 Goal: Understanding the problem, constraints, and scale.
 Mode: Conversational, but concise.
@@ -1219,11 +1219,11 @@ Red flags:
 ❌ Accepts vague requirements ("a lot of users")
 ❌ No questions about tradeoffs
 
-Allow at max 6-8 exchanges.
+Allow at max 4-6 exchanges.
 
 TRANSITION RULE: Once requirements are clear and you've answered their questions:
 1. Say: "Okay, I think we have a good grasp of requirements. Go ahead and design the high-level architecture. Use the design canvas to sketch it out."
-2. IMMEDIATELY call the transition_to_phase2 tool
+2. IMMEDIATELY call the transition_to_phase2 tool (CRITICAL: Invoke the tool silently via the tool API. Do NOT output raw JSON, XML, or the tool name in your conversational text response)
 3. You will NOT hear from the candidate again until they submit their complete design
 
 **PHASE 2: SILENT DESIGN**

@@ -359,7 +359,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                     console.log(`[${session.id}] 🎬 Phase 1 → Phase 2 transition initiated`);
 
                     // Determine phase name based on interview type
-                    const phaseName = session.type === 'system_design' ? 'design' : 'implementation';
+                    const phaseName = (session.type === 'system_design' || session.type === 'design') ? 'design' : 'implementation';
 
                     // Send phase transition message to frontend
                     // Frontend expects 'phase' property to trigger UI changes
@@ -415,13 +415,13 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                         sentenceBuffer = sentenceBuffer.substring(index); // Update buffer immediately
 
                         if (sentence.length > 0) {
-                            // 🧹 CLEANUP: Filter out [DESIGN UPDATE] blocks from TTS
-                            // The AI sometimes outputs a design summary block at the start. We don't want to speak this.
-                            // Pattern: [DESIGN UPDATE]: ... (lines) ... Risks: [...]
-                            // We'll use a regex to strip it.
+                            // 🧹 CLEANUP: Filter out [DESIGN UPDATE] blocks and JSON Tool leaks from TTS
                             let cleanSentence = sentence.replace(/\[DESIGN UPDATE\][\s\S]*?Risks: \[.*?\]/g, '').trim();
+                            cleanSentence = cleanSentence.replace(/<tool_use>[\s\S]*?<\/tool_use>/gi, '').trim();
+                            cleanSentence = cleanSentence.replace(/\{[\s\S]*?"name"\s*:\s*"transition_to_phase2"[\s\S]*?\}/gi, '').trim();
+                            cleanSentence = cleanSentence.replace(/transition_to_phase2/gi, '').trim();
 
-                            // If the cleanup left nothing (was just a design update), ignore
+                            // If the cleanup left nothing, ignore
                             if (cleanSentence.length === 0) {
                                 console.log(`[${session.id}] 🔇 Skipped silent design update block for TTS`);
                             } else {
@@ -470,6 +470,9 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
             // Apply same cleanup to final sentence
             let finalSentence = sentenceBuffer.trim();
             finalSentence = finalSentence.replace(/\[DESIGN UPDATE\][\s\S]*?Risks: \[.*?\]/g, '').trim();
+            finalSentence = finalSentence.replace(/<tool_use>[\s\S]*?<\/tool_use>/gi, '').trim();
+            finalSentence = finalSentence.replace(/\{[\s\S]*?"name"\s*:\s*"transition_to_phase2"[\s\S]*?\}/gi, '').trim();
+            finalSentence = finalSentence.replace(/transition_to_phase2/gi, '').trim();
 
             if (finalSentence.length > 0) {
                 console.log(`[${session.id}] 🗣️ Queueing Final Sentence: "${finalSentence}"`);
@@ -504,11 +507,25 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         }
 
         // Wait for all TTS to finish before declaring done?
-        // Ideally yes, but we don't want to hold the socket open if not needed.
-        // But for debugging, let's await it.
         await ttsChain;
 
         console.log(`[${session.id}] 🤖 CLAUDE FULL OUTPUT: "${fullResponseText}"`);
+
+        // EMERGENCY FALLBACK: If AI leaked the tool call into text but didn't trigger API tool block
+        if (fullResponseText.includes('transition_to_phase2') && (!session.currentPhase || session.currentPhase === 'clarification')) {
+            console.log(`[${session.id}] 🚨 EMERGENCY FALLBACK: Detected phase transition tool in text output.`);
+            const phaseName = (session.type === 'system_design' || session.type === 'design') ? 'design' : 'implementation';
+            sendData(session, {
+                type: 'phase_transition',
+                payload: {
+                    from: 'clarification',
+                    to: phaseName,
+                    phase: phaseName,
+                    message: `Transitioning to ${phaseName} phase. Microphone will be disabled. Submit your solution when ready.`
+                }
+            });
+            session.currentPhase = phaseName;
+        }
 
         // Save to History
         session.history.push({
@@ -653,8 +670,8 @@ function setupAzureSTT(session) {
                     session.turnParts.push(text);
                     session.tempTranscript = ""; // Clear interim
 
-                    // Trigger turn completion with a short buffer
-                    resetUtteranceTimer(session, 500); //1500ms
+                    // Trigger turn completion with a forgiving buffer to allow candidate breaths
+                    resetUtteranceTimer(session, 2000); // Increased from 500ms to 2000ms
                 }
             }
             else if (e.result.reason === sdk.ResultReason.NoMatch) {
