@@ -805,11 +805,12 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
         }
     }, [skillInterviews, profileData]);
 
-    const handleViewInterview = (id) => {
+    const handleViewInterview = (id, type) => {
+        const url = `/dashboard/interview-details/${id}${type ? `?type=${type}` : ''}`;
         onComplete().then(() => {
-            navigate(`/dashboard/interview-details/${id}`);
+            navigate(url);
         }).catch(() => {
-            navigate(`/dashboard/interview-details/${id}`);
+            navigate(url);
         });
     };
 
@@ -904,7 +905,7 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
                                     </div>
 
                                     <button
-                                        onClick={() => handleViewInterview(interview.id)}
+                                        onClick={() => handleViewInterview(interview.id, interview.type)}
                                         className="w-full py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-900 bg-slate-50 hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2"
                                     >
                                         Start Interview

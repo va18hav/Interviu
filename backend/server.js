@@ -1234,7 +1234,7 @@ app.get('/api/onboarding-interviews', async (req, res) => {
         }
 
         // Return top 4
-        const topFour = results.slice(0, 4);
+        const topFour = results.slice(0, 4).map(item => ({ ...item, type: normalizedType }));
         res.json({ interviews: topFour });
     } catch (error) {
         console.error('[OnboardingInterviews] Error:', error);
