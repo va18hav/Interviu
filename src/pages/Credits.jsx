@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap, Clock, Check, Star, MessageSquare,
     Sparkles, ShieldCheck, Mail, Send, X, ArrowRight,
-    TrendingUp, Award, BarChart3
+    TrendingUp, Award, BarChart3, Instagram, Twitter, Linkedin
 } from 'lucide-react';
 import Navbar from "../components/Navbar";
 
@@ -11,7 +11,8 @@ const CreditsPage = () => {
     const [credits, setCredits] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showRequestModal, setShowRequestModal] = useState(false);
-    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [modalStep, setModalStep] = useState(1);
+    const [socialsClicked, setSocialsClicked] = useState({});
     const [formData, setFormData] = useState({
         experience: '',
         features: '',
@@ -30,6 +31,7 @@ const CreditsPage = () => {
                     const data = await response.json();
                     if (response.ok) {
                         setCredits(data.credits);
+                        setSocialsClicked(data.socials_clicked || {});
                     }
                 }
             } catch (error) {
@@ -41,22 +43,66 @@ const CreditsPage = () => {
         fetchCredits();
     }, []);
 
-    const handleRequestSubmit = (e) => {
+    const handleRequestSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate API call for feedback collection
-        setTimeout(() => {
+
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/feedback`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                setModalStep(2);
+            } else {
+                console.error("Failed to submit feedback");
+            }
+        } catch (error) {
+            console.error("Error submitting feedback:", error);
+        } finally {
             setLoading(false);
-            setFormSubmitted(true);
-            setTimeout(() => {
-                setShowRequestModal(false);
-                setFormSubmitted(false);
-                setFormData({ experience: '', features: '', willingToPay: '' });
-            }, 3000);
-        }, 1500);
+        }
     };
 
+    const handleSocialClick = async (platform, url) => {
+        window.open(url, '_blank');
 
+        if (socialsClicked[platform]) return; // Already claimed
+
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/socials/reward`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ platform })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCredits(data.credits);
+                setSocialsClicked(data.socials_clicked || {});
+            }
+        } catch (error) {
+            console.error("Error claiming social reward:", error);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setShowRequestModal(false);
+        setTimeout(() => {
+            setModalStep(1);
+            setFormData({ experience: '', features: '', willingToPay: '' });
+        }, 300);
+    };
     return (
         <div className="min-h-screen bg-slate-50">
             <Navbar credits={credits} />
@@ -128,41 +174,6 @@ const CreditsPage = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                    {[
-                        {
-                            icon: Sparkles,
-                            title: 'How it works',
-                            desc: 'Use credits to start specialized interview rounds. Each session consumes a fixed amount of units.',
-                            color: 'text-amber-500'
-                        },
-                        {
-                            icon: Award,
-                            title: 'Earning More',
-                            desc: 'Complete surveys, report bugs, and share detailed feedback to earn additional calibration units.',
-                            color: 'text-indigo-500'
-                        },
-                        {
-                            icon: BarChart3,
-                            title: 'Future Launch',
-                            desc: 'Early adopters will receive special legacy status and permanent boosters upon public release.',
-                            color: 'text-emerald-500'
-                        }
-                    ].map((item, i) => (
-                        <div key={i} className="p-8 rounded-[1.5rem] bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                            <div className={`w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-6 border border-slate-50`}>
-                                <item.icon className={`w-6 h-6 ${item.color}`} />
-                            </div>
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-3">{item.title}</h3>
-                            <p className="text-slate-500 text-xs font-medium leading-relaxed uppercase tracking-tight">
-                                {item.desc}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
             </main>
 
             {/* Request Modal */}
@@ -173,7 +184,7 @@ const CreditsPage = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setShowRequestModal(false)}
+                            onClick={handleCloseModal}
                             className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
                         />
 
@@ -183,7 +194,7 @@ const CreditsPage = () => {
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden"
                         >
-                            {!formSubmitted ? (
+                            {modalStep === 1 && (
                                 <form onSubmit={handleRequestSubmit}>
                                     <div className="px-8 pt-8 pb-4 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -197,7 +208,7 @@ const CreditsPage = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => setShowRequestModal(false)}
+                                            onClick={handleCloseModal}
                                             className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all"
                                         >
                                             <X className="w-5 h-5" />
@@ -253,28 +264,96 @@ const CreditsPage = () => {
                                             disabled={loading || !formData.willingToPay}
                                             className="w-full py-4 rounded-xl bg-slate-900 text-white font-black text-[12px] uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-30"
                                         >
-                                            {loading ? 'Transmitting...' : (
-                                                <>Send Feedback & Request <Send className="w-4 h-4" /></>
+                                            {loading ? 'Processing...' : (
+                                                <>Next <ArrowRight className="w-4 h-4" /></>
                                             )}
                                         </button>
                                     </div>
                                 </form>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="p-12 text-center flex flex-col items-center gap-6"
-                                >
+                            )}
+
+                            {modalStep === 2 && (
+                                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                                                <Award className="w-5 h-5 text-indigo-600" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Unlock Rewards</h3>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Earn 50 Credits Per Follow</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleCloseModal}
+                                            className="p-2 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+
+                                    <div className="p-8 space-y-4">
+                                        {[
+                                            { id: 'instagram', name: 'Instagram', icon: Instagram, url: 'https://instagram.com/intervyu', color: 'bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-100' },
+                                            { id: 'x', name: 'X (Twitter)', icon: Twitter, url: 'https://x.com/intervyu', color: 'bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-100' },
+                                            { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, url: 'https://linkedin.com/company/intervyu', color: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' }
+                                        ].map(social => (
+                                            <button
+                                                key={social.id}
+                                                onClick={() => handleSocialClick(social.id, social.url)}
+                                                disabled={socialsClicked[social.id]}
+                                                className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${socialsClicked[social.id] ? 'opacity-50 cursor-not-allowed grayscale' : social.color}`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <social.icon className="w-6 h-6" />
+                                                    <span className="font-black text-sm uppercase tracking-widest">Connect {social.name}</span>
+                                                </div>
+                                                {socialsClicked[social.id] ? (
+                                                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
+                                                        <Check className="w-3 h-3" /> Claimed
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-white/50 px-2 py-1 rounded">
+                                                        +50 Credits
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest w-1/2">
+                                            Any clicks unlock credits instantly.
+                                        </p>
+                                        <button
+                                            onClick={() => setModalStep(3)}
+                                            className="py-4 px-8 rounded-xl bg-slate-900 text-white font-black text-[12px] uppercase tracking-widest hover:bg-black transition-all shadow-xl"
+                                        >
+                                            Complete
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalStep === 3 && (
+                                <div className="p-12 text-center flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-500">
                                     <div className="w-20 h-20 rounded-[2rem] bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-xl shadow-emerald-500/10">
-                                        <Send className="w-10 h-10" />
+                                        <Check className="w-10 h-10" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Transmission Received</h3>
-                                        <p className="text-slate-500 font-medium max-w-xs">
-                                            Your feedback has been logged. Our systems will reviewed your request for additional units.
+                                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Rewards Deposited</h3>
+                                        <p className="text-slate-500 font-medium max-w-xs mx-auto">
+                                            Thank you for your feedback and connection. Your new credits have been permanently bound to your account balance.
                                         </p>
                                     </div>
-                                </motion.div>
+                                    <button
+                                        onClick={handleCloseModal}
+                                        className="mt-4 px-8 py-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-black text-[10px] uppercase tracking-widest transition-all"
+                                    >
+                                        Return to Dashboard
+                                    </button>
+                                </div>
                             )}
                         </motion.div>
                     </div>

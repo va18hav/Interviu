@@ -154,8 +154,6 @@ const LoginPage = () => {
                     throw new Error(data.error || "Authentication failed");
                 }
 
-                console.log("Auth successful:", data);
-
                 // Store User Data & Token
                 const user = data.user;
                 const session = data.session;

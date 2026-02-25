@@ -64,7 +64,7 @@ const InterviewReport = () => {
         if (triggeredByEndButton && endInterviewParams) {
             const generateAndFetchReport = async () => {
                 try {
-                    console.log("[Report] Calling API for end-interview and report generation...");
+
                     const token = localStorage.getItem('authToken');
                     if (!token) {
                         console.error('[Report] No auth token available');

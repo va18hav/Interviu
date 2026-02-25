@@ -114,18 +114,18 @@ const PopularInterviewsHero = () => {
                         className="flex flex-wrap items-center justify-center lg:justify-start gap-8 pt-4"
                     >
                         <div className="flex flex-col items-center lg:items-start">
-                            <span className="text-2xl font-black text-white">500+</span>
+                            <span className="text-2xl font-black text-white">40+</span>
                             <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Simulations</span>
                         </div>
                         <div className="w-[1px] h-10 bg-white/10 hidden sm:block" />
                         <div className="flex flex-col items-center lg:items-start">
-                            <span className="text-2xl font-black text-white">98%</span>
+                            <span className="text-2xl font-black text-white">85%</span>
                             <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Realism Rate</span>
                         </div>
                         <div className="w-[1px] h-10 bg-white/10 hidden sm:block" />
                         <div className="flex flex-col items-center lg:items-start">
-                            <span className="text-2xl font-black text-white">24/7</span>
-                            <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">AI Mentorship</span>
+                            <span className="text-2xl font-black text-white">4</span>
+                            <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Round types</span>
                         </div>
                     </motion.div>
                 </div>

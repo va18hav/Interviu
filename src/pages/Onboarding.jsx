@@ -824,7 +824,7 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
                     Ready to <span className="text-indigo-600">Start</span>
                 </h2>
                 <p className="text-sm text-slate-500 font-medium max-w-lg">
-                    Your profile is ready. We've added 500 free credits to your account to get you started.
+                    Your profile is ready. We've added 300 free credits to your account to get you started.
                 </p>
             </div>
 
@@ -844,20 +844,20 @@ const SlideFinal = ({ onBack, onComplete, loading, profileData, skillInterviews 
                         <div className="flex-1">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="space-y-1">
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Free Starter Plan</h3>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-widest">Early Access</h3>
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-[8px] font-bold uppercase tracking-widest border border-indigo-500/30">
-                                        Starter Pack
+                                        Free Allocaation
                                     </span>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-4xl font-black text-white tracking-tighter">500</div>
+                                    <div className="text-4xl font-black text-white tracking-tighter">300</div>
                                     <div className="text-indigo-300/60 text-[9px] font-bold uppercase tracking-widest mt-1">Free Credits</div>
                                 </div>
                             </div>
 
                             <div className="flex flex-wrap gap-x-6 gap-y-3 pt-4 border-t border-white/5">
                                 {[
-                                    '500 minutes of interviews',
+                                    '300 minutes of interviews',
                                     'Full performance reports',
                                     'Access to all rounds'
                                 ].map((label) => (

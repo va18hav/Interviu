@@ -33,12 +33,10 @@ const CodingRound = () => {
         return {
             first_name: creds.first_name || location.state?.firstName || "Candidate",
             last_name: creds.last_name || location.state?.lastName || "",
-            avatar_url: creds.avatar_url || ""
+            avatar_url: creds.avatar_url || "",
+            id: creds.id
         };
     });
-
-    console.log('[CodingRound] Location State:', location.state);
-    console.log('[CodingRound] Slug:', slug);
 
 
     // ============================================================================
@@ -112,7 +110,7 @@ const CodingRound = () => {
                         // Warning at 15 mins (900s) into Phase 3
                         if (timeInPhase3 >= 900 && !transitionsTriggeredRef.current.wrapupWarning) {
                             transitionsTriggeredRef.current.wrapupWarning = true;
-                            console.log('[Timer] Triggering Wrap-up Warning (15m in Phase 3)');
+
                             if (ws.current) {
                                 ws.current.send(JSON.stringify({
                                     type: 'inject_system_message',
@@ -124,7 +122,7 @@ const CodingRound = () => {
                         // Final Wrap-up at 20 mins (1200s) into Phase 3
                         if (timeInPhase3 >= 1200 && !transitionsTriggeredRef.current.endInterview) {
                             transitionsTriggeredRef.current.endInterview = true;
-                            console.log('[Timer] Triggering Final Wrap-up (20m in Phase 3)');
+
                             if (ws.current) {
                                 ws.current.send(JSON.stringify({
                                     type: 'inject_system_message',
@@ -206,7 +204,6 @@ ${formatList(critical_requirements)}
         ws.current = new WebSocket(import.meta.env.VITE_WS_URL);
 
         ws.current.onopen = () => {
-            console.log('[WS] Connected');
 
             // Construct System Prompt Context
             // Replicating logic from DesignRound.jsx to ensure all template variables are available
@@ -261,6 +258,7 @@ ${formatList(critical_requirements)}
                 type: 'init',
                 payload: {
                     ...sessionContext,
+                    userId: userData.id,
                     firstName: userData.first_name, // Use latest from localStorage
                     ttsProvider: 'azure' // Explicitly force Azure
                 }
@@ -286,7 +284,7 @@ ${formatList(critical_requirements)}
                     await handleTtsChunk(msg.payload);
                 }
                 else if (msg.type === 'session_info') {
-                    console.log(`[WS] Received session info: ${msg.payload.sessionId}`);
+
                     setSessionId(msg.payload.sessionId);
                 }
                 else if (msg.type === 'interviewer_turn') {
@@ -294,7 +292,7 @@ ${formatList(critical_requirements)}
                     setInterviewState('neutral');
                 }
                 else if (msg.type === 'stt_ready') { // or azure_ready
-                    console.log('[STT] Ready - Starting Mic');
+
                     startAudioCapture();
                 }
                 else if (msg.type === 'user_transcript') {
@@ -321,19 +319,16 @@ ${formatList(critical_requirements)}
                     }
                 }
                 else if (msg.type === 'user_turn_complete') {
-                    console.log('[STT] User Turn Complete');
-                    setIsListening(false);
-                    setCurrentAnswer(null); // Added this line as per instruction
                     setInterviewState('speechEnd');
                 }
                 else if (msg.type === 'phase_transition') {
-                    console.log(`[Phase] Transitioning to: ${msg.payload.phase}`);
+
                     setInterviewPhase(msg.payload.phase);
 
                     if (msg.payload.phase === 'implementation') {
                         setShowCode(true);
                         // Phase 2: Silent implementation phase
-                        console.log('[Phase 2] Entering silent implementation phase');
+
                     }
                 }
                 else if (msg.type === 'error') {
@@ -348,7 +343,7 @@ ${formatList(critical_requirements)}
         };
 
         ws.current.onclose = () => {
-            console.log('[WS] Disconnected');
+
             stopAudioCapture();
             if (interviewState !== 'ended') {
                 setInterviewState('error');
@@ -367,10 +362,10 @@ ${formatList(critical_requirements)}
         if (interviewState === 'initializing') {
             timeout = setTimeout(() => {
                 if (interviewStateRef.current === 'initializing') {
-                    console.error('[Session] Initialization timed out (25s)');
+                    console.error('[Session] Initialization timed out (15s)');
                     setInitError(true);
                 }
-            }, 25000);
+            }, 15000);
         }
         return () => clearTimeout(timeout);
     }, [interviewState]);
@@ -436,7 +431,7 @@ ${formatList(critical_requirements)}
     };
 
     const stopAudioServices = () => {
-        console.log('[Audio] Stopping all audio services...');
+
         stopAudioCapture();
 
         // Stop any currently playing TTS chunks
@@ -452,11 +447,9 @@ ${formatList(critical_requirements)}
         }
 
         if (ws.current) {
-            // Only close WS if we want to fully terminate, but for report generation we usually keep it.
-            // However, the user request says cleanup STT and TTS "disconnected as soon as call is terminated".
-            // Since we use the same WS for report data sometimes (history), we might just send a 'stop' signal if backend supports it.
-            // But usually closing the mic and stopping the context is enough for the user's hardware/privacy.
-            console.log('[WS] STT/TTS services detached from hardware.');
+            try {
+                ws.current.close();
+            } catch (e) { console.error(e); }
         }
     };
 
@@ -513,7 +506,7 @@ ${formatList(critical_requirements)}
                 if (activeTtsSourcesRef.current === 0) {
                     const now = audioContext.current?.currentTime || 0;
                     if (now >= nextStartTimeRef.current - 0.2) {
-                        console.log('[TTS] End of stream detected');
+
                         isPlayingRef.current = false;
                         setInterviewState('neutral');
                         setCurrentQuestion(null);
@@ -551,7 +544,7 @@ ${formatList(critical_requirements)}
                     setCurrentQuestion(prev => {
                         let newText = prev || '';
                         let currentCount = displayedWordCountRef.current;
-                        const karaokeLimit = window.innerWidth < 768 ? 5 : 20;
+                        const karaokeLimit = window.innerWidth < 768 ? 5 : 10;
                         for (const word of wordsToDisplay) {
                             if (currentCount >= karaokeLimit) {
                                 newText = word;
@@ -577,9 +570,9 @@ ${formatList(critical_requirements)}
         let timer;
 
         if (interviewPhase === 'implementation') {
-            console.log('[Phase 2] Starting 20s timer before disabling audio...');
+
             timer = setTimeout(() => {
-                console.log('[Phase 2] 20 seconds elapsed - Disabling audio capture');
+
                 // Stop audio capture
                 if (scriptProcessorRef.current) {
                     scriptProcessorRef.current.disconnect();
@@ -630,11 +623,9 @@ ${formatList(critical_requirements)}
     // Phase 2 Submit Handler
     const handleSubmitSolution = () => {
         if (!ws.current || interviewPhase !== 'implementation') {
-            console.log('[Submit] Ignoring - not in implementation phase');
+
             return;
         }
-
-        console.log('[Submit] Sending complete code solution to AI');
 
         // Build complete code context
         const codeContext = Object.entries(files)
@@ -650,8 +641,6 @@ ${formatList(critical_requirements)}
                 message: 'I\'ve completed my implementation. Here is my solution.'
             }
         }));
-
-        console.log('[Submit] Code submission sent');
 
         // Transition to Phase 3
         setInterviewPhase('review');
@@ -914,9 +903,6 @@ ${formatList(critical_requirements)}
         }
     };
 
-    // REMOVED LOADING OVERLAY
-    // if (isEndingInterview) { ... }
-
     return (
         <main className="h-screen bg-slate-50 flex flex-col relative overflow-hidden">
             {/* Header */}
@@ -924,10 +910,9 @@ ${formatList(critical_requirements)}
                 <div className="flex items-center justify-between mx-auto max-w-8xl">
                     <div className="hidden md:flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
                         <div className="flex flex-col leading-tight">
-                            <span className="text-sm font-black text-slate-900 tracking-tight">
-                                {company} • {role}
+                            <span className="text-xs font-black text-slate-900 tracking-tight">
+                                {company} {role}
                             </span>
-                            <span className="text-[10px] text-indigo-600 font-black uppercase tracking-[0.2em] mt-0.5">Coding Protocol</span>
                         </div>
                     </div>
 
@@ -1027,7 +1012,7 @@ ${formatList(critical_requirements)}
                         (interviewState === 'user-speaking' && currentAnswer && currentAnswer.trim().length > 0) ||
                         (interviewState === 'ai-speaking' && (currentQuestion || true))
                     ) && (
-                            <div className="absolute bottom-16 left-0 right-0 px-8 pointer-events-none flex justify-center z-50">
+                            <div className="absolute bottom-26 md:bottom-[2%] md:left-[16%] md:right-[22%] pointer-events-none flex justify-start z-60">
                                 <div className="w-full max-w-6xl pointer-events-auto">
                                     <StatusBox
                                         interviewState={interviewState}
@@ -1041,8 +1026,8 @@ ${formatList(critical_requirements)}
             </div>
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-50 to-transparent z-40">
-                <div className="max-w-xl mx-auto flex items-center justify-center gap-6 bg-white/80 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
+            <div className="absolute bottom-4 right-4 z-40 flex justify-end">
+                <div className="inline-flex items-center justify-center gap-3 bg-white/80 backdrop-blur-xl px-4 py-3 rounded-[2rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
 
                     {/* Microphone Indicator */}
                     {interviewPhase !== 'implementation' && (

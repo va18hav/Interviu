@@ -167,11 +167,8 @@ const PreviousInterviews = () => {
                             <span className="font-bold text-[10px] uppercase tracking-widest">Return to Hub</span>
                         </button>
                         <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                            Performance<br className="max-md:hidden" /> Chronicle
+                            Performance Chronicle
                         </h1>
-                        <p className="text-slate-500 max-w-xl text-sm md:text-base font-medium">
-                            A historical retrospective of your technical simulations. Review transcripts, analyze scores, and track your engineering trajectory.
-                        </p>
                     </div>
 
                     <div className="w-full lg:w-[400px] relative group shrink-0">

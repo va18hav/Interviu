@@ -15,11 +15,11 @@ const TestDesignUI = () => {
     const handleComponentUpdate = (componentId, newConfig) => {
         // This would normally update the component in the canvas
         // For now, just log it
-        console.log('Component updated:', componentId, newConfig);
+
     };
 
     const handleDesignChange = (change) => {
-        console.log('Design change:', change);
+
     };
 
     return (

@@ -205,7 +205,7 @@ const Navbar = ({ credits: propCredits }) => {
                                 </div>
                                 <div className="flex flex-col  -ml-4">
                                     <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">Interviu</h1>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Interview Better</p>
+                                    <p className="text-xs text-slate-400 tracking-wider">Interview Better</p>
                                 </div>
                             </Link>
                         </div>
@@ -214,7 +214,7 @@ const Navbar = ({ credits: propCredits }) => {
                         <nav ref={navRef} className='hidden md:flex items-center gap-1 bg-slate-100/50 p-1 rounded-full border border-slate-200/60 relative'>
                             {/* Sliding Indicator */}
                             <div
-                                className="absolute top-1 bottom-1 bg-indigo-300/60 rounded-full shadow-sm ring-1 ring-black/5 transition-all duration-300 ease-out"
+                                className="absolute top-1 bottom-1 bg-indigo-500/90 rounded-full shadow-sm ring-1 ring-black/5 transition-all duration-300 ease-out"
                                 style={{
                                     left: `${indicatorStyle.left}px`,
                                     width: `${indicatorStyle.width}px`,
@@ -229,7 +229,7 @@ const Navbar = ({ credits: propCredits }) => {
                                         ref={el => addToNavLinksRef(el, index)}
                                         to={link.path}
                                         className={`relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${isActive(link.path)
-                                            ? 'text-black'
+                                            ? 'text-white'
                                             : 'text-slate-600 hover:text-slate-900'
                                             }`}
                                     >

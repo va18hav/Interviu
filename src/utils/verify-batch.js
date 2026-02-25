@@ -13,14 +13,12 @@ const changes = [
 ];
 
 // Replicate TestInterview.jsx logic
-console.log("--- SIMULATION START ---");
+
 changes.forEach((change, i) => {
     const summary = designChangeTracker.recordChange(change);
     const count = designChangeTracker.getUnsyncedCount();
-    console.log(`[${i + 1}] Change: ${change.type}, Unsynced Count: ${count}`);
 
     if (count >= 5) {
-        console.log(">>> BATCH THRESHOLD REACHED (5). SYNCING...");
 
         const updates = designChangeTracker.getChangesSinceLastSync();
         const consolidatedSummary = designChangeTracker.generateConsolidatedSummary(updates);
@@ -39,12 +37,9 @@ changes.forEach((change, i) => {
 
         const context = designChangeTracker.summarizeState(mockComponents, mockConnections);
 
-        console.log("\n--- PAYLOAD TO BE SENT ---");
-        console.log("Summary:", consolidatedSummary);
-        console.log("Context:", context);
+
 
         designChangeTracker.markAsSynced();
-        console.log("\nSynced. New Unsynced Count:", designChangeTracker.getUnsyncedCount());
+
     }
 });
-console.log("--- SIMULATION END ---");

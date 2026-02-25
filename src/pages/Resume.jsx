@@ -237,7 +237,6 @@ const Resume = () => {
         const file = event.target.files[0];
         if (file) {
             setResume(file);
-            console.log(file);
 
             // Create preview URL for PDF
             if (file.type === 'application/pdf') {
@@ -319,7 +318,6 @@ const Resume = () => {
                 }
             }
 
-            console.log(analysis);
         };
         setIsAnalyzing(true);
         reader.readAsDataURL(resume);

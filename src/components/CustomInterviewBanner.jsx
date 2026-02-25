@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight, Workflow } from 'lucide-react'
 import { motion } from 'framer-motion'
 import bot from "../assets/images/bot.png"
-import configure from "../assets/images/custominterview2.png"
+import configure from "../assets/images/customInterview.png"
 
 const CustomInterviewBanner = ({ firstName }) => {
     const navigate = useNavigate()
@@ -22,7 +22,7 @@ const CustomInterviewBanner = ({ firstName }) => {
                 <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
             </div>
 
-            <div className="relative z-10 px-8 md:px-12 py-10 md:py-14 flex flex-col md:flex-row items-center justify-between gap-12">
+            <div className="relative z-10 px-8 md:px-14 py-10 md:py-14 flex flex-col md:flex-row items-center justify-between gap-12">
                 <div className="max-w-2xl space-y-8 text-center md:text-left">
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 backdrop-blur-md mx-auto md:mx-0">

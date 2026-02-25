@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
 import Groq from 'groq-sdk' // Import Groq SDK
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -31,7 +32,7 @@ async function extractTextFromPDF(pdfBuffer) {
 }
 
 import http from 'http';
-import { setupWebSocket, sessions } from './websocketHandler.js';
+import { setupWebSocket, sessions, cleanupSession } from './websocketHandler.js';
 
 dotenv.config()
 const app = express()
@@ -587,14 +588,141 @@ app.get('/api/credits', requireAuth(), async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('profiles')
-            .select('credits')
+            .select('credits, socials_clicked')
             .eq('id', userId)
             .single();
 
         if (error) throw error;
-        res.json({ credits: data?.credits || 0 });
+        res.json({
+            credits: data?.credits || 0,
+            socials_clicked: data?.socials_clicked || {}
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Socials Reward
+app.post('/api/socials/reward', requireAuth(), async (req, res) => {
+    const userId = req.userId;
+    const { platform } = req.body;
+
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+    if (!['instagram', 'x', 'linkedin'].includes(platform)) {
+        return res.status(400).json({ error: "Invalid platform" });
+    }
+
+    try {
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('credits, socials_clicked')
+            .eq('id', userId)
+            .single();
+
+        if (profileError) throw profileError;
+
+        let clicked = profile.socials_clicked || {};
+
+        // Safety check if user somehow stored it as array manually in DB
+        if (Array.isArray(clicked)) {
+            const temp = {};
+            clicked.forEach(k => temp[k] = true);
+            clicked = temp;
+        }
+
+        if (clicked[platform]) {
+            return res.status(400).json({ error: 'Reward already claimed for this platform' });
+        }
+
+        // Apply new click and grant 50 credits
+        clicked[platform] = true;
+        const newCredits = (profile.credits || 0) + 50;
+
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ credits: newCredits, socials_clicked: clicked })
+            .eq('id', userId);
+
+        if (updateError) throw updateError;
+
+        res.json({
+            success: true,
+            credits: newCredits,
+            socials_clicked: clicked,
+            rewarded: 50
+        });
+    } catch (error) {
+        console.error("Socials reward error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Configure Nodemailer with Hostinger SMTP
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: true, // Use SSL/TLS
+    auth: {
+        user: (process.env.SMTP_USER || '').trim(),
+        pass: (process.env.SMTP_PASS || '').replace(/^"|"$/g, '').trim(),
+    },
+});
+
+// Feedback Endpoint
+app.post('/api/feedback', requireAuth(), async (req, res) => {
+    const userId = req.userId;
+    const { experience, features, willingToPay } = req.body;
+
+    if (!userId) return res.status(400).json({ error: "User ID required" });
+
+    try {
+        // Fetch user's name
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, email')
+            .eq('id', userId)
+            .single();
+
+        if (error) throw error;
+
+        const userName = `${profile?.first_name || 'Unknown'} ${profile?.last_name || 'User'}`;
+        const userEmail = profile?.email || 'No email provided';
+
+        // Construct Email
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: 'support@interviu.pro',
+            replyTo: userEmail,
+            subject: `New Early Access Feedback from ${userName}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <h2 style="color: #4f46e5; margin-bottom: 24px;">New Early Access Feedback</h2>
+                    
+                    <div style="background-color: #f8fafc; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>User:</strong> ${userName}</p>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;"><strong>Email:</strong> <a href="mailto:${userEmail}">${userEmail}</a></p>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;"><strong>User ID:</strong> ${userId}</p>
+                    </div>
+
+                    <h3 style="color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Experience</h3>
+                    <div style="background-color: #ffffff; padding: 16px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px; color: #334155; white-space: pre-wrap;">${experience || 'N/A'}</div>
+
+                    <h3 style="color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Requested Features</h3>
+                    <div style="background-color: #ffffff; padding: 16px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px; color: #334155; white-space: pre-wrap;">${features || 'N/A'}</div>
+
+                    <h3 style="color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Willingness to Pay</h3>
+                    <div style="background-color: #ffffff; padding: 16px; border: 1px solid #e2e8f0; border-radius: 6px; color: #334155;"><strong>${willingToPay || 'N/A'}</strong></div>
+                </div>
+            `
+        };
+
+        // Send Email
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: "Feedback sent successfully" });
+    } catch (error) {
+        console.error("Feedback email error:", error);
+        res.status(500).json({ error: "Failed to send feedback email" });
     }
 });
 
@@ -1395,6 +1523,13 @@ app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), asyn
         } else {
             console.log("[EndInterview] Skipping report generation as per client request (criteria not met).");
             report = { message: "Report generation skipped. Minimum interview requirements not met." };
+        }
+
+        // 🔥 IMPORTANT: Force cleanup the WebSocket STT stream if they manually ended the session
+        if (endWsSession) {
+            console.log(`[EndInterview] Forcing WebSocket and Azure STT cleanup for active session ${sessionId}`);
+            endWsSession.creditsDeducted = true; // Prevents the auto-deduct logic from double-charging
+            cleanupSession(endWsSession);
         }
 
         res.json({

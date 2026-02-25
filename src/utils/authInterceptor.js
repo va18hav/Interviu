@@ -30,5 +30,3 @@ window.fetch = async (...args) => {
         return Promise.reject(error);
     }
 };
-
-console.log('[Auth Interceptor] Global fetch monitoring enabled.');

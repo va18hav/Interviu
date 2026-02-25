@@ -75,11 +75,7 @@ const PopularInterviewsPage = () => {
     const getRoleCategory = (roleName) => {
         const r = roleName.toLowerCase();
         if (r.includes('software engineer') || r.includes('sde') || r.includes('developer') || r.includes('frontend') || r.includes('backend') || r.includes('full stack') || r.includes('ios') || r.includes('android')) return 'Software Engineering';
-        if (r.includes('ai') || r.includes('machine learning') || r.includes('ml') || r.includes('deep learning') || r.includes('vision') || r.includes('nlp')) return 'AI/ML';
-        if (r.includes('data')) return 'Data';
-        if (r.includes('cloud') || r.includes('devops') || r.includes('sre') || r.includes('solutions architect') || r.includes('azure')) return 'Cloud';
-        if (r.includes('product') || r.includes('manager')) return 'Product Management';
-        return 'Other';
+        if (r.includes('cloud') || r.includes('devops') || r.includes('sre') || r.includes('solutions architect') || r.includes('azure') || r.includes('production engineer') || r.includes('infrastructure engineer') || r.includes('site reliability engineer')) return 'Devops/SRE';
     };
 
     const getCompanyColor = (company) => {
@@ -91,7 +87,10 @@ const PopularInterviewsPage = () => {
             'Microsoft': 'sky',
             'Apple': 'slate',
             'Nvidia': 'emerald',
-            'OpenAI': 'indigo'
+            'OpenAI': 'indigo',
+            'Stripe': 'purple',
+            'Salesforce': 'cyan',
+            'Rubrik': 'cyan'
         };
         return colors[company] || 'indigo';
     };
@@ -104,7 +103,9 @@ const PopularInterviewsPage = () => {
         sky: { bg: "bg-sky-50", text: "text-sky-600", accent: "from-sky-500 to-sky-600", border: "border-sky-100", light: "bg-sky-50/50", glow: "shadow-sky-200" },
         emerald: { bg: "bg-emerald-50", text: "text-emerald-600", accent: "from-emerald-500 to-emerald-600", border: "border-emerald-100", light: "bg-emerald-50/50", glow: "shadow-emerald-200" },
         indigo: { bg: "bg-indigo-50", text: "text-indigo-600", accent: "from-indigo-500 to-indigo-600", border: "border-indigo-100", light: "bg-indigo-50/50", glow: "shadow-indigo-200" },
-        slate: { bg: "bg-slate-50", text: "text-slate-600", accent: "from-slate-600 to-slate-800", border: "border-slate-200", light: "bg-slate-50/50", glow: "shadow-slate-400" }
+        slate: { bg: "bg-slate-50", text: "text-slate-600", accent: "from-slate-600 to-slate-800", border: "border-slate-200", light: "bg-slate-50/50", glow: "shadow-slate-400" },
+        purple: { bg: "bg-purple-100", text: "text-purple-600", accent: "from-purple-600 to-purple-800", border: "border-purple-100", light: "bg-purple-50/50", glow: "shadow-purple-300" },
+        cyan: { bg: "bg-cyan-50", text: "text-cyan-600", accent: "from-cyan-500 to-cyan-600", border: "border-cyan-100", light: "bg-cyan-50/50", glow: "shadow-cyan-200" },
     };
 
     const filteredInterviews = interviews.filter(interview => {

@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { getSystemPrompt } from './prompts/index.js';
 import { createTTSProvider } from './utils/providers/tts-factory.js';
 import { generateInterviewReport } from './utils/reportGenerator.js';
+import { supabaseAdmin } from './utils/supabase.js';
 import crypto from 'crypto';
 
 dotenv.config();
@@ -191,6 +192,7 @@ export function setupWebSocket(server) {
                     if (oldSession) {
                         // Update the session's socket
                         oldSession.ws = ws;
+                        oldSession.disconnectedAt = null; // Clear disconnect timer
                         wsToSessionId.set(ws, oldSessionId);
                         console.log(`[WS] Session ${oldSessionId} re-associated with new socket`);
                         sendData(oldSession, { type: 'reconnected', payload: { sessionId: oldSessionId } });
@@ -229,17 +231,24 @@ export function setupWebSocket(server) {
             clearInterval(rateLimitTimer);
             wsToSessionId.delete(ws);
 
+            const staleSession = sessions.get(sessionId);
+            if (staleSession) {
+                staleSession.disconnectedAt = Date.now(); // Mark exact disconnect time
+                console.log(`[WS] Suspending Azure STT for disconnected session: ${sessionId}`);
+                cleanupAzureSTT(staleSession);
+            }
+
             // H-1: TTL-based cleanup — allow 5 minutes for reconnect before disposing
             // If the client reconnects within that window, the session is preserved.
             setTimeout(() => {
-                const staleSession = sessions.get(sessionId);
-                if (staleSession && staleSession.ws !== ws) {
+                const currentSession = sessions.get(sessionId);
+                if (currentSession && currentSession.ws !== ws) {
                     // Client already reconnected with a new socket — don't clean up
                     return;
                 }
-                if (staleSession) {
+                if (currentSession) {
                     console.log(`[WS] TTL expired for ${sessionId}. Cleaning up session.`);
-                    cleanupSession(staleSession);
+                    cleanupSession(currentSession);
                 }
             }, 5 * 60 * 1000); // 5-minute grace window
         });
@@ -288,8 +297,6 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         }
 
         console.log(`[${session.id}] 🚀 Sending to Claude (Streaming)...`);
-        console.log(`[${session.id}] 📜 SYSTEM PROMPT:\n${dynamicSystemPrompt}\n═══════════════════════════════════`);
-
 
         // 🛠️ TOOL DEFINITIONS
         // Only allow phase transition tool if we are in Phase 1 (Clarification)
@@ -306,6 +313,10 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
             });
         }
 
+        // 🚨 Create Abort Controller for LLM
+        const abortController = new AbortController();
+        session.llmAbortController = abortController;
+
         // 🌊 STREAMING IMPLEMENTATION
         const stream = anthropic.messages.stream({
             model: "claude-sonnet-4-20250514",
@@ -319,7 +330,9 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                 }
             ],
             messages: prunedHistory,
-            tools: tools.length > 0 ? tools : undefined,
+            tools: tools.length > 0 ? tools : undefined
+        }, {
+            signal: abortController.signal
         });
 
         let fullResponseText = "";
@@ -332,6 +345,11 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         let ttsChain = Promise.resolve();
 
         for await (const chunk of stream) {
+            // 🛑 GUARD: Check if session was cleaned up mid-stream
+            if (!session.active) {
+                console.log(`[${session.id}] 🛑 Active stream aborted due to session disconnect.`);
+                break;
+            }
             // Handle tool use
             if (chunk.type === 'content_block_start' && chunk.content_block.type === 'tool_use') {
                 const toolName = chunk.content_block.name;
@@ -390,11 +408,11 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                     // If buffer contains a delimiter, split and send.
                     // Aggressive Splitting for Low Latency:
                     // Standard punctuation [.!?] OR substantial natural pauses [,,;] followed by space.
-                    let match = sentenceBuffer.match(/([.!?,,;])\s+/);
-                    if (match) {
+                    let match = sentenceBuffer.match(/([.!?])\s+/);
+                    while (match) {
                         const index = match.index + match[0].length;
                         const sentence = sentenceBuffer.substring(0, index).trim();
-                        const remaining = sentenceBuffer.substring(index);
+                        sentenceBuffer = sentenceBuffer.substring(index); // Update buffer immediately
 
                         if (sentence.length > 0) {
                             // 🧹 CLEANUP: Filter out [DESIGN UPDATE] blocks from TTS
@@ -411,6 +429,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
 
                                 // Append to TTS Chain
                                 ttsChain = ttsChain.then(async () => {
+                                    if (!session.active) return; // 🛑 GUARD: Skip TTS if session ended
                                     console.log(`[${session.id}] 🔊 Synthesizing: "${cleanSentence}"`);
                                     let isFirstChunkOfSentence = true;
                                     try {
@@ -439,7 +458,8 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                             }
                         }
 
-                        sentenceBuffer = remaining;
+                        // Check for next match in the remaining buffer
+                        match = sentenceBuffer.match(/([.!?])\s+/);
                     }
                 }
             }
@@ -454,6 +474,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
             if (finalSentence.length > 0) {
                 console.log(`[${session.id}] 🗣️ Queueing Final Sentence: "${finalSentence}"`);
                 ttsChain = ttsChain.then(async () => {
+                    if (!session.active) return; // 🛑 GUARD: Skip final TTS if session ended
                     console.log(`[${session.id}] 🔊 Synthesizing Final: "${finalSentence}"`);
                     let isFirstChunkOfSentence = true;
                     try {
@@ -479,6 +500,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
                     }
                 });
             }
+            sentenceBuffer = ""; // Clear buffer so it isn't picked up again 
         }
 
         // Wait for all TTS to finish before declaring done?
@@ -502,12 +524,33 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         });
     } finally {
         session.isProcessingResponse = false;
+        session.lastResponseClearedAt = Date.now();
     }
 }
 
 
-function cleanupSession(session) {
+export async function cleanupSession(session) {
     session.active = false;
+
+    // --- AUTOMATIC CREDIT DEDUCTION FOR DISCONNECTS ---
+    if (session.userId && session.startedAt && !session.creditsDeducted) {
+        session.creditsDeducted = true; // Prevent double deduction
+        const endTime = session.disconnectedAt || Date.now();
+        const durationInMinutes = (endTime - session.startedAt) / 60000;
+        const creditsToDeduct = Math.ceil(durationInMinutes);
+
+        try {
+            console.log(`[${session.id}] 💰 Auto-deducting ${creditsToDeduct} credits for disconnected user ${session.userId} (${durationInMinutes.toFixed(2)}m)`);
+            const { data: profile } = await supabaseAdmin.from('profiles').select('credits').eq('id', session.userId).single();
+            if (profile) {
+                const newBalance = profile.credits - creditsToDeduct;
+                await supabaseAdmin.from('profiles').update({ credits: newBalance }).eq('id', session.userId);
+                console.log(`[${session.id}] ✅ Auto-deduction successful. New balance: ${newBalance}`);
+            }
+        } catch (err) {
+            console.error(`[${session.id}] ❌ Failed to auto-deduct credits:`, err);
+        }
+    }
 
     console.log(`\n=== SESSION HISTORY (${session.id}) ===`);
     session.history.forEach(msg => {
@@ -531,6 +574,15 @@ function cleanupSession(session) {
         session.utteranceEndTimer = null;
     }
 
+    if (session.llmAbortController) {
+        try {
+            session.llmAbortController.abort();
+            session.llmAbortController = null;
+        } catch (e) {
+            console.error(`[${session.id}] Error aborting LLM:`, e);
+        }
+    }
+
     cleanupAzureSTT(session); // ✅ Changed to Azure cleanup
     sessions.delete(session.id);
 
@@ -550,6 +602,7 @@ function setupAzureSTT(session) {
 
         // Optimize for speed/latency if possible
         speechConfig.setProperty(sdk.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
+        speechConfig.setProperty(sdk.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1500");
 
         const audioFormat = sdk.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1);
         const pushStream = sdk.AudioInputStream.createPushStream(audioFormat);
@@ -579,8 +632,9 @@ function setupAzureSTT(session) {
                     payload: { text: text, isFinal: false }
                 });
 
-                // Reset silence/utterance timer on activity
-                resetUtteranceTimer(session);
+                // Reset silence/utterance timer on activity to a longer fallback
+                // so we don't prematurely cut them off mid-sentence (default is 500ms)
+                resetUtteranceTimer(session, 3000);
             }
         };
 
@@ -600,7 +654,7 @@ function setupAzureSTT(session) {
                     session.tempTranscript = ""; // Clear interim
 
                     // Trigger turn completion with a short buffer
-                    resetUtteranceTimer(session, 1500); // 1.5s silence to finalize
+                    resetUtteranceTimer(session, 500); //1500ms
                 }
             }
             else if (e.result.reason === sdk.ResultReason.NoMatch) {
@@ -642,7 +696,7 @@ function setupAzureSTT(session) {
 }
 
 
-function resetUtteranceTimer(session, ms = 1500) {
+function resetUtteranceTimer(session, ms = 500) {
     if (session.utteranceEndTimer) {
         clearTimeout(session.utteranceEndTimer);
     }
@@ -743,12 +797,10 @@ async function finalizeTurn(session) {
     if (session.turnParts.length > 0) {
         textToProcess = session.turnParts.join(" ");
         console.log(`[${session.id}] Using ${session.turnParts.length} parts: "${textToProcess}"`);
-    } else if (session.tempTranscript && session.tempTranscript.trim().length > 0) {
-        // Fallback to interim
-        textToProcess = session.tempTranscript;
-        console.log(`[${session.id}] ⚠️ Using interim fallback: "${textToProcess}"`);
     } else {
-        // Nothing to process
+        // Nothing to process, we do NOT fallback to tempTranscript anymore
+        // because we want to wait for Azure to officially declare the sentence finished.
+        console.log(`[${session.id}] ⚠️ Ignored finalizeTurn because there are no final turn parts yet.`);
         return;
     }
 
@@ -774,6 +826,20 @@ async function finalizeTurn(session) {
         return;
     }
 
+    // 🛑 ROBUST FIX: Ignore echoes and residual transcripts
+    // Drop short filler noise completely if it happens closely after AI finishes (< 3000ms)
+    const isRecentResponse = session.lastResponseClearedAt && (Date.now() - session.lastResponseClearedAt < 5000);
+    const lowerText = textToProcess.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+    const fillerWords = ['yeah', 'yes', 'yep', 'ok', 'okay', 'mhm', 'uh', 'um', 'right', 'sure', 'alright'];
+
+    if (isRecentResponse) {
+        if (wordCount <= 10 || fillerWords.includes(lowerText)) {
+            console.log(`[${session.id}] 🛑 Dropping post-TTS residual/echo: "${textToProcess}"`);
+            session.isProcessingResponse = false;
+            return;
+        }
+    }
+
     // notify frontend turn complete (optional)
     sendData(session, { type: 'user_turn_complete' });
 
@@ -788,6 +854,7 @@ async function finalizeTurn(session) {
 async function handleInit(session, context) {
     console.log(`[${session.id}] Init for role: ${context?.role}`);
     session.context = context; // Save full context for report generation
+    session.userId = context.userId; // Save userId for disconnect deductions
 
     try {
         if (context.ttsProvider) {

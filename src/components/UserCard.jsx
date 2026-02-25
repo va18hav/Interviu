@@ -58,11 +58,6 @@ const UserCard = ({ interviewState, firstName, lastName, first_name, last_name, 
                         </div>
                     )}
                 </div>
-
-                <div className="flex flex-col items-center gap-1">
-                    <p className="text-slate-900 font-bold uppercase tracking-widest text-[10px]">Candidate Identity Verified</p>
-                    <p className="text-slate-400 text-xs font-medium">Session Live • Voice Mode</p>
-                </div>
             </div>
         </div>
     )

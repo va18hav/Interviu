@@ -90,9 +90,49 @@ const ProfileSettings = () => {
         confirmPassword: "",
     });
 
+    const [interviewsCount, setInterviewsCount] = useState(0);
+    const [avgScore, setAvgScore] = useState(0.0);
+    const [credits, setCredits] = useState(0);
+
     useEffect(() => {
         getProfile();
+        fetchMetrics();
     }, []);
+
+    const fetchMetrics = async () => {
+        try {
+            const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
+            if (!userCreds?.id) return;
+
+            const token = localStorage.getItem('authToken');
+            const fetchParams = { headers: { 'Authorization': `Bearer ${token}` } };
+
+            const [curatedRes, customRes, creditsRes] = await Promise.all([
+                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}`, fetchParams),
+                fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${userCreds.id}`, fetchParams),
+                fetch(`${import.meta.env.VITE_API_URL}/api/credits?userId=${userCreds.id}`, fetchParams)
+            ]);
+
+            const curatedData = curatedRes.ok ? await curatedRes.json() : [];
+            const customData = customRes.ok ? await customRes.json() : [];
+            const creditsData = creditsRes.ok ? await creditsRes.json() : { credits: 0 };
+
+            const allInterviews = [...curatedData, ...customData];
+            setInterviewsCount(allInterviews.length);
+
+            if (allInterviews.length > 0) {
+                const totalScore = allInterviews.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
+                setAvgScore((totalScore / allInterviews.length).toFixed(1));
+            } else {
+                setAvgScore(0.0);
+            }
+
+            setCredits(creditsData.credits || 0);
+
+        } catch (err) {
+            console.error("Error fetching metrics:", err);
+        }
+    };
 
     async function getProfile() {
         try {
@@ -372,11 +412,11 @@ const ProfileSettings = () => {
 
                                 <div className="mt-8 pt-8 border-t border-slate-50 grid grid-cols-2 gap-4">
                                     <div className="text-center">
-                                        <div className="text-lg font-black text-slate-900 tracking-tighter">12</div>
+                                        <div className="text-lg font-black text-slate-900 tracking-tighter">{interviewsCount}</div>
                                         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Interviews</div>
                                     </div>
                                     <div className="text-center border-l border-slate-50">
-                                        <div className="text-lg font-black text-slate-900 tracking-tighter">8.4</div>
+                                        <div className="text-lg font-black text-slate-900 tracking-tighter">{avgScore}</div>
                                         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Avg Score</div>
                                     </div>
                                 </div>
@@ -390,11 +430,11 @@ const ProfileSettings = () => {
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Usage Limits</span>
                             </div>
                             <h3 className="text-lg font-bold mb-2 tracking-tight">Active Credits</h3>
-                            <div className="text-4xl font-black tracking-tighter mb-4 text-indigo-400">500</div>
+                            <div className="text-4xl font-black tracking-tighter mb-4 text-indigo-400">{credits}</div>
                             <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                                 <motion.div
                                     initial={{ width: 0 }}
-                                    animate={{ width: '65%' }}
+                                    animate={{ width: `${Math.min((credits / 300) * 100, 100)}%` }}
                                     className="h-full bg-indigo-500 rounded-full"
                                 />
                             </div>

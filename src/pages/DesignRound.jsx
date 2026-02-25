@@ -22,13 +22,17 @@ const DesignRound = () => {
         domain
     } = location.state || {};
 
+    // Map the expected problem variables safely
+    const roundProblemData = location.state?.problemData || location.state || {};
+
     // User Data from localStorage (Latest Name & Avatar)
     const [userData, setUserData] = useState(() => {
         const creds = JSON.parse(localStorage.getItem("userCredentials")) || {};
         return {
             first_name: creds.first_name || location.state?.firstName || "Candidate",
             last_name: creds.last_name || location.state?.lastName || "",
-            avatar_url: creds.avatar_url || ""
+            avatar_url: creds.avatar_url || "",
+            id: creds.id
         };
     });
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -74,7 +78,7 @@ const DesignRound = () => {
                         // Warning at 15 mins (900s) into Phase 3
                         if (timeInPhase3 >= 900 && !transitionsTriggeredRef.current.wrapupWarning) {
                             transitionsTriggeredRef.current.wrapupWarning = true;
-                            console.log('[Timer] Triggering Wrap-up Warning (15m in Phase 3)');
+
                             if (ws.current) {
                                 ws.current.send(JSON.stringify({
                                     type: 'inject_system_message',
@@ -86,7 +90,7 @@ const DesignRound = () => {
                         // Final Wrap-up at 20 mins (1200s) into Phase 3
                         if (timeInPhase3 >= 1200 && !transitionsTriggeredRef.current.endInterview) {
                             transitionsTriggeredRef.current.endInterview = true;
-                            console.log('[Timer] Triggering Final Wrap-up (20m in Phase 3)');
+
                             if (ws.current) {
                                 ws.current.send(JSON.stringify({
                                     type: 'inject_system_message',
@@ -159,7 +163,6 @@ const DesignRound = () => {
         ws.current = new WebSocket(import.meta.env.VITE_WS_URL);
 
         ws.current.onopen = () => {
-            console.log('[WS] Connected');
 
             // Construct System Prompt Context from Location State
             // Replicating logic from InterviewSession.jsx to ensure all template variables are available
@@ -210,6 +213,7 @@ const DesignRound = () => {
                 type: 'init',
                 payload: {
                     ...sessionContext,
+                    userId: userData.id,
                     firstName: userData.first_name, // Use latest from localStorage
                     ttsProvider: 'azure'
                 }
@@ -230,7 +234,7 @@ const DesignRound = () => {
                     await handleTtsChunk(msg.payload);
                 }
                 else if (msg.type === 'session_info') {
-                    console.log(`[WS] Received session info: ${msg.payload.sessionId}`);
+
                     setSessionId(msg.payload.sessionId);
                 }
                 else if (msg.type === 'interviewer_turn') {
@@ -239,7 +243,7 @@ const DesignRound = () => {
                     setInterviewState('neutral');
                 }
                 else if (msg.type === 'stt_ready') {
-                    console.log('[STT] Deepgram Ready - Starting Mic');
+
                     startAudioCapture();
                 }
                 else if (msg.type === 'user_transcript') {
@@ -268,7 +272,7 @@ const DesignRound = () => {
                     }
                 }
                 else if (msg.type === 'phase_transition') {
-                    console.log(`[Phase] Transitioning to: ${msg.payload.phase}`);
+
                     setInterviewPhase(msg.payload.phase);
 
                     if (msg.payload.phase === 'design') {
@@ -277,10 +281,6 @@ const DesignRound = () => {
                     }
                 }
                 else if (msg.type === 'user_turn_complete') {
-                    console.log('[STT] User Turn Complete');
-                    setIsListening(false);
-                    // Valid state transition: User finished -> speechEnd
-                    // Mic should be disabled here.
                     setInterviewState('speechEnd');
                 }
                 else if (msg.type === 'error') {
@@ -295,7 +295,7 @@ const DesignRound = () => {
         };
 
         ws.current.onclose = () => {
-            console.log('[WS] Disconnected');
+
             stopAudioCapture();
             if (interviewState !== 'ended') {
                 // Optional: Reconnect logic could go here
@@ -393,7 +393,7 @@ const DesignRound = () => {
     };
 
     const stopAudioServices = () => {
-        console.log('[Audio] Stopping all audio services...');
+
         stopAudioCapture();
 
         if (audioContext.current) {
@@ -407,7 +407,11 @@ const DesignRound = () => {
         }
 
         if (ws.current) {
-            console.log('[WS] STT/TTS services detached from hardware.');
+            try {
+                ws.current.close();
+            } catch (e) {
+                console.error('[WS] Error closing connection', e);
+            }
         }
     };
 
@@ -427,7 +431,6 @@ const DesignRound = () => {
         const { audio, words } = payload;
 
         // Log chunk stats for debugging
-        console.log(`[TTS] Received chunk: ${audio.length} bytes, ${words ? words.length : 0} words`);
 
         if (!audioContext.current) return;
         if (audioContext.current.state === 'suspended') {
@@ -471,7 +474,7 @@ const DesignRound = () => {
             displayedWordCountRef.current = 0;
         } else if (payload.new_sentence) {
             // 🔄 New Sentence in same stream: Reset anchor
-            console.log('[TTS] New Sentence detected. Resetting anchor time.');
+
             sequenceStartTimeRef.current = startTime;
         }
 
@@ -486,7 +489,7 @@ const DesignRound = () => {
                     const now = audioContext.current?.currentTime || 0;
                     // Double check time just in case, but ref count is more reliable for "network holes"
                     if (now >= nextStartTimeRef.current - 0.2) { // 200ms grace
-                        console.log('[TTS] End of stream detected (Sources=0)');
+
                         isPlayingRef.current = false;
                         setInterviewState('neutral');
                         setCurrentQuestion(null); // Clear text after speaking
@@ -540,7 +543,7 @@ const DesignRound = () => {
                         let currentCount = displayedWordCountRef.current;
 
                         // Process one by one to handle pagination logic correctly
-                        const karaokeLimit = window.innerWidth < 768 ? 5 : 20;
+                        const karaokeLimit = window.innerWidth < 768 ? 5 : 10;
                         for (const word of wordsToDisplay) {
                             if (currentCount >= karaokeLimit) {
                                 newText = word;
@@ -567,9 +570,9 @@ const DesignRound = () => {
         let timer;
 
         if (interviewPhase === 'design') {
-            console.log('[Phase 2] Starting 20s timer before disabling audio...');
+
             timer = setTimeout(() => {
-                console.log('[Phase 2] 20 seconds elapsed - Disabling audio capture');
+
                 // Stop audio capture
                 if (scriptProcessorRef.current) {
                     scriptProcessorRef.current.disconnect();
@@ -629,11 +632,9 @@ const DesignRound = () => {
     // Phase 2 Submit Handler
     const handleSubmitDesign = () => {
         if (!ws.current || interviewPhase !== 'design') {
-            console.log('[Submit] Ignoring - not in design phase');
+
             return;
         }
-
-        console.log('[Submit] Sending complete design solution to AI');
 
         // Build comprehensive design context from all files
         let fullDesignContext = "";
@@ -664,8 +665,6 @@ const DesignRound = () => {
                 message: 'I\'ve completed my design implementation across multiple configurations. Here is my solution.'
             }
         }));
-
-        console.log('[Submit] Design submission sent');
 
         // Transition to Phase 3
         setInterviewPhase('deep-dive');
@@ -800,14 +799,13 @@ const DesignRound = () => {
                     <div className="hidden md:flex items-center bg-white/80 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 pointer-events-auto transition-all duration-500 hover:scale-[1.02]">
                         <div className="flex flex-col leading-tight">
                             <span className="text-sm font-black text-slate-900 tracking-tight">
-                                {company} • {role}
+                                {company} {role}
                             </span>
-                            <span className="text-[10px] text-indigo-600 font-black uppercase tracking-[0.2em] mt-0.5">Design Protocol</span>
                         </div>
                     </div>
 
                     <div className="flex gap-4 pointer-events-auto">
-                        <div className="bg-white/80 backdrop-blur-xl px-4 py-2.5 md:px-5 md:py-3 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-2 md:gap-3 transition-all duration-500 hover:scale-[1.02]">
+                        <div className="bg-white/80 backdrop-blur-xl px-2 py-1 md:px-3 md:py-2 rounded-2xl border border-white/40 shadow-xl shadow-slate-200/50 flex items-center gap-2 md:gap-3 transition-all duration-500 hover:scale-[1.02]">
                             <div className="relative">
                                 <div className={`w-2.5 h-2.5 rounded-full ${isListening ? 'bg-green-500' : 'bg-slate-300'}`}></div>
                                 {isListening && <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>}
@@ -941,7 +939,7 @@ const DesignRound = () => {
                         (interviewState === 'user-speaking' && currentAnswer && currentAnswer.trim().length > 0) ||
                         (interviewState === 'ai-speaking' && (currentQuestion || true))
                     ) && (
-                            <div className="absolute bottom-26 left-0 right-0 px-8 pointer-events-none flex justify-center z-30">
+                            <div className="absolute bottom-26 md:bottom-[2%] md:left-[16%] md:right-[22%] pointer-events-none flex justify-start z-60">
                                 <div className="w-full max-w-6xl pointer-events-auto">
                                     <StatusBox
                                         interviewState={interviewState}
@@ -956,8 +954,8 @@ const DesignRound = () => {
 
             {/* Bottom Control Bar */}
             {!isFullScreen && (
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-50 to-transparent z-40">
-                    <div className="max-w-xl mx-auto flex items-center justify-center gap-6 bg-white/80 backdrop-blur-xl p-3 rounded-[2.5rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
+                <div className="absolute bottom-4 right-4 z-40 flex justify-end">
+                    <div className="inline-flex items-center justify-center gap-3 bg-white/80 backdrop-blur-xl px-4 py-3 rounded-[2rem] border border-white/40 shadow-2xl shadow-slate-200/50 transition-all duration-500 hover:scale-[1.02]">
 
                         {/* Microphone Indicator */}
                         {interviewPhase !== 'design' && (

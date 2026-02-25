@@ -150,9 +150,12 @@ const InterviewDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-      </div>
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+        </div>
+      </>
     );
   }
 
@@ -251,7 +254,7 @@ const InterviewDashboard = () => {
             <CustomInterviewBanner firstName={userCredentials?.first_name || userCredentials?.firstName || "Candidate"} />
           </div>
 
-          {/* Performance Chronicle (Past Interviews) */}
+          {/*(Past Interviews) */}
           <section>
             <SectionTitle
               icon={History}
