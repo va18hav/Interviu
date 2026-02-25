@@ -15,6 +15,10 @@ const GlobalFeedbackModal = () => {
 
     // Determine if we should hide the feedback button (e.g., in active interview rounds)
     const hideOnRoutes = [
+        '/interview-details',
+        '/',
+        '/login',
+        '/credits',
         '/coding-round',
         '/design-round',
         '/debug-round',
