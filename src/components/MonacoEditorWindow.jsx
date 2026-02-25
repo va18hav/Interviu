@@ -33,7 +33,28 @@ const LANGUAGE_ICONS = {
     terraform: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/terraform/terraform-original.svg",
     sql: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg",
     docker: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
-    markdown: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/markdown/markdown-original.svg"
+    markdown: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/markdown/markdown-original.svg",
+    apex: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg",
+    dart: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dart/dart-original.svg",
+    lua: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/lua/lua-original.svg",
+    powershell: "https://upload.wikimedia.org/wikipedia/commons/a/af/PowerShell_Core_6.0_icon.png",
+    r: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/r/r-original.svg",
+    objectivec: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/objectivec/objectivec-plain.svg",
+    haskell: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/haskell/haskell-original.svg",
+    perl: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/perl/perl-original.svg",
+    elixir: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/elixir/elixir-original.svg",
+    clojure: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/clojure/clojure-original.svg",
+    julia: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/julia/julia-original.svg",
+    fsharp: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fsharp/fsharp-original.svg",
+    erlang: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/erlang/erlang-original.svg",
+    lisp: "https://upload.wikimedia.org/wikipedia/commons/4/48/Lisp_logo.svg",
+    prolog: "https://upload.wikimedia.org/wikipedia/commons/9/90/Prolog_logo.png",
+    fortran: "https://upload.wikimedia.org/wikipedia/commons/a/af/Fortran_logo.svg",
+    cobol: "https://upload.wikimedia.org/wikipedia/commons/1/18/COBOL_logo.svg",
+    abap: "https://upload.wikimedia.org/wikipedia/commons/9/9d/SAP_logo.svg",
+    scheme: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Scheme_logo.svg",
+    racket: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Racket-logo.svg",
+    solidity: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/solidity/solidity-original.svg"
 };
 
 const MonacoEditorWindow = ({
@@ -406,7 +427,26 @@ const MonacoEditorWindow = ({
             'rs': 'rust', 'go': 'go', 'rb': 'ruby', 'php': 'php', 'cs': 'csharp',
             'kt': 'kotlin', 'kts': 'kotlin', 'swift': 'swift', 'scala': 'scala',
             'sh': 'shell', 'bash': 'shell',
-            'txt': 'plaintext', 'md': 'markdown', 'log': 'plaintext'
+            'txt': 'plaintext', 'md': 'markdown', 'log': 'plaintext',
+            'cls': 'apex', 'trigger': 'apex', 'apex': 'apex',
+            'dart': 'dart', 'lua': 'lua', 'ps1': 'powershell', 'psm1': 'powershell',
+            'r': 'r', 'rmd': 'r', 'rhistory': 'r',
+            'm': 'objectivec', 'mm': 'objectivec',
+            'hs': 'haskell', 'lhs': 'haskell',
+            'pl': 'perl', 'pm': 'perl', 't': 'perl',
+            'ex': 'elixir', 'exs': 'elixir',
+            'clj': 'clojure', 'cljs': 'clojure', 'cljc': 'clojure', 'edn': 'clojure',
+            'jl': 'julia',
+            'fs': 'fsharp', 'fsi': 'fsharp', 'fsx': 'fsharp', 'fsscript': 'fsharp',
+            'erl': 'erlang', 'hrl': 'erlang',
+            'lisp': 'lisp', 'lsp': 'lisp', 'l': 'lisp', 'fasl': 'lisp',
+            'pro': 'prolog', 'plg': 'prolog', 'prolog': 'prolog',
+            'f': 'fortran', 'for': 'fortran', 'f90': 'fortran', 'f95': 'fortran',
+            'cbl': 'cobol', 'cob': 'cobol', 'cpy': 'cobol',
+            'abap': 'abap',
+            'scm': 'scheme', 'ss': 'scheme',
+            'rkt': 'racket',
+            'sol': 'solidity'
         };
         return map[ext] || language;
     };
@@ -818,7 +858,26 @@ const getFileIcon = (filename) => {
         'css': LANGUAGE_ICONS.css,
         'md': LANGUAGE_ICONS.markdown,
         'txt': LANGUAGE_ICONS.markdown, // Use markdown icon or generic file
-        'log': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/salesforce/salesforce-original.svg' // Keep for now
+        'log': LANGUAGE_ICONS.markdown,
+        'cls': LANGUAGE_ICONS.apex, 'trigger': LANGUAGE_ICONS.apex, 'apex': LANGUAGE_ICONS.apex,
+        'dart': LANGUAGE_ICONS.dart, 'lua': LANGUAGE_ICONS.lua, 'ps1': LANGUAGE_ICONS.powershell, 'psm1': LANGUAGE_ICONS.powershell,
+        'r': LANGUAGE_ICONS.r, 'rmd': LANGUAGE_ICONS.r, 'rhistory': LANGUAGE_ICONS.r,
+        'm': LANGUAGE_ICONS.objectivec, 'mm': LANGUAGE_ICONS.objectivec,
+        'hs': LANGUAGE_ICONS.haskell, 'lhs': LANGUAGE_ICONS.haskell,
+        'pl': LANGUAGE_ICONS.perl, 'pm': LANGUAGE_ICONS.perl, 't': LANGUAGE_ICONS.perl,
+        'ex': LANGUAGE_ICONS.elixir, 'exs': LANGUAGE_ICONS.elixir,
+        'clj': LANGUAGE_ICONS.clojure, 'cljs': LANGUAGE_ICONS.clojure, 'cljc': LANGUAGE_ICONS.clojure, 'edn': LANGUAGE_ICONS.clojure,
+        'jl': LANGUAGE_ICONS.julia,
+        'fs': LANGUAGE_ICONS.fsharp, 'fsi': LANGUAGE_ICONS.fsharp, 'fsx': LANGUAGE_ICONS.fsharp, 'fsscript': LANGUAGE_ICONS.fsharp,
+        'erl': LANGUAGE_ICONS.erlang, 'hrl': LANGUAGE_ICONS.erlang,
+        'lisp': LANGUAGE_ICONS.lisp, 'lsp': LANGUAGE_ICONS.lisp, 'l': LANGUAGE_ICONS.lisp, 'fasl': LANGUAGE_ICONS.lisp,
+        'pro': LANGUAGE_ICONS.prolog, 'plg': LANGUAGE_ICONS.prolog, 'prolog': LANGUAGE_ICONS.prolog,
+        'f': LANGUAGE_ICONS.fortran, 'for': LANGUAGE_ICONS.fortran, 'f90': LANGUAGE_ICONS.fortran, 'f95': LANGUAGE_ICONS.fortran,
+        'cbl': LANGUAGE_ICONS.cobol, 'cob': LANGUAGE_ICONS.cobol, 'cpy': LANGUAGE_ICONS.cobol,
+        'abap': LANGUAGE_ICONS.abap,
+        'scm': LANGUAGE_ICONS.scheme, 'ss': LANGUAGE_ICONS.scheme,
+        'rkt': LANGUAGE_ICONS.racket,
+        'sol': LANGUAGE_ICONS.solidity
     };
     return map[ext] || LANGUAGE_ICONS.javascript;
 };
