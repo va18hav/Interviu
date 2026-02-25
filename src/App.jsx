@@ -39,8 +39,8 @@ const App = () => {
       <GlobalFeedbackModal />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Maintenance />} />
-        <Route path="/home" element={<LandingPage />} />
+        {/* <Route path="/" element={<Maintenance />} /> */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
