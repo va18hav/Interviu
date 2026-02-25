@@ -158,15 +158,16 @@ const CreditsPage = () => {
                                         </div>
 
                                         <button
-                                            onClick={() => setShowRequestModal(true)}
-                                            className="w-full py-4 rounded-xl bg-white text-slate-900 font-black text-[12px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
+                                            // onClick={() => setShowRequestModal(true)}
+                                            className="opacity-50 cursor-not-allowed w-full py-4 rounded-xl bg-white text-slate-900 font-black text-[12px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
                                         >
                                             Request More Credits
+
                                             <ArrowRight className="w-4 h-4" />
                                         </button>
 
                                         <p className="mt-4 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-60">
-                                            Refills based on feedback contribution
+                                            Coming Soon, Stay tuned!
                                         </p>
                                     </div>
                                 </div>
@@ -295,8 +296,8 @@ const CreditsPage = () => {
 
                                     <div className="p-8 space-y-4">
                                         {[
-                                            { id: 'instagram', name: 'Instagram', icon: Instagram, url: 'https://instagram.com/intervyu', color: 'bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-100' },
-                                            { id: 'x', name: 'X (Twitter)', icon: Twitter, url: 'https://x.com/intervyu', color: 'bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-100' },
+                                            { id: 'instagram', name: 'Instagram', icon: Instagram, url: 'https://instagram.com/interviu.pro', color: 'bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-100' },
+                                            { id: 'x', name: 'X (Twitter)', icon: Twitter, url: 'https://x.com/Interviu199934', color: 'bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-100' },
                                             { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, url: 'https://linkedin.com/company/intervyu', color: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' }
                                         ].map(social => (
                                             <button

@@ -22,12 +22,9 @@ const PopularInterviewsPage = () => {
     const [interviews, setInterviews] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [roleFilter, setRoleFilter] = useState('All');
+    const [activeTab, setActiveTab] = useState('sde'); // 'sde' or 'devops'
     const [companyFilter, setCompanyFilter] = useState('All');
     const [levelFilter, setLevelFilter] = useState('All');
-
-    // Defines the broader role categories for the UI filter
-    const ROLE_CATEGORIES = ['Software Engineering', 'AI/ML', 'Data', 'Cloud', 'Product Management', 'Other'];
 
     // Defines exact filtering options for companies and levels derived from data
     const [uniqueCompanies, setUniqueCompanies] = useState([]);
@@ -72,11 +69,7 @@ const PopularInterviewsPage = () => {
         fetchInterviews();
     }, []);
 
-    const getRoleCategory = (roleName) => {
-        const r = roleName.toLowerCase();
-        if (r.includes('software engineer') || r.includes('sde') || r.includes('developer') || r.includes('frontend') || r.includes('backend') || r.includes('full stack') || r.includes('ios') || r.includes('android')) return 'Software Engineering';
-        if (r.includes('cloud') || r.includes('devops') || r.includes('sre') || r.includes('solutions architect') || r.includes('azure') || r.includes('production engineer') || r.includes('infrastructure engineer') || r.includes('site reliability engineer')) return 'Devops/SRE';
-    };
+    // Removed getRoleCategory
 
     const getCompanyColor = (company) => {
         const colors = {
@@ -109,11 +102,10 @@ const PopularInterviewsPage = () => {
     };
 
     const filteredInterviews = interviews.filter(interview => {
-        const category = getRoleCategory(interview.role);
-        const roleMatch = roleFilter === 'All' || category === roleFilter;
+        const typeMatch = interview.type === activeTab;
         const companyMatch = companyFilter === 'All' || interview.company === companyFilter;
         const levelMatch = levelFilter === 'All' || interview.level === levelFilter;
-        return roleMatch && companyMatch && levelMatch;
+        return typeMatch && companyMatch && levelMatch;
     });
 
     const containerVariants = {
@@ -137,7 +129,7 @@ const PopularInterviewsPage = () => {
                 {/* Hero Banner */}
                 <PopularInterviewsHero />
 
-                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -158,68 +150,86 @@ const PopularInterviewsPage = () => {
                         </div>
                     </motion.div>
 
-                    {/* Filters Row */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-wrap items-center gap-4 bg-slate-50 p-3 rounded-[2rem] border border-slate-100"
-                    >
-                        <div className="flex items-center gap-2 pl-4 pr-2 text-slate-400">
-                            <Filter className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Filters</span>
-                        </div>
-
-                        <select
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
-                            className="px-6 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold cursor-pointer hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-sm"
+                    {/* Right Side Controls */}
+                    <div className="flex flex-col items-start xl:items-end gap-5">
+                        {/* Tabs for SDE and DevOps */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex bg-slate-100/70 p-1.5 rounded-2xl border border-slate-200/80 shadow-sm"
                         >
-                            <option value="All">All Roles</option>
-                            {ROLE_CATEGORIES.map(category => (
-                                <option key={category} value={category}>{category}</option>
-                            ))}
-                        </select>
+                            <button
+                                onClick={() => setActiveTab('sde')}
+                                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 ${activeTab === 'sde'
+                                    ? 'bg-white text-indigo-600 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-200/50'
+                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
+                                    }`}
+                            >
+                                Software Engineering
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('devops')}
+                                className={`px-6 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 ${activeTab === 'devops'
+                                    ? 'bg-white text-indigo-600 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-200/50'
+                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
+                                    }`}
+                            >
+                                DevOps & SRE
+                            </button>
+                        </motion.div>
 
-                        <select
-                            value={companyFilter}
-                            onChange={(e) => setCompanyFilter(e.target.value)}
-                            className="px-6 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold cursor-pointer hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-sm"
+                        {/* Filters Row */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="flex flex-wrap items-center gap-4 bg-slate-50 p-3 rounded-[2rem] border border-slate-100"
                         >
-                            <option value="All">All Companies</option>
-                            {uniqueCompanies.map(company => (
-                                <option key={company} value={company}>{company}</option>
-                            ))}
-                        </select>
+                            <div className="flex items-center gap-2 pl-4 pr-2 text-slate-400">
+                                <Filter className="w-4 h-4" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Filters</span>
+                            </div>
 
-                        <select
-                            value={levelFilter}
-                            onChange={(e) => setLevelFilter(e.target.value)}
-                            className="px-6 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold cursor-pointer hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-sm"
-                        >
-                            <option value="All">All Levels</option>
-                            {uniqueLevels.map(level => (
-                                <option key={level} value={level}>{level}</option>
-                            ))}
-                        </select>
+                            <select
+                                value={companyFilter}
+                                onChange={(e) => setCompanyFilter(e.target.value)}
+                                className="px-6 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold cursor-pointer hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-sm"
+                            >
+                                <option value="All">All Companies</option>
+                                {uniqueCompanies.map(company => (
+                                    <option key={company} value={company}>{company}</option>
+                                ))}
+                            </select>
 
-                        <AnimatePresence>
-                            {(roleFilter !== 'All' || companyFilter !== 'All' || levelFilter !== 'All') && (
-                                <motion.button
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    onClick={() => {
-                                        setRoleFilter('All');
-                                        setCompanyFilter('All');
-                                        setLevelFilter('All');
-                                    }}
-                                    className="px-4 py-2 text-xs font-black text-slate-500 hover:text-red-500 uppercase tracking-widest transition-colors"
-                                >
-                                    Reset
-                                </motion.button>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
+                            <select
+                                value={levelFilter}
+                                onChange={(e) => setLevelFilter(e.target.value)}
+                                className="px-6 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-bold cursor-pointer hover:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all shadow-sm"
+                            >
+                                <option value="All">All Levels</option>
+                                {uniqueLevels.map(level => (
+                                    <option key={level} value={level}>{level}</option>
+                                ))}
+                            </select>
+
+                            <AnimatePresence>
+                                {(companyFilter !== 'All' || levelFilter !== 'All') && (
+                                    <motion.button
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        onClick={() => {
+                                            setCompanyFilter('All');
+                                            setLevelFilter('All');
+                                        }}
+                                        className="px-4 py-2 text-xs font-black text-slate-500 hover:text-red-500 uppercase tracking-widest transition-colors"
+                                    >
+                                        Reset
+                                    </motion.button>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -257,7 +267,6 @@ const PopularInterviewsPage = () => {
                                 </div>
                                 <button
                                     onClick={() => {
-                                        setRoleFilter('All');
                                         setCompanyFilter('All');
                                         setLevelFilter('All');
                                     }}
