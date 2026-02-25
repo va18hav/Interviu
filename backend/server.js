@@ -914,6 +914,7 @@ app.get('/api/recent-interviews', requireAuth(), async (req, res) => {
         // 2. Fetch metadata for these IDs
         const recentInterviews = [];
         for (const id of uniqueInterviewIds) {
+            let interviewType = 'sde';
             let { data: interview } = await supabaseAdmin
                 .from('sde_interviews')
                 .select('*')
@@ -927,6 +928,7 @@ app.get('/api/recent-interviews', requireAuth(), async (req, res) => {
                     .eq('id', id)
                     .single();
                 interview = devops;
+                interviewType = 'devops';
             }
 
             if (interview) {
@@ -936,6 +938,7 @@ app.get('/api/recent-interviews', requireAuth(), async (req, res) => {
 
                 recentInterviews.push({
                     ...interview,
+                    type: interview.type || interviewType,
                     icon_url: interview.icon_link,
                     progress,
                     completedCount,

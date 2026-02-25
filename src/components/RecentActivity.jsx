@@ -141,7 +141,7 @@ const RecentActivity = () => {
                             className="h-full flex flex-col"
                         >
                             <div
-                                onClick={() => navigate(`/dashboard/interview-details/${currentInterview.id}`)}
+                                onClick={() => navigate(`/dashboard/interview-details/${currentInterview.id}?type=${currentInterview.type || 'sde'}`)}
                                 className="flex-1 flex flex-col justify-between cursor-pointer"
                             >
                                 <div className="space-y-8">
