@@ -11,6 +11,7 @@ import InterviewDetails from "./pages/InterviewDetails"
 import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import GlobalFeedbackModal from "./components/GlobalFeedbackModal"
+import Maintenance from "./pages/Maintenance"
 import './App.css'
 
 import Onboarding from "./pages/Onboarding"
@@ -38,7 +39,8 @@ const App = () => {
       <GlobalFeedbackModal />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Maintenance />} />
+        <Route path="/home" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
 
