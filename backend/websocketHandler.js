@@ -335,7 +335,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
 
         // 🌊 STREAMING IMPLEMENTATION
         const stream = anthropic.messages.stream({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-sonnet-4-5",
             max_tokens: 200, // Increased for conversational flow + tool calls
             temperature: 0.1,
             system: [
@@ -928,7 +928,7 @@ async function handleInit(session, context) {
         console.log(`[${session.id}] 📜 SYSTEM PROMPT AT START:\n${session.systemPrompt}\n═══════════════════════════════════`);
 
         const openingCompletion = await anthropic.messages.create({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-sonnet-4-5",
             max_tokens: 150,
             temperature: 0.1,
             system: [

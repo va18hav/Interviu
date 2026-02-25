@@ -40,27 +40,27 @@ const App = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Maintenance />} />
-        {/* <Route path="/home" element={<LandingPage />} />
+        <Route path="/home" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/callback" element={<AuthCallback />} /> */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          {/* <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/all-previous-interviews" element={<PreviousInterviews />} />
           <Route path="/dashboard/all-popular-interviews" element={<PopularInterviewsPage />} />
           <Route path="/dashboard/interview-details/:id" element={<InterviewDetails />} />
           <Route path="/create" element={<CreateInterview />} />
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/credits" element={<CreditsPage />} />
-          <Route path="/onboarding" element={<Onboarding />} /> */}
+          <Route path="/onboarding" element={<Onboarding />} />
 
           {/* Interview Rounds */}
-          {/* <Route path="/design-round" element={<DesignRound />} />
+          <Route path="/design-round" element={<DesignRound />} />
           <Route path="/coding-round" element={<CodingRound />} />
           <Route path="/debug-round" element={<DebugRound />} />
           <Route path="/behavioral-round" element={<BehavioralRound />} />
-          <Route path="/report" element={<InterviewReport />} /> */}
+          <Route path="/report" element={<InterviewReport />} />
         </Route>
       </Routes>
     </BrowserRouter>
