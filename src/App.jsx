@@ -10,7 +10,7 @@ import PopularInterviewsPage from "./pages/PopularInterviewsPage"
 import InterviewDetails from "./pages/InterviewDetails"
 import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
-import GlobalFeedbackModal from "./components/GlobalFeedbackModal"
+// import GlobalFeedbackModal from "./components/GlobalFeedbackModal"
 import Maintenance from "./pages/Maintenance"
 import './App.css'
 
