@@ -492,6 +492,9 @@ const DesignRound = () => {
 
                         isPlayingRef.current = false;
                         setInterviewState('neutral');
+                        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                            ws.current.send(JSON.stringify({ type: 'tts_playback_done' }));
+                        }
                         setCurrentQuestion(null); // Clear text after speaking
                         nextStartTimeRef.current = 0; // Reset for next turn
                         displayedWordCountRef.current = 0;

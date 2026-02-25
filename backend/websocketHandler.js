@@ -200,6 +200,21 @@ export function setupWebSocket(server) {
                         sendData({ ws }, { type: 'error', payload: { message: 'Session not found' } });
                     }
                 }
+                else if (msg.type === 'tts_playback_done') {
+                    console.log(`[${session.id}] 🔊 Frontend finished TTS playback. Listening resumed.`);
+
+                    if (session.ttsFallbackTimer) {
+                        clearTimeout(session.ttsFallbackTimer);
+                        session.ttsFallbackTimer = null;
+                    }
+
+                    session.isProcessingResponse = false;
+                    session.lastResponseClearedAt = Date.now();
+
+                    // Discard any audio accumulated while AI was speaking
+                    session.tempTranscript = "";
+                    session.turnParts = [];
+                }
                 else if (msg.type === 'commit_turn') {
                     console.log(`[${session.id}] 🛑 Manual Commit Turn Signal Received`);
                     finalizeTurn(session);
@@ -261,6 +276,7 @@ export function setupWebSocket(server) {
 
 async function handleCandidateResponse(session, text, isDesignUpdate = false) {
     session.isProcessingResponse = true;
+    session.ttsGeneratedInTurn = false;
 
     if (!isDesignUpdate) {
         console.log(`[${session.id}] ═══════════════════════════════════`);
@@ -317,153 +333,178 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
         const abortController = new AbortController();
         session.llmAbortController = abortController;
 
-        // 🌊 STREAMING IMPLEMENTATION
-        const stream = anthropic.messages.stream({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 200, // Increased for conversational flow + tool calls
-            temperature: 0.1,
-            system: [
-                {
-                    type: "text",
-                    text: dynamicSystemPrompt,
-                    cache_control: { type: "ephemeral" }
-                }
-            ],
-            messages: prunedHistory,
-            tools: tools.length > 0 ? tools : undefined
-        }, {
-            signal: abortController.signal
-        });
-
         let fullResponseText = "";
         let sentenceBuffer = "";
         let isFirstToken = true;
         let silenceDetected = false;
-
-        // 🔒 TTS Synchronization Chain
-        // Ensures Sentence 2 doesn't start synthesizing until Sentence 1 finishes
         let ttsChain = Promise.resolve();
 
-        for await (const chunk of stream) {
-            // 🛑 GUARD: Check if session was cleaned up mid-stream
-            if (!session.active) {
-                console.log(`[${session.id}] 🛑 Active stream aborted due to session disconnect.`);
-                break;
-            }
-            // Handle tool use
-            if (chunk.type === 'content_block_start' && chunk.content_block.type === 'tool_use') {
-                const toolName = chunk.content_block.name;
-                console.log(`[${session.id}] 🔧 Tool called: ${toolName}`);
+        // 🚨 RETRY LOGIC FOR HTTP 529 OVERLOADED
+        let retries = 3;
+        let delay = 1000;
+        let streamSuccess = false;
 
-                if (toolName === 'transition_to_phase2') {
-                    console.log(`[${session.id}] 🎬 Phase 1 → Phase 2 transition initiated`);
-
-                    // Determine phase name based on interview type
-                    const phaseName = (session.type === 'system_design' || session.type === 'design') ? 'design' : 'implementation';
-
-                    // Send phase transition message to frontend
-                    // Frontend expects 'phase' property to trigger UI changes
-                    sendData(session, {
-                        type: 'phase_transition',
-                        payload: {
-                            from: 'clarification',
-                            to: phaseName,
-                            phase: phaseName,
-                            message: `Transitioning to ${phaseName} phase. Microphone will be disabled. Submit your solution when ready.`
+        while (retries > 0 && !streamSuccess) {
+            try {
+                // 🌊 STREAMING IMPLEMENTATION
+                const stream = anthropic.messages.stream({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 200, // Increased for conversational flow + tool calls
+                    temperature: 0.1,
+                    system: [
+                        {
+                            type: "text",
+                            text: dynamicSystemPrompt,
+                            cache_control: { type: "ephemeral" }
                         }
-                    });
+                    ],
+                    messages: prunedHistory,
+                    tools: tools.length > 0 ? tools : undefined
+                }, {
+                    signal: abortController.signal
+                });
 
-                    // Mark that we're in Phase 2 (silent implementation)
-                    session.currentPhase = phaseName;
-                }
-            }
+                streamSuccess = true; // Stream initialized successfully
 
-            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-                const token = chunk.delta.text;
-                fullResponseText += token;
-                sentenceBuffer += token;
+                for await (const chunk of stream) {
+                    // 🛑 GUARD: Check if session was cleaned up mid-stream
+                    if (!session.active) {
+                        console.log(`[${session.id}] 🛑 Active stream aborted due to session disconnect.`);
+                        break;
+                    }
+                    // Handle tool use
+                    if (chunk.type === 'content_block_start' && chunk.content_block.type === 'tool_use') {
+                        const toolName = chunk.content_block.name;
+                        console.log(`[${session.id}] 🔧 Tool called: ${toolName}`);
 
-                if (isFirstToken) {
-                    console.log(`[${session.id}] ⚡ First token received`);
-                    isFirstToken = false;
-                }
+                        if (toolName === 'transition_to_phase2') {
+                            console.log(`[${session.id}] 🎬 Phase 1 → Phase 2 transition initiated`);
 
-                // Check for Silence Protocol early
-                if (fullResponseText.length < 20 && (fullResponseText.includes('[ACK]') || fullResponseText.includes('[SILENT]'))) {
-                    console.log(`[${session.id}] 🤐 AI chose SILENCE (ACK). Aborting stream processing.`);
-                    silenceDetected = true;
-                    // convert stream to promise to let it finish in background or just break?
-                    // We should probably let it finish to get full content for history, but stop TTS.
-                    // But we can't "stop" the stream easily without aborting. 
-                    // Let's just set a flag to NOT send TTS.
-                }
+                            // Determine phase name based on interview type
+                            const phaseName = (session.type === 'system_design' || session.type === 'design') ? 'design' : 'implementation';
 
-                if (!silenceDetected) {
-                    // Check for sentence delimiters
-                    // We look for [.!?] followed by space or newline, or just end of buffer if it looks complete?
-                    // Simple regex: /([.!?])\s+$/
-                    // We split by delimiters but keep them.
+                            // Send phase transition message to frontend
+                            // Frontend expects 'phase' property to trigger UI changes
+                            sendData(session, {
+                                type: 'phase_transition',
+                                payload: {
+                                    from: 'clarification',
+                                    to: phaseName,
+                                    phase: phaseName,
+                                    message: `Transitioning to ${phaseName} phase. Microphone will be disabled. Submit your solution when ready.`
+                                }
+                            });
 
-                    // Simple accumulation split:
-                    // If buffer contains a delimiter, split and send.
-                    // Aggressive Splitting for Low Latency:
-                    // Standard punctuation [.!?] OR substantial natural pauses [,,;] followed by space.
-                    let match = sentenceBuffer.match(/([.!?])\s+/);
-                    while (match) {
-                        const index = match.index + match[0].length;
-                        const sentence = sentenceBuffer.substring(0, index).trim();
-                        sentenceBuffer = sentenceBuffer.substring(index); // Update buffer immediately
+                            // Mark that we're in Phase 2 (silent implementation)
+                            session.currentPhase = phaseName;
+                        }
+                    }
 
-                        if (sentence.length > 0) {
-                            // 🧹 CLEANUP: Filter out [DESIGN UPDATE] blocks and JSON Tool leaks from TTS
-                            let cleanSentence = sentence.replace(/\[DESIGN UPDATE\][\s\S]*?Risks: \[.*?\]/g, '').trim();
-                            cleanSentence = cleanSentence.replace(/<tool_use>[\s\S]*?<\/tool_use>/gi, '').trim();
-                            cleanSentence = cleanSentence.replace(/\{[\s\S]*?"name"\s*:\s*"transition_to_phase2"[\s\S]*?\}/gi, '').trim();
-                            cleanSentence = cleanSentence.replace(/transition_to_phase2/gi, '').trim();
+                    if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+                        const token = chunk.delta.text;
+                        fullResponseText += token;
+                        sentenceBuffer += token;
 
-                            // If the cleanup left nothing, ignore
-                            if (cleanSentence.length === 0) {
-                                console.log(`[${session.id}] 🔇 Skipped silent design update block for TTS`);
-                            } else {
-                                console.log(`[${session.id}] 🗣️ Queueing Sentence: "${cleanSentence}"`);
+                        if (isFirstToken) {
+                            console.log(`[${session.id}] ⚡ First token received`);
+                            isFirstToken = false;
+                        }
 
-                                // Append to TTS Chain
-                                ttsChain = ttsChain.then(async () => {
-                                    if (!session.active) return; // 🛑 GUARD: Skip TTS if session ended
-                                    console.log(`[${session.id}] 🔊 Synthesizing: "${cleanSentence}"`);
-                                    let isFirstChunkOfSentence = true;
-                                    try {
-                                        const provider = createTTSProvider(session.ttsProvider || 'azure');
-                                        await provider.streamTTS(cleanSentence, (chunk) => {
-                                            sendData(session, {
-                                                type: 'tts_chunk',
-                                                payload: {
-                                                    audio: chunk.audio ? chunk.audio.toString('base64') : null,
-                                                    words: chunk.words || [],
-                                                    textChunk: chunk.textChunk || null,
-                                                    new_sentence: isFirstChunkOfSentence
-                                                }
-                                            });
-                                            isFirstChunkOfSentence = false;
-                                        });
-                                    } catch (err) {
-                                        console.error(`[${session.id}] TTS Error for chunk:`, err);
-                                        // Notify frontend to release state
-                                        sendData(session, {
-                                            type: 'error',
-                                            payload: { message: "TTS Generation Failed" }
+                        // Check for Silence Protocol early
+                        if (fullResponseText.length < 20 && (fullResponseText.includes('[ACK]') || fullResponseText.includes('[SILENT]'))) {
+                            console.log(`[${session.id}] 🤐 AI chose SILENCE (ACK). Aborting stream processing.`);
+                            silenceDetected = true;
+                            // convert stream to promise to let it finish in background or just break?
+                            // We should probably let it finish to get full content for history, but stop TTS.
+                            // But we can't "stop" the stream easily without aborting. 
+                            // Let's just set a flag to NOT send TTS.
+                        }
+
+                        if (!silenceDetected) {
+                            // Check for sentence delimiters
+                            // We look for [.!?] followed by space or newline, or just end of buffer if it looks complete?
+                            // Simple regex: /([.!?])\s+$/
+                            // We split by delimiters but keep them.
+
+                            // Simple accumulation split:
+                            // If buffer contains a delimiter, split and send.
+                            // Aggressive Splitting for Low Latency:
+                            // Standard punctuation [.!?] OR substantial natural pauses [,,;] followed by space.
+                            let match = sentenceBuffer.match(/([.!?])\s+/);
+                            while (match) {
+                                const index = match.index + match[0].length;
+                                const sentence = sentenceBuffer.substring(0, index).trim();
+                                sentenceBuffer = sentenceBuffer.substring(index); // Update buffer immediately
+
+                                if (sentence.length > 0) {
+                                    // 🧹 CLEANUP: Filter out [DESIGN UPDATE] blocks and JSON Tool leaks from TTS
+                                    let cleanSentence = sentence.replace(/\[DESIGN UPDATE\][\s\S]*?Risks: \[.*?\]/g, '').trim();
+                                    cleanSentence = cleanSentence.replace(/<tool_use>[\s\S]*?<\/tool_use>/gi, '').trim();
+                                    cleanSentence = cleanSentence.replace(/\{[\s\S]*?"name"\s*:\s*"transition_to_phase2"[\s\S]*?\}/gi, '').trim();
+                                    cleanSentence = cleanSentence.replace(/transition_to_phase2/gi, '').trim();
+
+                                    // If the cleanup left nothing, ignore
+                                    if (cleanSentence.length === 0) {
+                                        console.log(`[${session.id}] 🔇 Skipped silent design update block for TTS`);
+                                    } else {
+                                        console.log(`[${session.id}] 🗣️ Queueing Sentence: "${cleanSentence}"`);
+                                        session.ttsGeneratedInTurn = true;
+
+                                        // Append to TTS Chain
+                                        ttsChain = ttsChain.then(async () => {
+                                            if (!session.active) return; // 🛑 GUARD: Skip TTS if session ended
+                                            console.log(`[${session.id}] 🔊 Synthesizing: "${cleanSentence}"`);
+                                            let isFirstChunkOfSentence = true;
+                                            try {
+                                                const provider = createTTSProvider(session.ttsProvider || 'azure');
+                                                await provider.streamTTS(cleanSentence, (chunk) => {
+                                                    sendData(session, {
+                                                        type: 'tts_chunk',
+                                                        payload: {
+                                                            audio: chunk.audio ? chunk.audio.toString('base64') : null,
+                                                            words: chunk.words || [],
+                                                            textChunk: chunk.textChunk || null,
+                                                            new_sentence: isFirstChunkOfSentence
+                                                        }
+                                                    });
+                                                    isFirstChunkOfSentence = false;
+                                                });
+                                            } catch (err) {
+                                                console.error(`[${session.id}] TTS Error for chunk:`, err);
+                                                // Notify frontend to release state
+                                                sendData(session, {
+                                                    type: 'error',
+                                                    payload: { message: "TTS Generation Failed" }
+                                                });
+                                            }
                                         });
                                     }
-                                });
+                                }
+
+                                // Check for next match in the remaining buffer
+                                match = sentenceBuffer.match(/([.!?])\s+/);
                             }
                         }
-
-                        // Check for next match in the remaining buffer
-                        match = sentenceBuffer.match(/([.!?])\s+/);
                     }
+                } // End of stream loop
+
+            } catch (err) {
+                if (err.status === 529 && retries > 1) {
+                    console.warn(`[${session.id}] ⚠️ Anthropic 529 Overloaded during stream. Retrying in ${delay}ms... (${retries - 1} left)`);
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                    retries--;
+                    streamSuccess = false; // Force retry
+                    // Reset states for retry
+                    fullResponseText = "";
+                    sentenceBuffer = "";
+                    isFirstToken = true;
+                    silenceDetected = false;
+                } else {
+                    throw err; // Out of retries or actual code logic error
                 }
             }
-        }
+        } // End of Retry While Loop
 
         // Handle remaining buffer (last sentence)
         if (!silenceDetected && sentenceBuffer.trim().length > 0) {
@@ -476,6 +517,7 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
 
             if (finalSentence.length > 0) {
                 console.log(`[${session.id}] 🗣️ Queueing Final Sentence: "${finalSentence}"`);
+                session.ttsGeneratedInTurn = true;
                 ttsChain = ttsChain.then(async () => {
                     if (!session.active) return; // 🛑 GUARD: Skip final TTS if session ended
                     console.log(`[${session.id}] 🔊 Synthesizing Final: "${finalSentence}"`);
@@ -540,8 +582,20 @@ async function handleCandidateResponse(session, text, isDesignUpdate = false) {
             payload: { message: 'AI Error. Please try again.' }
         });
     } finally {
-        session.isProcessingResponse = false;
-        session.lastResponseClearedAt = Date.now();
+        if (!session.ttsGeneratedInTurn) {
+            session.isProcessingResponse = false;
+            session.lastResponseClearedAt = Date.now();
+        } else {
+            console.log(`[${session.id}] ⏳ LLM done generating. Waiting for frontend to finish TTS playback...`);
+            // Safety timeout in case frontend disconnected or missed the playback end
+            session.ttsFallbackTimer = setTimeout(() => {
+                session.isProcessingResponse = false;
+                session.lastResponseClearedAt = Date.now();
+                console.log(`[${session.id}] ⚠️ TTS playback fallback timer triggered. Resuming listening.`);
+                session.tempTranscript = "";
+                session.turnParts = [];
+            }, 30000);
+        }
     }
 }
 
@@ -671,7 +725,7 @@ function setupAzureSTT(session) {
                     session.tempTranscript = ""; // Clear interim
 
                     // Trigger turn completion with a forgiving buffer to allow candidate breaths
-                    resetUtteranceTimer(session, 2000); // Increased from 500ms to 2000ms
+                    resetUtteranceTimer(session, 700); // Increased from 500ms to 2000ms
                 }
             }
             else if (e.result.reason === sdk.ResultReason.NoMatch) {
@@ -897,21 +951,39 @@ async function handleInit(session, context) {
 
         console.log(`[${session.id}] 📜 SYSTEM PROMPT AT START:\n${session.systemPrompt}\n═══════════════════════════════════`);
 
-        const openingCompletion = await anthropic.messages.create({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 150,
-            temperature: 0.1,
-            system: [
-                {
-                    type: "text",
-                    text: session.systemPrompt,
-                    cache_control: { type: "ephemeral" }
+        let openingCompletion;
+        let retries = 3;
+        let delay = 1000;
+
+        while (retries > 0) {
+            try {
+                openingCompletion = await anthropic.messages.create({
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 150,
+                    temperature: 0.1,
+                    system: [
+                        {
+                            type: "text",
+                            text: session.systemPrompt,
+                            cache_control: { type: "ephemeral" }
+                        }
+                    ],
+                    messages: [
+                        { role: "user", content: "Start the interview. Give a brief 1-2 sentence intro and ask the first question." }
+                    ]
+                });
+                break; // Success
+            } catch (err) {
+                if (err.status === 529 && retries > 1) {
+                    console.warn(`[${session.id}] ⚠️ Anthropic 529 Overloaded. Retrying in ${delay}ms... (${retries - 1} left)`);
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2; // Exponential backoff (1s, 2s)
+                    retries--;
+                } else {
+                    throw err; // Out of retries or different error
                 }
-            ],
-            messages: [
-                { role: "user", content: "Start the interview. Give a brief 1-2 sentence intro and ask the first question." }
-            ]
-        });
+            }
+        }
 
         console.log(`[${session.id}] 📊 Init Tokens - Input: ${openingCompletion.usage.input_tokens}, Output: ${openingCompletion.usage.output_tokens}`);
         console.log(`[${session.id}] 💾 Init Cache - Read: ${openingCompletion.usage.cache_read_input_tokens || 0}, Created: ${openingCompletion.usage.cache_creation_input_tokens || 0}`);

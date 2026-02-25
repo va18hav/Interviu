@@ -530,6 +530,9 @@ const DebugRound = () => {
 
                         isPlayingRef.current = false;
                         setInterviewState('neutral');
+                        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+                            ws.current.send(JSON.stringify({ type: 'tts_playback_done' }));
+                        }
                         setCurrentQuestion(null);
                         nextStartTimeRef.current = 0;
                         displayedWordCountRef.current = 0;
