@@ -46,7 +46,7 @@ const LoginPage = () => {
                 {
                     theme: "outline",
                     size: "large",
-                    width: "220", // Specific width for better alignment
+                    width: "180", // Specific width for better alignment
                     text: "signin_with",
                     shape: "pill",
                     logo_alignment: "left"
@@ -312,7 +312,7 @@ const LoginPage = () => {
                                                                 name="first_name"
                                                                 value={formData.first_name}
                                                                 onChange={handleChange}
-                                                                placeholder="VIOLET"
+                                                                placeholder="VAIBHAV"
                                                                 className={`w-full bg-slate-50 border ${errors.first_name ? 'border-rose-500 ring-4 ring-rose-500/5' : 'border-slate-100 group-hover/field:border-slate-200'} rounded-2xl p-4 pl-12 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase tracking-widest`}
                                                             />
                                                             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/field:text-indigo-500 transition-colors" />
@@ -327,7 +327,7 @@ const LoginPage = () => {
                                                                 name="last_name"
                                                                 value={formData.last_name}
                                                                 onChange={handleChange}
-                                                                placeholder="STEELE"
+                                                                placeholder="K"
                                                                 className={`w-full bg-slate-50 border ${errors.last_name ? 'border-rose-500 ring-4 ring-rose-500/5' : 'border-slate-100 group-hover/field:border-slate-200'} rounded-2xl p-4 pl-12 text-xs font-bold text-slate-900 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-600/5 outline-none transition-all uppercase tracking-widest`}
                                                             />
                                                             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within/field:text-indigo-500 transition-colors" />
@@ -346,7 +346,7 @@ const LoginPage = () => {
                                                         value={formData.email}
                                                         onChange={handleChange}
                                                         className={`w-full rounded-2xl border ${errors.email ? 'border-red-200 bg-red-50/10' : 'border-slate-200/60 bg-white/50'} px-4 py-4 pr-12 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all group-hover:border-slate-300`}
-                                                        placeholder="name@example.com"
+                                                        placeholder="vaibhav@example.com"
                                                     />
                                                     <Mail className={`absolute right-4 top-4 w-5 h-5 ${errors.email ? 'text-red-400' : 'text-slate-300 group-hover:text-slate-400'} transition-colors`} />
                                                 </div>

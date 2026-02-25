@@ -1,5 +1,4 @@
 import { softwareCodingRoundPrompt, softwareBehavioralRoundPrompt, softwareDebugRoundPrompt, softwareDesignRoundPrompt } from './softwarePrompts.js';
-import { dataAnalystCodingRoundPrompt, dataAnalystNonCodingRoundPrompt } from './dataAnalystPrompts.js';
 import { devopsCodingRoundPrompt, devopsDebugRoundPrompt, devopsDesignRoundPrompt, devopsBehavioralRoundPrompt } from './devopsPrompts.js';
 import {
     customSoftwareCodingRoundPrompt,
@@ -90,13 +89,7 @@ export const getSystemPrompt = (context) => {
         }
         return resolveTemplate(customPrompt, templateContext);
     }
-
-    // 1. Data Analyst
-    if (role && role.toLowerCase().includes('data analyst')) {
-        return resolveTemplate(dataAnalystCodingRoundPrompt, templateContext);
-    }
-
-    // 2. DevOps / SRE
+    // 1. DevOps / SRE
     if (role && (role.toLowerCase().includes('devops') || role.toLowerCase().includes('sre') || role.toLowerCase().includes('reliability'))) {
         let devopsSelectedPrompt = devopsCodingRoundPrompt; // Default fallback
 
@@ -112,7 +105,7 @@ export const getSystemPrompt = (context) => {
         return resolveTemplate(devopsSelectedPrompt, templateContext);
     }
 
-    // 3. General Software Engineering (Default)
+    // 2. General Software Engineering (Default)
     // Select based on Round Type
     let selectedPrompt = softwareCodingRoundPrompt; // Default fallback
 

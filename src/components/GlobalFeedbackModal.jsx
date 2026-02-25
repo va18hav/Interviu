@@ -15,7 +15,6 @@ const GlobalFeedbackModal = () => {
 
     // Determine if we should hide the feedback button (e.g., in active interview rounds)
     const hideOnRoutes = [
-        '/interview-details',
         '/',
         '/login',
         '/credits',
@@ -25,8 +24,11 @@ const GlobalFeedbackModal = () => {
         '/behavioral-round'
     ];
 
-    // Check if current route starts with any of the hidden routes
-    const shouldHide = hideOnRoutes.some(route => location.pathname.startsWith(route));
+    // Check if current route matches root exactly, or starts with other hidden routes
+    const shouldHide = hideOnRoutes.some(route => {
+        if (route === '/') return location.pathname === '/';
+        return location.pathname.startsWith(route);
+    });
 
     if (shouldHide) return null;
 
