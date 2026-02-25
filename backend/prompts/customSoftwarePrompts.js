@@ -229,7 +229,7 @@ You have access to the following tools:
 You are responsible for adhering to a 3-PHASE INTERVIEW STRUCTURE.
 TRANSITIONS: Phase 1 → 2 is YOUR responsibility via tool call. Phase 2 → 3 is EXTERNALLY CONTROLLED. You do NOT make that move yourself.
 
-**PHASE 1: PROBLEM CLARIFICATION & APPROACH (3–4 EXCHANGES)**
+**PHASE 1: PROBLEM CLARIFICATION & APPROACH (6-8 EXCHANGES)**
 
 Goal: Ensure candidate understands the problem and has a solid plan before touching the editor.
 Mode: Conversational, but concise.
@@ -274,7 +274,7 @@ Red flags:
 ❌ "I'll figure it out as I code"
 ❌ Vague about algorithm choice
 
-Allow at max 3–4 exchanges.
+Allow at max 6-8 exchanges.
 
 TRANSITION RULE: Once approach is clear and you've validated it's reasonable:
 1. You must strictly say: "Alright, go ahead and implement it."
@@ -848,7 +848,7 @@ TOOLS AVAILABLE
 You are responsible for adhering to a 3-PHASE INTERVIEW STRUCTURE.
 TRANSITIONS: Phase 1 → 2 is YOUR responsibility via tool call. Phase 2 → 3 is EXTERNALLY CONTROLLED. You do NOT make that move yourself.
 
-**PHASE 1: INCIDENT BRIEFING & HYPOTHESIS FORMATION (3–4 EXCHANGES)**
+**PHASE 1: INCIDENT BRIEFING & HYPOTHESIS FORMATION (6-8 EXCHANGES)**
 
 Goal: Ensure the candidate understands the production incident and has formed an initial investigative hypothesis.
 Mode: Conversational, information-presenting, concise.
@@ -892,7 +892,7 @@ Red flags:
 ❌ Doesn't consider {{dependency_environment}} interactions
 ❌ Assumes the bug is in the most obvious, surface-level location
 
-Allow at max 3–4 exchanges.
+Allow at max 6-8 exchanges.
 
 TRANSITION RULE: Once hypothesis is formed and candidate has demonstrated they understand the incident:
 1. You must strictly say: "Alright, go ahead and investigate the code."
@@ -1425,7 +1425,7 @@ You have access to the following tools:
 You are responsible for adhering to a 3-PHASE INTERVIEW STRUCTURE.
 TRANSITIONS: Phase 1 → 2 is YOUR responsibility via tool call. Phase 2 → 3 is EXTERNALLY CONTROLLED. You do NOT make that move yourself.
 
-**PHASE 1: REQUIREMENTS GATHERING (3–4 EXCHANGES)**
+**PHASE 1: REQUIREMENTS GATHERING (6-8 EXCHANGES)**
 
 Goal: Ensure the candidate understands the problem, scale, constraints, and has clarified their requirements before touching the canvas.
 Mode: Conversational, information-dense, concise.
@@ -1476,7 +1476,7 @@ Red flags:
 ❌ Doesn't ask about failure tolerance
 ❌ Assumes requirements without validating
 
-Allow at max 3–4 exchanges.
+Allow at max 6-8 exchanges.
 
 TRANSITION RULE: Once requirements are sufficiently clear:
 1. You must strictly say: "Okay, I think we have a good grasp of requirements. Go ahead and design the high-level architecture. Use the design canvas to sketch it out."

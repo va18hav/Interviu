@@ -7,10 +7,10 @@ import CreateInterview from "./pages/CreateInterview"
 import ProfileSettings from "./pages/ProfileSettings"
 import PreviousInterviews from "./pages/PreviousInterviews"
 import PopularInterviewsPage from "./pages/PopularInterviewsPage"
-import Resume from "./pages/Resume"
 import InterviewDetails from "./pages/InterviewDetails"
 import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
+import GlobalFeedbackModal from "./components/GlobalFeedbackModal"
 import './App.css'
 
 import Onboarding from "./pages/Onboarding"
@@ -35,6 +35,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <GlobalFeedbackModal />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -44,7 +45,6 @@ const App = () => {
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/resume" element={<Resume />} />
           <Route path="/dashboard/all-previous-interviews" element={<PreviousInterviews />} />
           <Route path="/dashboard/all-popular-interviews" element={<PopularInterviewsPage />} />
           <Route path="/dashboard/interview-details/:id" element={<InterviewDetails />} />
@@ -59,12 +59,6 @@ const App = () => {
           <Route path="/debug-round" element={<DebugRound />} />
           <Route path="/behavioral-round" element={<BehavioralRound />} />
           <Route path="/report" element={<InterviewReport />} />
-
-          <Route path="/dashboard/test-design-ui" element={<TestDesignUI />} />
-
-          {/* Test Routes */}
-          <Route path="/dashboard/test-design-ui" element={<TestDesignUI />} />
-          <Route path="/instagram-post-1" element={<InstagramPost1 />} />
         </Route>
       </Routes>
     </BrowserRouter>

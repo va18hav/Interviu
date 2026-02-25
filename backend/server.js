@@ -671,7 +671,7 @@ const transporter = nodemailer.createTransport({
 // Feedback Endpoint
 app.post('/api/feedback', requireAuth(), async (req, res) => {
     const userId = req.userId;
-    const { experience, features, willingToPay } = req.body;
+    const { experience, features, willingToPay, bugs } = req.body;
 
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
@@ -688,41 +688,25 @@ app.post('/api/feedback', requireAuth(), async (req, res) => {
         const userName = `${profile?.first_name || 'Unknown'} ${profile?.last_name || 'User'}`;
         const userEmail = profile?.email || 'No email provided';
 
-        // Construct Email
-        const mailOptions = {
-            from: process.env.SMTP_USER,
-            to: 'support@interviu.pro',
-            replyTo: userEmail,
-            subject: `New Early Access Feedback from ${userName}`,
-            html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                    <h2 style="color: #4f46e5; margin-bottom: 24px;">New Early Access Feedback</h2>
-                    
-                    <div style="background-color: #f8fafc; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
-                        <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>User:</strong> ${userName}</p>
-                        <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;"><strong>Email:</strong> <a href="mailto:${userEmail}">${userEmail}</a></p>
-                        <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;"><strong>User ID:</strong> ${userId}</p>
-                    </div>
+        // Insert into Supabase feedbacks table using the Admin client to bypass RLS securely
+        const { error: insertError } = await supabaseAdmin
+            .from('feedbacks')
+            .insert({
+                user_id: userId,
+                user_name: userName,
+                user_email: userEmail,
+                experience: experience || null,
+                features: features || null,
+                willing_to_pay: willingToPay || null,
+                bugs: bugs || null
+            });
 
-                    <h3 style="color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Experience</h3>
-                    <div style="background-color: #ffffff; padding: 16px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px; color: #334155; white-space: pre-wrap;">${experience || 'N/A'}</div>
+        if (insertError) throw insertError;
 
-                    <h3 style="color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Requested Features</h3>
-                    <div style="background-color: #ffffff; padding: 16px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px; color: #334155; white-space: pre-wrap;">${features || 'N/A'}</div>
-
-                    <h3 style="color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Willingness to Pay</h3>
-                    <div style="background-color: #ffffff; padding: 16px; border: 1px solid #e2e8f0; border-radius: 6px; color: #334155;"><strong>${willingToPay || 'N/A'}</strong></div>
-                </div>
-            `
-        };
-
-        // Send Email
-        await transporter.sendMail(mailOptions);
-
-        res.json({ success: true, message: "Feedback sent successfully" });
+        res.json({ success: true, message: "Feedback submitted successfully" });
     } catch (error) {
-        console.error("Feedback email error:", error);
-        res.status(500).json({ error: "Failed to send feedback email" });
+        console.error("Feedback database insertion error:", error);
+        res.status(500).json({ error: "Failed to submit feedback" });
     }
 });
 
@@ -885,7 +869,7 @@ app.get('/api/recent-interviews', requireAuth(), async (req, res) => {
         // 1. Get unique recent curated_interview_ids
         const { data: activity, error: activityError } = await supabaseAdmin
             .from('completed_curated_interviews')
-            .select('curated_interview_id, round_id, completed_at')
+            .select('curated_interview_id, round_id, completed_at, report_data')
             .eq('user_id', userId)
             .order('completed_at', { ascending: false });
 
@@ -895,6 +879,9 @@ app.get('/api/recent-interviews', requireAuth(), async (req, res) => {
         const uniqueInterviewIds = [];
 
         activity.forEach(item => {
+            const isInvalid = item.report_data?.status === 'skipped' || item.report_data?.status === 'failed' || item.report_data?.error;
+            if (isInvalid) return;
+
             if (!interviewMap[item.curated_interview_id]) {
                 if (uniqueInterviewIds.length < 3) {
                     uniqueInterviewIds.push(item.curated_interview_id);
@@ -1446,86 +1433,88 @@ app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), asyn
         let report = null;
 
         if (generateReport) {
-            console.log(`[EndInterview] Generating report and storing interview data for ${sessionId}...`);
-
-            // 1. Generate Report
-            // Note: generateInterviewReport assumes 'session' object structure. We mock it here.
+            console.log(`[EndInterview] Generating report for ${sessionId}...`);
             try {
-                const generatedReportData = await generateInterviewReport(sessionData, context);
-                report = generatedReportData;
-
-                // 2. Store in Database
-                const isCustom = context.customInterview === true;
-                const timestamp = new Date().toISOString();
-
-                if (isCustom) {
-                    // Prepare title (System Context / Domain Context) with first letter capitalized
-                    let titleRaw = context.domain_focus;
-                    // Ensure only first letter is capitalized (rest kept as is, or lowercase? "first letter being upper-case always" usually implies fixing the first char)
-                    const title = titleRaw.charAt(0).toUpperCase() + titleRaw.slice(1);
-
-                    const { error: insertError } = await supabaseAdmin
-                        .from('completed_custom_interviews')
-                        .insert([{
-                            user_id: userId,
-                            title: title,
-                            job_role: context.role,
-                            job_description: context.job_description || context.problem_statement || null,
-                            transcript: sessionData.history,
-                            report_data: report,
-                            score: report.verdict.confidence, // Assuming report has a score field
-                            duration_mins: Math.ceil(durationInMinutes),
-                            started_at: null, // We don't track start time explicitly in this endpoint input yet
-                            completed_at: timestamp
-                        }]);
-
-                    if (insertError) {
-                        console.error("Error inserting custom interview:", insertError);
-                        // We don't fail the request, but log it. Report is returned to user.
-                    } else {
-                        console.log("[EndInterview] Custom interview stored successfully.");
-                    }
-
-                } else {
-                    // Curated Interview
-                    // Extract origin ID from roundKey if possible: "uuid-round-N"
-                    let curatedId = null;
-                    if (context.roundKey && context.roundKey.includes('-round-')) {
-                        curatedId = context.roundKey.split('-round-')[0];
-                    }
-
-                    const { error: insertError } = await supabaseAdmin
-                        .from('completed_curated_interviews')
-                        .insert([{
-                            user_id: userId,
-                            round_id: context.roundId,
-                            curated_interview_id: curatedId,
-                            type: context.type || 'sde',
-                            title: context.title || "Interview",
-                            company: context.company,
-                            transcript: sessionData.history,
-                            report_data: report,
-                            score: report.verdict.confidence,
-                            duration_mins: Math.ceil(durationInMinutes),
-                            started_at: null,
-                            completed_at: timestamp
-                        }]);
-
-                    if (insertError) {
-                        console.error("Error inserting curated interview:", insertError);
-                    } else {
-                        console.log("[EndInterview] Curated interview stored successfully.");
-                    }
-                }
-
+                // 1. Generate Report
+                report = await generateInterviewReport(sessionData, context);
             } catch (err) {
-                console.error("[EndInterview] Report generation or storage failed:", err);
-                // Fallback: Return success to user but with error message in report field?
+                console.error("[EndInterview] Report generation failed:", err);
                 report = { status: "failed", error: "Report generation failed on server." };
             }
         } else {
             console.log("[EndInterview] Skipping report generation as per client request (criteria not met).");
-            report = { message: "Report generation skipped. Minimum interview requirements not met." };
+            report = { status: "skipped", message: "Report generation skipped. Minimum interview requirements not met." };
+        }
+
+        // 2. Store in Database ALWAYS
+        try {
+            const isCustom = context.customInterview === true;
+            const timestamp = new Date().toISOString();
+
+            // Try to extract a score if the report generated successfully
+            const score = (report && report.verdict && report.verdict.confidence !== undefined)
+                ? report.verdict.confidence
+                : null;
+
+            if (isCustom) {
+                // Prepare title (System Context / Domain Context) with first letter capitalized
+                let titleRaw = context.domain_focus || "Custom Scenario";
+                const title = titleRaw.charAt(0).toUpperCase() + titleRaw.slice(1);
+
+                const { error: insertError } = await supabaseAdmin
+                    .from('completed_custom_interviews')
+                    .insert([{
+                        user_id: userId,
+                        title: title,
+                        job_role: context.role,
+                        job_description: context.job_description || context.problem_statement || null,
+                        transcript: sessionData.history,
+                        report_data: report,
+                        score: score,
+                        duration_mins: Math.ceil(durationInMinutes),
+                        started_at: null, // We don't track start time explicitly in this endpoint input yet
+                        completed_at: timestamp
+                    }]);
+
+                if (insertError) {
+                    console.error("Error inserting custom interview:", insertError);
+                } else {
+                    console.log("[EndInterview] Custom interview stored successfully.");
+                }
+
+            } else {
+                // Curated Interview
+                // Extract origin ID from roundKey if possible: "uuid-round-N"
+                let curatedId = null;
+                if (context.roundKey && context.roundKey.includes('-round-')) {
+                    curatedId = context.roundKey.split('-round-')[0];
+                }
+
+                const { error: insertError } = await supabaseAdmin
+                    .from('completed_curated_interviews')
+                    .insert([{
+                        user_id: userId,
+                        round_id: context.roundId,
+                        curated_interview_id: curatedId,
+                        type: context.type || 'sde',
+                        title: context.title || "Interview",
+                        company: context.company,
+                        transcript: sessionData.history,
+                        report_data: report,
+                        score: score,
+                        duration_mins: Math.ceil(durationInMinutes),
+                        started_at: null,
+                        completed_at: timestamp
+                    }]);
+
+                if (insertError) {
+                    console.error("Error inserting curated interview:", insertError);
+                } else {
+                    console.log("[EndInterview] Curated interview stored successfully.");
+                }
+            }
+        } catch (dbErr) {
+            console.error("[EndInterview] Database insertion failed:", dbErr);
         }
 
         // 🔥 IMPORTANT: Force cleanup the WebSocket STT stream if they manually ended the session

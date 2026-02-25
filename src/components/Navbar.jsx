@@ -313,7 +313,7 @@ const Navbar = ({ credits: propCredits }) => {
                                                         <Zap size={18} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="font-bold tracking-tight">Credits & Billing</span>
+                                                        <span className="font-bold tracking-tight">Credits & Usage</span>
                                                         <span className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">Tokens & session history</span>
                                                     </div>
                                                 </Link>

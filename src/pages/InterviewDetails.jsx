@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2, Bug, Database, CodeXml, Layers, Sparkles, Target, Zap } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Star, CheckCircle, Brain, Code, MessageSquare, Terminal, ChevronRight, X, Loader2, Bug, Database, CodeXml, Layers, Sparkles, Target, Zap, Layout, AlertTriangle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 const InterviewDetails = () => {
@@ -15,7 +15,16 @@ const InterviewDetails = () => {
 
     const [completedRounds, setCompletedRounds] = useState({});
     const [showCreditModal, setShowCreditModal] = useState(false);
+    const [showDeviceBlock, setShowDeviceBlock] = useState(false);
     const [ttsProvider, setTtsProvider] = useState('azure');
+
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const fetchInterviewDetails = async () => {
@@ -50,7 +59,8 @@ const InterviewDetails = () => {
                 if (progressData.length > 0) {
                     const completedMap = {};
                     progressData.forEach(item => {
-                        if (item.round_id && !completedMap[item.round_id]) {
+                        const isInvalid = item.report_data?.status === 'skipped' || item.report_data?.status === 'failed' || item.report_data?.error;
+                        if (item.round_id && !completedMap[item.round_id] && !isInvalid) {
                             completedMap[item.round_id] = item;
                         }
                     });
@@ -150,9 +160,10 @@ const InterviewDetails = () => {
             slug: round.slug || round.questionSlug
         };
 
-        // Mobile Restriction for Design Round
-        if (round.type === 'design' && window.innerWidth < 1024) {
-            alert('The Design Canvas requires a larger screen (Desktop) for the best experience. Please switch to a desktop device to start this round.');
+        // Mobile Restriction for Technical Rounds
+        const technicalRounds = ['design', 'coding', 'coding-algo', 'coding-dsa', 'debugging', 'debug'];
+        if (technicalRounds.includes(round.type) && isMobile) {
+            setShowDeviceBlock(true);
             return;
         }
 
@@ -246,10 +257,60 @@ const InterviewDetails = () => {
         </AnimatePresence>
     );
 
+    const MobileRestrictionModal = () => (
+        <AnimatePresence>
+            {showDeviceBlock && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-10 border border-white/20 text-center overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50 rounded-full blur-[80px] -mr-24 -mt-24 opacity-60" />
+
+                        <div className="relative space-y-8">
+                            <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto ring-8 ring-indigo-50/50 transform rotate-3">
+                                <Layout className="w-10 h-10 text-indigo-600" />
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase leading-tight">Larger screen Required</h3>
+                                <p className="text-slate-500 font-medium leading-relaxed">
+                                    Technical interfaces require a larger screen for the optimal precision experience. You can try the behavioral rounds on smaller screens.
+                                </p>
+                                <div className="py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <p className="text-xs font-bold text-slate-600 flex items-center justify-center gap-2">
+                                        <AlertTriangle className="w-4 h-4 text-indigo-500" />
+                                        Please switch to a desktop device to start this round.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowDeviceBlock(false)}
+                                className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase tracking-[0.2em] text-xs active:scale-95"
+                            >
+                                Acknowledge
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+
     return (
         <div className="min-h-screen bg-white font-inter">
             <Navbar />
             <CreditWarningModal />
+            <MobileRestrictionModal />
 
             {/* Back Navigation */}
             <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-10">

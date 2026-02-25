@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap, Clock, Check, Star, MessageSquare,
     Sparkles, ShieldCheck, Mail, Send, X, ArrowRight,
-    TrendingUp, Award, BarChart3, Instagram, Twitter, Linkedin
+    TrendingUp, Award, BarChart3, Instagram, Twitter, Linkedin,
+    History, Calendar
 } from 'lucide-react';
 import Navbar from "../components/Navbar";
 
@@ -18,29 +19,58 @@ const CreditsPage = () => {
         features: '',
         willingToPay: ''
     });
+    const [interviews, setInterviews] = useState([]);
 
     useEffect(() => {
-        const fetchCredits = async () => {
+        const fetchCreditsAndHistory = async () => {
             try {
                 const userCreds = JSON.parse(localStorage.getItem("userCredentials"));
                 if (userCreds?.id) {
                     const token = localStorage.getItem('authToken');
-                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/credits?userId=${userCreds.id}`, {
+
+                    // Fetch Credits
+                    const credsPromise = fetch(`${import.meta.env.VITE_API_URL}/api/credits?userId=${userCreds.id}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    const data = await response.json();
-                    if (response.ok) {
+
+                    // Fetch History
+                    const fetchParams = { headers: { 'Authorization': `Bearer ${token}` } };
+                    const curatedPromise = fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/curated?userId=${userCreds.id}`, fetchParams);
+                    const customPromise = fetch(`${import.meta.env.VITE_API_URL}/api/completed-interviews/custom?userId=${userCreds.id}`, fetchParams);
+
+                    const [credsRes, curatedRes, customRes] = await Promise.all([credsPromise, curatedPromise, customPromise]);
+
+                    if (credsRes.ok) {
+                        const data = await credsRes.json();
                         setCredits(data.credits);
                         setSocialsClicked(data.socials_clicked || {});
                     }
+
+                    const curatedData = curatedRes.ok ? await curatedRes.json() : [];
+                    const customData = customRes.ok ? await customRes.json() : [];
+
+                    const curatedNormalized = curatedData.map(item => ({
+                        ...item,
+                        displayTitle: item.title || `${item.company} ${item.type} Interview`,
+                        date: new Date(item.completed_at)
+                    }));
+
+                    const customNormalized = customData.map(item => ({
+                        ...item,
+                        displayTitle: item.title,
+                        date: new Date(item.completed_at)
+                    }));
+
+                    const combined = [...curatedNormalized, ...customNormalized].sort((a, b) => b.date - a.date);
+                    setInterviews(combined);
                 }
             } catch (error) {
-                console.error("Error fetching credits:", error);
+                console.error("Error fetching data:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchCredits();
+        fetchCreditsAndHistory();
     }, []);
 
     const handleRequestSubmit = async (e) => {
@@ -158,21 +188,61 @@ const CreditsPage = () => {
                                         </div>
 
                                         <button
-                                            // onClick={() => setShowRequestModal(true)}
-                                            className="opacity-50 cursor-not-allowed w-full py-4 rounded-xl bg-white text-slate-900 font-black text-[12px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
+                                            onClick={() => setShowRequestModal(true)}
+                                            className="w-full py-4 rounded-xl bg-white text-slate-900 font-black text-[12px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
                                         >
                                             Request More Credits
 
                                             <ArrowRight className="w-4 h-4" />
                                         </button>
-
-                                        <p className="mt-4 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-60">
-                                            Coming Soon, Stay tuned!
-                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Usage History Section */}
+                <div className="mt-16 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <History className="w-5 h-5 text-indigo-600" />
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Usage History</h2>
+                    </div>
+
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[200px] relative">
+                        {loading && interviews.length === 0 ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center bg-white/50 backdrop-blur-sm z-10">
+                                <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] animate-pulse">Loading history...</p>
+                            </div>
+                        ) : null}
+
+                        {interviews.length > 0 ? (
+                            <div className="divide-y divide-slate-100">
+                                {interviews.map((interview, index) => (
+                                    <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 hover:bg-slate-50 transition-colors">
+                                        <div className="space-y-1">
+                                            <h3 className="text-base font-bold text-slate-900">{interview.displayTitle}</h3>
+                                            <div className="flex items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {interview.date.toLocaleDateString()}</span>
+                                                <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                                <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {interview.duration_mins || 0} mins</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 rounded-xl border border-rose-100 text-rose-600 shrink-0">
+                                            <Zap className="w-4 h-4 fill-rose-600" />
+                                            <span className="text-sm font-black tracking-widest">-{interview.duration_mins || 0}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : !loading && (
+                            <div className="p-12 text-center flex flex-col items-center">
+                                <History className="w-12 h-12 text-slate-200 mb-4" />
+                                <h3 className="text-lg font-black text-slate-900 uppercase">No usage history</h3>
+                                <p className="text-sm text-slate-500 font-medium mt-2">Complete an interview session to see your credit usage here.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>
@@ -298,7 +368,7 @@ const CreditsPage = () => {
                                         {[
                                             { id: 'instagram', name: 'Instagram', icon: Instagram, url: 'https://instagram.com/interviu.pro', color: 'bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-100' },
                                             { id: 'x', name: 'X (Twitter)', icon: Twitter, url: 'https://x.com/Interviu199934', color: 'bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-100' },
-                                            { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, url: 'https://linkedin.com/company/intervyu', color: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' }
+                                            // { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, url: 'https://linkedin.com/company/intervyu', color: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' }
                                         ].map(social => (
                                             <button
                                                 key={social.id}

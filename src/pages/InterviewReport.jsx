@@ -185,17 +185,25 @@ const InterviewReport = () => {
         );
     }
 
-    if (reportData?.status === 'failed' || reportData?.error) {
+    if (reportData?.status === 'skipped' || reportData?.status === 'failed' || reportData?.error) {
+        const isSkipped = reportData?.status === 'skipped' || reportData?.message?.includes('skipped');
+        const title = isSkipped ? "Insufficient Signals" : "Report Generation Failed";
+        const message = isSkipped
+            ? "Your interview duration was too short to gather enough technical signals for a comprehensive report."
+            : (reportData.error || "There was an issue generating your comprehensive feedback report. Please try again later or contact support.");
+        const iconColor = isSkipped ? "bg-amber-100 text-amber-600" : "bg-rose-100 text-rose-600";
+        const borderColor = isSkipped ? "border-amber-100" : "border-rose-100";
+
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
-                <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-rose-100 shadow-xl space-y-6">
-                    <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className={`max-w-md w-full bg-white p-8 rounded-3xl border ${borderColor} shadow-xl space-y-6`}>
+                    <div className={`w-16 h-16 ${iconColor} rounded-full flex items-center justify-center mx-auto mb-4`}>
                         <AlertTriangle className="w-8 h-8" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Report Generation Failed</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h2>
                         <p className="text-slate-500 mt-2">
-                            {reportData.error || "There was an issue generating your comprehensive feedback report. Please try again later or contact support."}
+                            {message}
                         </p>
                     </div>
                     <button
