@@ -57,7 +57,7 @@ const CustomInterviewBanner = ({ firstName }) => {
                     </div>
                 </div>
 
-                <div className="relative w-full md:w-auto flex justify-center md:block">
+                <div className="hidden md:block relative w-full md:w-auto flex justify-center md:block">
                     <img
                         src={configure}
                         alt=""
