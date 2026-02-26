@@ -237,7 +237,7 @@ const LoginPage = () => {
                 <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] overflow-hidden transition-all duration-500 hover:shadow-[0_48px_80px_-12px_rgba(0,0,0,0.12)]">
                     <div className="p-8 md:p-10">
                         {/* Jio Alert Banner */}
-                        <AnimatePresence>
+                        {/* <AnimatePresence>
                             {showJioAlert && (
                                 <motion.div
                                     initial={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -262,7 +262,7 @@ const LoginPage = () => {
                                     </div>
                                 </motion.div>
                             )}
-                        </AnimatePresence>
+                        </AnimatePresence> */}
 
                         {/* Branding */}
                         <div className="flex flex-col items-center mb-10">
