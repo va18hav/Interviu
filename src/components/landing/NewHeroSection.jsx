@@ -174,11 +174,10 @@ const NewHeroSection = () => {
                             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-700 font-bold text-[10px] uppercase tracking-wider">
                                 <Target className="w-3.5 h-3.5" /> Trained on real hiring patterns
                             </span>
-                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-[10px] uppercase tracking-wider">
+                            {/* <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-[10px] uppercase tracking-wider">
                                 <PenTool className="w-3.5 h-3.5" /> 3+ Round types for SDE & DevOps
-                            </span>
+                            </span> */}
                         </motion.p>
-
                         {/* CTAs */}
                         <motion.div
                             variants={itemVariants}
