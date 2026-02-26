@@ -867,7 +867,7 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
 
                 <div className="h-6 w-px bg-gray-300 mx-2" />
 
-                <button
+                {!interviewMode && (<button
                     onClick={() => {
                         const rect = canvasRef.current.getBoundingClientRect();
                         const x = (rect.width / 2 - pan.x) / zoom;
@@ -879,9 +879,9 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                 >
                     <Square size={16} />
                     <span className="font-medium hidden sm:inline">Box</span>
-                </button>
+                </button>)}
 
-                <button
+                {!interviewMode && (<button
                     onClick={() => {
                         const rect = canvasRef.current.getBoundingClientRect();
                         const x = (rect.width / 2 - pan.x) / zoom;
@@ -894,6 +894,8 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                     <FileText size={16} />
                     <span className="font-medium hidden sm:inline">Note</span>
                 </button>
+                )}
+
 
                 <div className="h-6 w-px bg-gray-300 mx-2" />
 
