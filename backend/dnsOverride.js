@@ -14,15 +14,16 @@ import dns from 'dns';
 const resolver = new dns.promises.Resolver();
 resolver.setServers(['8.8.8.8', '1.1.1.1']); // Google, Cloudflare
 
+const originalDnsLookup = dns.lookup;
+const originalDnsPromisesLookup = dns.promises.lookup;
+
 // Ensure globalAgent options object exists
 if (!https.globalAgent.options) {
     https.globalAgent.options = {};
 }
+const originalAgentLookup = https.globalAgent.options.lookup || originalDnsLookup;
 
-const originalLookup = https.globalAgent.options.lookup || dns.lookup;
-
-https.globalAgent.options.lookup = (hostname, options, callback) => {
-    // dns.lookup allows options to be optional
+function customLookup(hostname, options, callback) {
     if (typeof options === 'function') {
         callback = options;
         options = {};
@@ -32,7 +33,6 @@ https.globalAgent.options.lookup = (hostname, options, callback) => {
         resolver.resolve4(hostname)
             .then(addresses => {
                 if (addresses && addresses.length > 0) {
-                    // Node's dns.lookup handles `{all: true}` differently
                     if (options && options.all) {
                         const formatted = addresses.map(addr => ({ address: addr, family: 4 }));
                         callback(null, formatted);
@@ -40,18 +40,37 @@ https.globalAgent.options.lookup = (hostname, options, callback) => {
                         callback(null, addresses[0], 4);
                     }
                 } else {
-                    // In case we somehow get an empty array without throwing
-                    originalLookup(hostname, options, callback);
+                    originalDnsLookup(hostname, options, callback);
                 }
             })
             .catch(err => {
                 console.error(`[DNS Override] Resolution failed for ${hostname}:`, err.message);
-                // Fallback safely so the app doesn't crash on timeouts
-                originalLookup(hostname, options, callback);
+                originalDnsLookup(hostname, options, callback);
             });
     } else {
-        originalLookup(hostname, options, callback);
+        originalDnsLookup(hostname, options, callback);
     }
+}
+
+// 1. Monkey-patch global dns.lookup (Intercepts Undici/Node 18+ native fetch in many cases)
+dns.lookup = customLookup;
+
+// 2. Monkey-patch dns.promises.lookup
+dns.promises.lookup = function (hostname, options) {
+    return new Promise((resolve, reject) => {
+        customLookup(hostname, options || {}, (err, address, family) => {
+            if (err) return reject(err);
+            if (options && options.all) {
+                // When 'all' is true, address is already the formatted array
+                resolve(address);
+            } else {
+                resolve({ address, family });
+            }
+        });
+    });
 };
 
-console.log('[DNS Override] Patched https.globalAgent.lookup for *.supabase.co to bypass ISP blocks');
+// 3. Monkey-patch https.globalAgent just in case older libraries/polyfills use it
+https.globalAgent.options.lookup = customLookup;
+
+console.log('[DNS Override] Patched dns.lookup and https.globalAgent for *.supabase.co to bypass ISP blocks');
