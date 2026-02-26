@@ -1,4 +1,3 @@
-import './dnsOverride.js'; // Must be the very first import to intercept DNS for all subsequent modules
 import express from 'express'
 import cors from 'cors'
 import nodemailer from 'nodemailer'
