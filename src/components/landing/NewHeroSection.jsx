@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Award, Mic, Target, Pen } from 'lucide-react';
+import { ArrowRight, Award, Mic, Target, Pen, PenTool } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import heroImage from '../../assets/images/landingbot.png';
@@ -145,7 +145,7 @@ const NewHeroSection = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                             </span>
-                            <span>Early Access: 3+ Round types For SDE & DevOps</span>
+                            <span>Early Access: 300 credits on signup</span>
                         </motion.div>
 
                         {/* Main Headline */}
@@ -173,6 +173,9 @@ const NewHeroSection = () => {
                         >
                             <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-700 font-bold text-[10px] uppercase tracking-wider">
                                 <Target className="w-3.5 h-3.5" /> Trained on real hiring patterns
+                            </span>
+                            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-[10px] uppercase tracking-wider">
+                                <PenTool className="w-3.5 h-3.5" /> 3+ Round types for SDE & DevOps
                             </span>
                         </motion.p>
 

@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, AlertCircle } from 'lucide-react';
 import { COMPONENT_METADATA, COMPONENT_CONFIG_SCHEMA } from '../utils/designComponentSchema';
 
-const ComponentConfigPanel = ({ component, onSave, onClose }) => {
+const ComponentConfigPanel = ({ component, position, onSave, onClose }) => {
     const [config, setConfig] = useState(component?.config || {});
     const [definedFields, setDefinedFields] = useState(component?.definedFields || []);
     const [assumedFields, setAssumedFields] = useState(component?.assumedFields || []);
+
+    const cardRef = useRef(null);
+    const [adjustedPos, setAdjustedPos] = useState(null);
 
     const types = component?.mergedTypes || (component?.type ? [component.type] : []);
 
@@ -23,6 +27,31 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
             setAssumedFields(component.assumedFields || []);
         }
     }, [component]);
+
+    useLayoutEffect(() => {
+        if (cardRef.current && position) {
+            const rect = cardRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let { x, y } = position;
+
+            // Offset slightly from cursor/component
+            x += 20;
+
+            if (x + rect.width > viewportWidth - 20) {
+                x = position.x - rect.width - 20; // Flip to left side
+            }
+            if (x < 20) x = 20;
+
+            if (y + rect.height > viewportHeight - 20) {
+                y = viewportHeight - rect.height - 20; // Shift up
+            }
+            if (y < 20) y = 20;
+
+            setAdjustedPos({ x, y });
+        }
+    }, [position, config]);
 
     if (!component || allSchemas.length === 0) return null;
 
@@ -92,18 +121,17 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
         const value = config[field.key] || '';
 
         return (
-            <div key={field.key} className="mb-3">
-                <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-gray-700 flex items-center gap-2">
+            <div key={field.key} className="mb-4 group">
+                <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5 group-focus-within:text-blue-500 transition-colors">
                         {field.label}
                         {status === 'undefined' && (
-                            <span className="text-[10px] text-orange-600 flex items-center gap-1 bg-orange-50 px-1 rounded">
-                                <AlertCircle size={10} />
+                            <span className="text-[9px] text-orange-500 flex items-center gap-0.5 bg-orange-50 px-1 rounded-sm border border-orange-100">
                                 Req
                             </span>
                         )}
                         {status === 'assumed' && (
-                            <span className="text-[10px] text-blue-600 bg-blue-50 px-1 rounded">
+                            <span className="text-[9px] text-blue-500 bg-blue-50 px-1 rounded-sm border border-blue-100">
                                 Auto
                             </span>
                         )}
@@ -111,7 +139,7 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
                     {status === 'undefined' && (
                         <button
                             onClick={() => handleMarkAsAssumed(field.key)}
-                            className="text-[10px] text-blue-600 hover:text-blue-700 underline"
+                            className="text-[9px] text-blue-500 hover:text-blue-700 underline opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                             Assume
                         </button>
@@ -119,30 +147,37 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
                 </div>
 
                 {field.type === 'select' || field.type === 'select-multi' ? (
-                    <select
-                        value={value}
-                        onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                        className={`w-full px-2 py-1.5 border rounded text-xs transition-colors ${status === 'undefined'
-                            ? 'border-orange-300 bg-orange-50 focus:border-orange-500 focus:ring-1 focus:ring-orange-200'
-                            : status === 'assumed'
-                                ? 'border-blue-300 bg-blue-50 focus:border-blue-500'
-                                : 'border-gray-300 focus:border-blue-500'
-                            }`}
-                    >
-                        <option value="">Select...</option>
-                        {field.options.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                        ))}
-                    </select>
+                    <div className="relative">
+                        <select
+                            value={value}
+                            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+                            className={`w-full px-2.5 py-2 rounded-md text-xs font-medium outline-none appearance-none transition-all shadow-sm cursor-pointer ${status === 'undefined'
+                                ? 'border border-orange-200 bg-orange-50/50 focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 text-orange-900'
+                                : status === 'assumed'
+                                    ? 'border border-blue-200 bg-blue-50/50 focus:border-blue-400 text-blue-900'
+                                    : 'border border-gray-200 bg-white hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-gray-800'
+                                }`}
+                        >
+                            <option value="">Select...</option>
+                            {field.options.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                            <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                    </div>
                 ) : field.type === 'textarea' ? (
                     <textarea
                         value={value}
                         onChange={(e) => handleFieldChange(field.key, e.target.value)}
                         placeholder={field.placeholder}
-                        rows={2}
-                        className={`w-full px-2 py-1.5 border rounded text-xs transition-colors ${status === 'undefined'
-                            ? 'border-orange-300 bg-orange-50 focus:border-orange-500'
-                            : 'border-gray-300 focus:border-blue-500'
+                        rows={3}
+                        className={`w-full px-2.5 py-2 rounded-md text-xs font-medium outline-none transition-all shadow-sm resize-none ${status === 'undefined'
+                            ? 'border border-orange-200 bg-orange-50/50 focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 text-orange-900'
+                            : 'border border-gray-200 bg-white hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-gray-800'
                             }`}
                     />
                 ) : (
@@ -151,9 +186,9 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
                         value={value}
                         onChange={(e) => handleFieldChange(field.key, e.target.value)}
                         placeholder={field.placeholder}
-                        className={`w-full px-2 py-1.5 border rounded text-xs transition-colors ${status === 'undefined'
-                            ? 'border-orange-300 bg-orange-50 focus:border-orange-500'
-                            : 'border-gray-300 focus:border-blue-500'
+                        className={`w-full px-2.5 py-2 rounded-md text-xs font-medium outline-none transition-all shadow-sm ${status === 'undefined'
+                            ? 'border border-orange-200 bg-orange-50/50 focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 text-orange-900'
+                            : 'border border-gray-200 bg-white hover:border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-gray-800'
                             }`}
                     />
                 )}
@@ -163,54 +198,63 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
 
     const undefinedCount = allFieldKeys.length - definedFields.length - assumedFields.length;
 
-    return (
-        <div className="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col border-l border-gray-200">
+    const measurementStyle = {
+        left: position?.x || 0,
+        top: position?.y || 0,
+        opacity: 0,
+        pointerEvents: 'none',
+        transform: 'none'
+    };
+
+    const finalStyle = {
+        left: adjustedPos?.x,
+        top: adjustedPos?.y,
+        opacity: 1,
+    };
+
+    const content = (
+        <div
+            ref={cardRef}
+            className={`fixed z-[9999] bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-200/80 p-0 w-[340px] max-h-[85vh] flex flex-col ring-1 ring-black/5 transition-all duration-300 ${adjustedPos ? 'animate-in fade-in zoom-in-95' : ''}`}
+            style={adjustedPos ? finalStyle : measurementStyle}
+        >
             {/* Header */}
             <div
-                className="p-4 text-white flex items-center justify-between"
+                className="p-4 text-white flex items-center justify-between rounded-t-xl shrink-0"
                 style={{ backgroundColor: primaryMetadata.color }}
             >
                 <div>
-                    <h3 className="font-semibold text-sm">
+                    <h3 className="font-bold text-sm tracking-wide">
                         {types.length > 1
                             ? types.map(t => COMPONENT_METADATA[t]?.label).join(' + ')
                             : primaryMetadata.label
                         }
                     </h3>
-                    <p className="text-[10px] opacity-90 mt-1">
-                        {definedFields.length} defined • {assumedFields.length} assumed • {undefinedCount} undefined
+                    <p className="text-[10px] opacity-80 mt-1 font-medium tracking-wide">
+                        {definedFields.length} DEFINED • {assumedFields.length} ASSUMED • {undefinedCount} UNDEFINED
                     </p>
                 </div>
                 <button
                     onClick={onClose}
-                    className="p-1 hover:bg-white/20 rounded"
+                    className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
                 >
-                    <X size={20} />
+                    <X size={18} />
                 </button>
             </div>
 
             {/* Configuration Fields */}
-            <div className="flex-1 overflow-y-auto p-4">
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-                    <p className="font-medium mb-1">Configuration Guide</p>
-                    <ul className="text-xs space-y-1 list-disc list-inside">
-                        <li>Fill in known values to mark fields as <strong>defined</strong></li>
-                        <li>Mark fields as <strong>assumed</strong> if you're making reasonable assumptions</li>
-                        <li><strong>Undefined</strong> fields will be highlighted to the interviewer</li>
-                    </ul>
-                </div>
-
+            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent hover:scrollbar-thumb-gray-300">
                 <div className="space-y-6">
                     {/* Always visible Name Field */}
-                    <div className="border border-blue-100 rounded-lg overflow-hidden bg-blue-50/50">
-                        <div className="px-3 py-2 border-b border-blue-100 bg-blue-50">
-                            <h4 className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm ring-1 ring-black/5">
+                        <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                                 Component Identity
                             </h4>
                         </div>
-                        <div className="p-3">
-                            <div className="mb-0">
-                                <label className="text-xs font-medium text-gray-700 flex items-center gap-2 mb-1">
+                        <div className="p-4">
+                            <div className="mb-0 group">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 mb-1.5 group-focus-within:text-blue-500 transition-colors">
                                     Name / Label
                                 </label>
                                 <input
@@ -218,19 +262,19 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
                                     value={config.label || ''}
                                     onChange={(e) => handleFieldChange('label', e.target.value)}
                                     placeholder={types.length > 1 ? types.map(t => COMPONENT_METADATA[t]?.label).join(' + ') : primaryMetadata.label}
-                                    className="w-full px-2 py-1.5 border border-blue-200 rounded text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-200 bg-white"
+                                    className="w-full px-2.5 py-2 border border-gray-200 rounded-md text-xs font-medium focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white hover:border-gray-300 transition-all shadow-sm outline-none"
                                 />
                             </div>
                         </div>
                     </div>
                     {Object.entries(groupedFields).map(([group, fields]) => (
-                        <div key={group} className="border border-gray-100 rounded-lg overflow-hidden">
-                            <div className="bg-gray-50 px-3 py-2 border-b border-gray-100">
-                                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <div key={group} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm ring-1 ring-black/5">
+                            <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                                     {group}
                                 </h4>
                             </div>
-                            <div className="p-3 bg-white">
+                            <div className="p-4">
                                 {fields.map(renderField)}
                             </div>
                         </div>
@@ -239,24 +283,26 @@ const ComponentConfigPanel = ({ component, onSave, onClose }) => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-gray-100 bg-white shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)] rounded-b-xl shrink-0">
                 <button
                     onClick={handleSave}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 font-medium"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-xs tracking-wide shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
                 >
-                    <Save size={18} />
-                    Save Configuration
+                    <Save size={16} strokeWidth={2.5} />
+                    APPLY CHANGES
                 </button>
 
                 {undefinedCount > 0 && (
-                    <p className="text-xs text-orange-600 mt-2 text-center flex items-center justify-center gap-1">
-                        <AlertCircle size={12} />
-                        {undefinedCount} field{undefinedCount > 1 ? 's' : ''} still undefined
+                    <p className="text-[10px] font-bold text-orange-500 mt-3 text-center flex items-center justify-center gap-1.5 uppercase tracking-wide">
+                        <AlertCircle size={14} />
+                        {undefinedCount} field{undefinedCount > 1 ? 's' : ''} undefined
                     </p>
                 )}
             </div>
         </div>
     );
+
+    return createPortal(content, document.body);
 };
 
 export default ComponentConfigPanel;

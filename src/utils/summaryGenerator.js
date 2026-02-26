@@ -13,6 +13,9 @@ const getComponentDisplayName = (comp) => {
         }
         return comp.mergedTypes.map(t => COMPONENT_METADATA[t]?.label || t).join(' + ');
     }
+
+    if (comp.type === 'text_note') return 'Text Note';
+    if (comp.type === 'bounding_box') return comp.config?.label || 'Bounding Box';
     return comp.config?.label || COMPONENT_METADATA[comp.type]?.label || 'Unknown';
 };
 
@@ -38,6 +41,11 @@ export const generateConnectionSummary = (oldConn, newConn, components) => {
         changes.push(`with ${newConfig.timeout} timeout`);
     }
 
+    // Sequence Number
+    if (newConfig.sequence_number !== oldConfig.sequence_number && newConfig.sequence_number) {
+        changes.push(`Sequence Flow Step: #${newConfig.sequence_number}`);
+    }
+
     // Detect Reliability Changes
     if (newConfig.circuit_breaker !== oldConfig.circuit_breaker) {
         changes.push(`Circuit Breaker ${newConfig.circuit_breaker}`);
@@ -56,6 +64,16 @@ export const generateComponentSummary = (oldComp, newComp) => {
     const oldConfig = oldComp?.config || {};
     const newConfig = newComp.config || {};
     const label = getComponentDisplayName(newComp);
+
+    // Text Note Specific
+    if (newComp.type === 'text_note' && newConfig.content !== oldConfig.content) {
+        changes.push(`Content: "${newConfig.content}"`);
+    }
+
+    // Bounding Box Specific
+    if (newComp.type === 'bounding_box' && newConfig.group_type !== oldConfig.group_type) {
+        changes.push(`Group Type: ${newConfig.group_type}`);
+    }
 
     // State Changes
     if (newConfig.st_type !== oldConfig.st_type) {

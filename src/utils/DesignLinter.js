@@ -18,9 +18,12 @@ export const validateDesign = (components, connections) => {
 
     // Helper: Build adjacency list for connectivity checks
     const adjList = {};
+    const revAdjList = {};
     connections.forEach(conn => {
         if (!adjList[conn.from]) adjList[conn.from] = [];
+        if (!revAdjList[conn.to]) revAdjList[conn.to] = [];
         adjList[conn.from].push(conn.to);
+        revAdjList[conn.to].push(conn.from);
     });
 
     // --- RULE 1: Direct Database Exposure (SECURITY) ---
@@ -94,20 +97,27 @@ export const validateDesign = (components, connections) => {
         }
     });
 
-    // --- RULE 4: Unbounded Queue (RELIABILITY) ---
+    // --- RULE 4: Unbounded Queue & Spike Protection (RELIABILITY) ---
     components.forEach(comp => {
         const types = comp.mergedTypes || [comp.type];
-        const hasQueue = types.some(t => t === COMPONENT_TYPES.MESSAGE_QUEUE);
+        const hasQueue = types.some(t => t === COMPONENT_TYPES.MESSAGE_QUEUE || t === COMPONENT_TYPES.STREAM_PROCESSING);
 
         if (hasQueue) {
-            const retention = comp.config?.retention;
-            if (!retention) {
+            // Check neighbors for DLQ or Backpressure
+            const neighbors = [...(adjList[comp.id] || []), ...(revAdjList[comp.id] || [])];
+            const hasProtection = neighbors.some(targetId => {
+                const target = components.find(c => c.id === targetId);
+                const targetTypes = target?.mergedTypes || (target?.type ? [target.type] : []);
+                return targetTypes.some(tt => tt === COMPONENT_TYPES.DEAD_LETTER_QUEUE || tt === COMPONENT_TYPES.BACKPRESSURE_CONTROLLER);
+            });
+
+            if (!hasProtection) {
                 const label = comp.config?.label || types.map(t => COMPONENT_METADATA[t]?.label).join(' + ');
                 issues.push({
-                    id: `rel-unbounded-queue-${comp.id}`,
-                    ruleId: 'RELIABILITY_UNBOUNDED_QUEUE',
+                    id: `rel-queue-protection-${comp.id}`,
+                    ruleId: 'RELIABILITY_UNPROTECTED_QUEUE',
                     severity: 'MEDIUM',
-                    message: `Unbounded Queue/Stream: '${label}' needs retention or size limits to prevent overflow.`,
+                    message: `Queue lacks spike protection: '${label}' is not connected to a Dead Letter Queue or Backpressure Controller. Configured retention might still overflow under massive spikes.`,
                     componentIds: [comp.id]
                 });
             }

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Plus, ZoomIn, ZoomOut, Settings, X, ChevronLeft, ChevronRight, Link as LinkIcon, AlertTriangle, Activity, Trash2, CheckCircle, AlertCircle, Download, Upload, FileJson, Image as ImageIcon, FileText, Save, ArrowRight } from 'lucide-react';
+import { Plus, ZoomIn, ZoomOut, Settings, X, ChevronLeft, ChevronRight, Link as LinkIcon, AlertTriangle, Activity, Trash2, CheckCircle, AlertCircle, Download, Upload, FileJson, Image as ImageIcon, FileText, Save, ArrowRight, Square } from 'lucide-react';
 import { COMPONENT_METADATA, COMPONENT_CONFIG_SCHEMA } from '../utils/designComponentSchema';
 import { getIconForType } from '../utils/DesignIcons.jsx';
 import { validateDesign } from '../utils/DesignLinter';
@@ -23,12 +23,22 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
     const [draggedComponent, setDraggedComponent] = useState(null); // For library items
     const [draggingComponentId, setDraggingComponentId] = useState(null); // For existing items
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+    // Resize state
+    const [resizingComponentId, setResizingComponentId] = useState(null);
+    const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, w: 0, h: 0 });
+
     const [selectedComponentId, setSelectedComponentId] = useState(null);
+    const [componentPopupPos, setComponentPopupPos] = useState(null);
     const [selectedConnectionId, setSelectedConnectionId] = useState(null);
     const [connectionPopupPos, setConnectionPopupPos] = useState(null);
+    const [editingNoteId, setEditingNoteId] = useState(null);
+
+    // Modes
+    const [isConnectionMode, setIsConnectionMode] = useState(false);
+    const [isSimulationMode, setIsSimulationMode] = useState(false);
 
     // Simulation Mode State
-    const [isSimulationMode, setIsSimulationMode] = useState(false);
     const [activeFailures, setActiveFailures] = useState({}); // { [componentId]: 'outage' | 'latency' }
     const [failureMenuTarget, setFailureMenuTarget] = useState(null); // { id: componentId, x: 0, y: 0 }
     const [activeStage, setActiveStage] = useState('mvp');
@@ -40,8 +50,6 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
         }
     }, [externalSelectedId]);
 
-    // Connection Mode State
-    const [isConnectionMode, setIsConnectionMode] = useState(false);
     const [connectionStartComponentId, setConnectionStartComponentId] = useState(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 }); // Track mouse for temp line
 
@@ -251,6 +259,24 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
         });
     };
 
+    // Handle Resize Mousedown
+    const handleResizeMouseDown = (e, component) => {
+        e.stopPropagation();
+        if (e.button !== 0) return;
+
+        const rect = canvasRef.current.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+        const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+
+        setResizingComponentId(component.id);
+        setResizeStart({
+            x: mouseX,
+            y: mouseY,
+            w: component.width || 400,
+            h: component.height || 300
+        });
+    };
+
     // Pan controls
     const handleMouseDown = (e) => {
         if (e.button === 1 || (e.button === 0 && e.altKey)) { // Middle mouse or Alt+Left
@@ -270,7 +296,16 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
             setMousePos({ x: mouseX, y: mouseY });
         }
 
-        if (draggingComponentId) {
+        if (resizingComponentId) {
+            const dx = mouseX - resizeStart.x;
+            const dy = mouseY - resizeStart.y;
+
+            setComponents(prev => prev.map(comp =>
+                comp.id === resizingComponentId
+                    ? { ...comp, width: Math.max(100, resizeStart.w + dx), height: Math.max(100, resizeStart.h + dy) }
+                    : comp
+            ));
+        } else if (draggingComponentId) {
             const newX = mouseX - dragOffset.x;
             const newY = mouseY - dragOffset.y;
 
@@ -294,6 +329,7 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
 
     const handleMouseUp = () => {
         setIsPanning(false);
+        setResizingComponentId(null);
 
         if (draggingComponentId) {
             const draggedComp = components.find(c => c.id === draggingComponentId);
@@ -390,7 +426,11 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
         } else {
             // Normal Selection Mode -> Open Config
             setSelectedComponentId(componentId);
-            onComponentSelect(components.find(c => c.id === componentId));
+            const component = components.find(c => c.id === componentId);
+            if (component && component.type !== 'bounding_box' && component.type !== 'text_note') {
+                setComponentPopupPos({ x: e.clientX, y: e.clientY });
+            }
+            onComponentSelect(component);
         }
     };
 
@@ -408,24 +448,43 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
     }, [onDesignChange]);
 
     // Helper to get center connection points for a component
-    // Helper to get center connection points for a component
     const getConnectionPoints = (comp) => {
         const { x, y } = comp.position;
+        const config = comp.config || {};
 
-        // Dynamic sizes based on mode
-        const iconH = isFullScreen ? 56 : 48; // h-14 vs h-12
-        const typesCount = (comp.mergedTypes || [comp.type]).length;
-        const compW = (isFullScreen ? 120 : 100) + (typesCount > 1 ? (typesCount - 1) * 45 : 0);
+        // Sizing logic
+        let compW = 100;
+        let compH = isFullScreen ? 56 : 48; // Standard node height
 
-        // The icon container width is roughy 40px per icon + gaps
-        const iconContainerW = (isFullScreen ? 56 : 48) + (typesCount > 1 ? (typesCount - 1) * 40 : 0);
-        const iconLeft = (compW - iconContainerW) / 2;
+        if (comp.type === 'bounding_box') {
+            const sizeMap = { 'Small': 300, 'Medium': 500, 'Large': 800, 'Extra Large': 1200 };
+            const boxSize = sizeMap[config.size || 'Medium'];
+            compW = boxSize;
+            compH = boxSize * 0.75; // 4:3 ratio
+        } else if (comp.type === 'text_note') {
+            compW = 160;
+            compH = 120;
+        } else {
+            // Standard node
+            const typesCount = (comp.mergedTypes || [comp.type]).length;
+            compW = (isFullScreen ? 120 : 100) + (typesCount > 1 ? (typesCount - 1) * 45 : 0);
+        }
+
+        // The icon container width is roughy 40px per icon + gaps, only for standard nodes
+        let iconLeft = compW / 2; // Default center
+        if (comp.type !== 'bounding_box' && comp.type !== 'text_note') {
+            const typesCount = (comp.mergedTypes || [comp.type]).length;
+            const iconContainerW = (isFullScreen ? 56 : 48) + (typesCount > 1 ? (typesCount - 1) * 40 : 0);
+            iconLeft = (compW - iconContainerW) / 2;
+        } else {
+            iconLeft = 0; // Not used the same way
+        }
 
         return {
             top: { x: x + compW / 2, y: y },
-            right: { x: x + iconLeft + iconContainerW, y: y + iconH / 2 },
-            bottom: { x: x + compW / 2, y: y + iconH },
-            left: { x: x + iconLeft, y: y + iconH / 2 }
+            right: { x: x + compW, y: y + compH / 2 },
+            bottom: { x: x + compW / 2, y: y + compH },
+            left: { x: x, y: y + compH / 2 }
         };
     };
 
@@ -649,51 +708,106 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
 
         const arrowPath = `M ${ex} ${ey} L ${a1x} ${a1y} L ${a2x} ${a2y} Z`;
 
-        const color = conn.isTemp ? "#3B82F6" : "#64748B"; // slate-500
+        // Bidirectional Start Arrow (Only for Bidirectional Stream)
+        let startArrowPath = null;
+        if (!conn.isTemp && conn.config?.interaction_type === 'Bidirectional Stream') {
+            let stx = sx - cp1.x;
+            let sty = sy - cp1.y;
+            if (Math.abs(stx) < 0.1 && Math.abs(sty) < 0.1) {
+                stx = sx - cp2.x;
+                sty = sy - cp2.y;
+            }
+            const sAngle = Math.atan2(sty, stx);
+            const sa1x = sx - arrowSize * Math.cos(sAngle - Math.PI / 6);
+            const sa1y = sy - arrowSize * Math.sin(sAngle - Math.PI / 6);
+            const sa2x = sx - arrowSize * Math.cos(sAngle + Math.PI / 6);
+            const sa2y = sy - arrowSize * Math.sin(sAngle + Math.PI / 6);
+            startArrowPath = `M ${sx} ${sy} L ${sa1x} ${sa1y} L ${sa2x} ${sa2y} Z`;
+        }
+
+        const strokeColor = conn.isTemp ? "#3B82F6" : "#475569"; // slate-600
+        // Sequence Number Rendering (Middle of Bezier)
+        let seqNode = null;
+        if (!conn.isTemp && conn.config?.sequence_number) {
+            // Cubic bez evaluation at t=0.5
+            const t = 0.5;
+            const mt1 = 1 - t;
+            const midX = mt1 * mt1 * mt1 * sx + 3 * mt1 * mt1 * t * cp1.x + 3 * mt1 * t * t * cp2.x + t * t * t * ex;
+            const midY = mt1 * mt1 * mt1 * sy + 3 * mt1 * mt1 * t * cp1.y + 3 * mt1 * t * t * cp2.y + t * t * t * ey;
+
+            seqNode = (
+                <g transform={`translate(${midX}, ${midY})`}>
+                    <circle cx="0" cy="0" r="10" fill="white" stroke={strokeColor} strokeWidth="1.5" />
+                    <text x="0" y="4" textAnchor="middle" fontSize="10" fontWeight="bold" fill={strokeColor} style={{ pointerEvents: 'none' }}>
+                        {conn.config.sequence_number}
+                    </text>
+                </g>
+            );
+        }
+
+        // Calculate path length for dash animation
+        const pathLength = Math.sqrt(Math.pow(ex - sx, 2) + Math.pow(ey - sy, 2)) + curvature * 2; // Approximation
 
         return (
-            <g key={conn.id}>
+            <g key={conn.id}
+                className={`transition-all duration-300 ${!conn.isTemp ? 'animate-in fade-in duration-500 cursor-pointer group' : ''}`}
+            >
                 {/* Start Terminal Dot */}
-                <circle cx={sx} cy={sy} r="3" fill={color} opacity={conn.isTemp ? 0.6 : 1} />
+                <circle cx={sx} cy={sy} r="3" fill={strokeColor} opacity={conn.isTemp ? 0.6 : 1} />
 
                 {/* Hit Box */}
+                {/* Invisible thicker path for easier hovering/clicking */}
                 <path
                     d={pathData}
                     fill="none"
-                    stroke="rgba(0,0,0,0)" // Transparent stroke
+                    stroke="transparent"
                     strokeWidth="20"
-                    style={{ cursor: 'pointer', pointerEvents: 'stroke' }}
+                    style={{ pointerEvents: 'stroke' }}
                     onClick={(e) => {
+                        if (conn.isTemp) return;
                         e.stopPropagation();
-                        if (!conn.isTemp) {
-                            setSelectedConnectionId(conn.id);
-                            setSelectedComponentId(null); // Deselect component
-                            setConnectionPopupPos({ x: e.clientX, y: e.clientY });
-                        }
+                        setSelectedConnectionId(conn.id);
+                        setConnectionPopupPos({ x: e.clientX, y: e.clientY });
                     }}
-                >
-                    <title>Click to delete</title>
-                </path>
+                />
 
-                {/* Visible Line */}
+                {/* The visible line */}
                 <path
                     d={pathData}
                     fill="none"
-                    stroke={color}
-                    strokeWidth={conn.isTemp ? "3" : "2"}
+                    stroke={strokeColor}
+                    strokeWidth={conn.isTemp ? "2" : "2"}
                     strokeDasharray={conn.isTemp ? "5,5" : "none"}
-                    opacity={conn.isTemp ? "0.6" : "1"}
-                    style={{ pointerEvents: 'none' }}
-                    className="transition-all duration-300"
+                    className={!conn.isTemp ? "group-hover:stroke-blue-500 group-hover:stroke-[3px] transition-colors duration-300" : "animate-pulse opacity-60"}
+                    style={{ pointerEvents: 'stroke' }}
+                    onClick={(e) => {
+                        if (conn.isTemp) return;
+                        e.stopPropagation();
+                        setSelectedConnectionId(conn.id);
+                        setConnectionPopupPos({ x: e.clientX, y: e.clientY });
+                    }}
                 />
 
                 {/* Arrow Head */}
                 <path
                     d={arrowPath}
-                    fill={color}
-                    opacity={conn.isTemp ? "0.6" : "1"}
-                    style={{ pointerEvents: 'none' }}
+                    fill={strokeColor}
+                    className={!conn.isTemp ? "group-hover:fill-blue-500 transition-colors duration-300 animate-in fade-in zoom-in slide-in-from-left-2 duration-700" : "opacity-60"}
+                    style={{ pointerEvents: 'none', animationFillMode: 'both' }}
                 />
+
+                {/* Bidirectional Arrow Head */}
+                {startArrowPath && (
+                    <path
+                        d={startArrowPath}
+                        fill={strokeColor}
+                        className={!conn.isTemp ? "group-hover:fill-blue-500 transition-colors duration-300 animate-in fade-in zoom-in slide-in-from-right-2 duration-700" : "opacity-60"}
+                        style={{ pointerEvents: 'none', animationFillMode: 'both' }}
+                    />
+                )}
+
+                {/* Sequence Number Label */}
+                {seqNode}
             </g>
         );
     };
@@ -750,6 +864,36 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                     <ZoomOut size={18} />
                 </button>
                 <span className="text-sm text-gray-600">{Math.round(zoom * 100)}%</span>
+
+                <div className="h-6 w-px bg-gray-300 mx-2" />
+
+                <button
+                    onClick={() => {
+                        const rect = canvasRef.current.getBoundingClientRect();
+                        const x = (rect.width / 2 - pan.x) / zoom;
+                        const y = (rect.height / 2 - pan.y) / zoom;
+                        addComponent('bounding_box', { x, y });
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors hover:bg-gray-100 text-gray-700"
+                    title="Add Bounding Box"
+                >
+                    <Square size={16} />
+                    <span className="font-medium hidden sm:inline">Box</span>
+                </button>
+
+                <button
+                    onClick={() => {
+                        const rect = canvasRef.current.getBoundingClientRect();
+                        const x = (rect.width / 2 - pan.x) / zoom;
+                        const y = (rect.height / 2 - pan.y) / zoom;
+                        addComponent('text_note', { x, y });
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors hover:bg-gray-100 text-gray-700"
+                    title="Add Text Note"
+                >
+                    <FileText size={16} />
+                    <span className="font-medium hidden sm:inline">Note</span>
+                </button>
 
                 <div className="h-6 w-px bg-gray-300 mx-2" />
 
@@ -919,7 +1063,7 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
 
             {/* Instructions Banner */}
             <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-sm text-blue-800 pl-20"> {/* Added left padding */}
-                <strong>Controls:</strong> Click components to connect (Link mode) • Click connections to configure • Alt+Drag to pan canvas
+                <strong>Controls:</strong> Click on the component to configure it • Click components to connect (Connect mode) • Click connections to configure • Alt+Drag to pan canvas
             </div>
 
             {/* Component Library Sidebar */}
@@ -939,12 +1083,14 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
 
                 <div className="p-2 overflow-y-auto flex-1">
                     {Object.entries(
-                        Object.entries(COMPONENT_METADATA).reduce((acc, [type, meta]) => {
-                            const category = meta.category || 'Other';
-                            if (!acc[category]) acc[category] = [];
-                            acc[category].push({ type, meta });
-                            return acc;
-                        }, {})
+                        Object.entries(COMPONENT_METADATA)
+                            .filter(([type]) => type !== 'bounding_box' && type !== 'text_note')
+                            .reduce((acc, [type, meta]) => {
+                                const category = meta.category || 'Other';
+                                if (!acc[category]) acc[category] = [];
+                                acc[category].push({ type, meta });
+                                return acc;
+                            }, {})
                     ).map(([category, items]) => (
                         <div key={category} className="mb-2">
                             {isSidebarExpanded && (
@@ -1059,134 +1205,236 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                         })
                     )}
 
-                    {/* Components */}
-                    {components.map((component) => {
-                        const meta = COMPONENT_METADATA[component.type];
-                        const schema = COMPONENT_CONFIG_SCHEMA[component.type];
-                        // Correct logic for config count: "definedFields.length / totalFields"
-                        const totalFields = schema?.fields ? schema.fields.length : 0;
+                    {/* Components - Sort to render bounding boxes first (behind others) */}
+                    {[...components]
+                        .sort((a, b) => {
+                            if (a.type === 'bounding_box' && b.type !== 'bounding_box') return -1;
+                            if (a.type !== 'bounding_box' && b.type === 'bounding_box') return 1;
+                            return 0;
+                        })
+                        .map((component) => {
+                            const meta = COMPONENT_METADATA[component.type];
+                            const schema = COMPONENT_CONFIG_SCHEMA[component.type];
+                            // Correct logic for config count: "definedFields.length / totalFields"
+                            const totalFields = schema?.fields ? schema.fields.length : 0;
 
-                        const isConnectionStart = connectionStartComponentId === component.id;
-                        const failureType = activeFailures[component.id]; // 'outage' | 'latency' | undefined
+                            const isConnectionStart = connectionStartComponentId === component.id;
+                            const failureType = activeFailures[component.id]; // 'outage' | 'latency' | undefined
 
-                        return (
-                            <div
-                                key={component.id}
-                                onMouseDown={(e) => {
-                                    if (!isConnectionMode && !isSimulationMode) {
-                                        handleComponentMouseDown(e, component);
-                                    }
-                                }}
-                                onClick={(e) => {
-                                    if (isSimulationMode) {
-                                        e.stopPropagation();
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        setFailureMenuTarget({
-                                            id: component.id,
-                                            x: rect.right + 10,
-                                            y: rect.top
-                                        });
-                                    } else {
-                                        handleComponentClick(e, component.id);
-                                    }
-                                }}
-                                className={`
-                                    group absolute flex flex-col items-center justify-start transition-all duration-200 cursor-pointer select-none
-                                    ${selectedComponentId === component.id ? 'z-10' : 'z-2'}
-                                `}
-                                style={{
-                                    left: component.position.x,
-                                    top: component.position.y,
-                                    width: `${(isFullScreen ? 120 : 100) + ((component.mergedTypes || [component.type]).length > 1 ? ((component.mergedTypes || [component.type]).length - 1) * 45 : 0)}px`,
-                                    height: isFullScreen ? '90px' : '80px',
-                                    zIndex: isConnectionStart ? 50 : 2
-                                }}
-                            >
-                                {/* Wrapper for Icon + Status used for hover target */}
-                                <div className="relative">
-                                    {/* Icon Container - No Box, just Icon or Minimal Styling */}
-                                    <div
-                                        className={`
-                                            ${isFullScreen ? 'h-14' : 'h-12'} w-auto min-w-[3rem] rounded-xl flex items-center justify-center p-2 transition-all duration-200
-                                            ${selectedComponentId === component.id
-                                                ? 'bg-white ring-2 ring-blue-500 shadow-lg'
-                                                : 'bg-white/90 hover:bg-white border border-slate-200 hover:shadow-md'
+                            // Calculate custom dimensions respecting dragged size or falling back to defaults
+                            let compW = component.width || 100;
+                            let compH = component.height || (isFullScreen ? 90 : 80);
+
+                            if (component.type === 'bounding_box') {
+                                if (!component.width) {
+                                    const sizeMap = { 'Small': 300, 'Medium': 500, 'Large': 800, 'Extra Large': 1200 };
+                                    compW = sizeMap[component.config?.size || 'Medium'];
+                                }
+                                if (!component.height) {
+                                    compH = compW * 0.75;
+                                }
+                            } else if (component.type === 'text_note') {
+                                compW = component.width || 160;
+                                compH = component.height || 120;
+                            } else {
+                                compW = component.width || ((isFullScreen ? 120 : 100) + ((component.mergedTypes || [component.type]).length > 1 ? ((component.mergedTypes || [component.type]).length - 1) * 45 : 0));
+                            }
+
+                            // Determine z-index dynamically
+                            let zIndexBase = 2;
+                            if (component.type === 'bounding_box') zIndexBase = 1;
+                            if (selectedComponentId === component.id) zIndexBase = 10;
+                            if (isConnectionStart) zIndexBase = 50;
+
+                            return (
+                                <div
+                                    key={component.id}
+                                    onMouseDown={(e) => {
+                                        if (!isConnectionMode && !isSimulationMode) {
+                                            // Only handle drag if we click the wrapper or header, NOT the background
+                                            if (component.type === 'bounding_box') {
+                                                // Event is naturally stopped by pointer-events mapping above
+                                                handleComponentMouseDown(e, component);
+                                            } else {
+                                                handleComponentMouseDown(e, component);
                                             }
-                                            ${activeFailures[component.id] === 'outage'
-                                                ? 'bg-red-50 ring-2 ring-red-400'
-                                                : activeFailures[component.id] === 'latency'
-                                                    ? 'bg-amber-50 ring-2 ring-amber-400'
-                                                    : ''
-                                            }
-                                        `}
-                                    >
-                                        {(() => {
-                                            const typesToRender = component.mergedTypes || [component.type];
-
-                                            // Dynamic color based on failure status
-                                            const getIconColor = (type) => activeFailures[component.id] === 'outage'
-                                                ? '#EF4444'
-                                                : activeFailures[component.id] === 'latency'
-                                                    ? '#F59E0B'
-                                                    : COMPONENT_METADATA[type]?.color || '#64748B';
-
-                                            return (
-                                                <div className="flex items-center gap-1.5 px-1">
-                                                    {typesToRender.map((type, idx) => {
-                                                        const IconComp = getIconForType(type);
-                                                        return (
-                                                            <React.Fragment key={`${component.id}-${type}-${idx}`}>
-                                                                {idx > 0 && <span className="text-slate-400 font-bold text-xs">+</span>}
-                                                                <IconComp size={isFullScreen ? 28 : 20} color={getIconColor(type)} />
-                                                            </React.Fragment>
-                                                        );
-                                                    })}
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-
-                                    {/* Delete Button (Hover) - Top Right of Icon */}
-                                    <button
-                                        onClick={(e) => {
+                                        }
+                                    }}
+                                    onClick={(e) => {
+                                        if (isSimulationMode) {
                                             e.stopPropagation();
-                                            removeComponent(component.id);
-                                        }}
-                                        className="absolute -top-2 -right-2 bg-white text-gray-400 hover:text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-gray-100 z-20"
-                                        title="Delete Component"
-                                    >
-                                        <X size={12} />
-                                    </button>
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            setFailureMenuTarget({
+                                                id: component.id,
+                                                x: rect.right + 10,
+                                                y: rect.top
+                                            });
+                                        } else {
+                                            handleComponentClick(e, component.id);
+                                        }
+                                    }}
+                                    onDoubleClick={(e) => {
+                                        e.stopPropagation();
+                                        if (component.type === 'text_note') {
+                                            setEditingNoteId(component.id);
+                                        }
+                                    }}
+                                    className={`
+                                    group absolute flex flex-col items-center justify-start transition-all duration-300 select-none animate-in zoom-in-75 fade-in duration-300
+                                    ${component.type === 'bounding_box' ? 'pointer-events-auto' : ''}
+                                    ${component.type !== 'text_note' ? 'cursor-pointer' : ''}
+                                `}
+                                    style={{
+                                        left: component.position.x,
+                                        top: component.position.y,
+                                        width: component.type === 'text_note' ? 'max-content' : `${compW}px`,
+                                        maxWidth: component.type === 'text_note' ? '300px' : undefined,
+                                        height: component.type === 'text_note' ? 'auto' : `${compH}px`,
+                                        minWidth: component.type === 'text_note' ? '160px' : undefined,
+                                        zIndex: zIndexBase
+                                    }}
+                                >
+                                    {/* Wrapper for Icon + Status used for hover target */}
+                                    <div className={`relative w-full  h-full transition-transform duration-300 ${['bounding_box', 'text_note'].includes(component.type) ? '' : 'group-hover:-translate-y-0.5'}`}>
+                                        {component.type === 'bounding_box' ? (
+                                            <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-start p-3 bg-transparent pointer-events-none relative group-hover:border-gray-400 transition-colors">
+                                                {/* Header area - clickable for dragging */}
+                                                <div className="text-gray-500 font-semibold mb-1 flex items-center gap-2 text-xs uppercase tracking-wider pointer-events-auto cursor-move bg-white/80 px-2 py-1 rounded backdrop-blur-sm -mt-6 -ml-2 select-none">
+                                                    {(() => { const IconComp = getIconForType(component.type); return <IconComp size={14} /> })()}
+                                                    {component.config?.label || meta.label}
+                                                </div>
 
-                                    {/* Connect/Settings Overlay (On Hover) */}
-                                    {/* Removed as per user request */}
-                                </div>
+                                                {/* Resize Handle */}
+                                                <div
+                                                    className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize flex items-end justify-end p-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"
+                                                    onMouseDown={(e) => handleResizeMouseDown(e, component)}
+                                                >
+                                                    <div className="w-3 h-3 border-r-2 border-b-2 border-gray-400 rounded-sm"></div>
+                                                </div>
+                                            </div>
+                                        ) : component.type === 'text_note' ? (
+                                            <div
+                                                className={`w-full h-full bg-yellow-100 shadow-md p-3 text-gray-800 rounded-lg flex flex-col items-start border border-yellow-200/50 transition-shadow ${editingNoteId === component.id ? 'ring-2 ring-blue-400 shadow-lg' : 'group-hover:shadow-lg'}`}
+                                                style={{ pointerEvents: 'auto', minWidth: '160px', minHeight: '60px' }}
+                                            >
+                                                <div
+                                                    className={`w-full h-full whitespace-pre-wrap text-[12px] font-medium leading-relaxed font-sans text-gray-800 outline-none ${editingNoteId === component.id ? 'cursor-text' : 'cursor-move'}`}
+                                                    contentEditable={editingNoteId === component.id}
+                                                    suppressContentEditableWarning={true}
+                                                    onBlur={(e) => {
+                                                        const newText = e.target.innerText;
+                                                        setEditingNoteId(null);
+                                                        setComponents(components.map(c =>
+                                                            c.id === component.id ? { ...c, config: { ...c.config, text: newText } } : c
+                                                        ));
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onMouseDown={(e) => {
+                                                        if (editingNoteId === component.id) {
+                                                            e.stopPropagation(); // allow text selection when editing
+                                                        }
+                                                        // let bubble up when not editing so we can drag the note!
+                                                    }}
+                                                    ref={(el) => {
+                                                        if (el && editingNoteId === component.id && document.activeElement !== el) {
+                                                            el.focus();
+                                                            try {
+                                                                const selection = window.getSelection();
+                                                                const range = document.createRange();
+                                                                range.selectNodeContents(el);
+                                                                range.collapse(false);
+                                                                selection.removeAllRanges();
+                                                                selection.addRange(range);
+                                                            } catch (err) { }
+                                                        }
+                                                    }}
+                                                >
+                                                    {component.config?.text || (editingNoteId === component.id ? '' : "Double click to edit...")}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className={`
+                                                ${isFullScreen ? 'h-14' : 'h-12'} w-auto min-w-[3rem] mx-auto rounded-2xl flex items-center justify-center p-2.5 transition-all duration-300 shadow-sm border border-slate-200/80 bg-white/95 backdrop-blur-sm
+                                                ${selectedComponentId === component.id
+                                                        ? 'ring-2 ring-blue-500 shadow-xl scale-105'
+                                                        : 'hover:shadow-xl'
+                                                    }
+                                                ${activeFailures[component.id] === 'outage'
+                                                        ? 'bg-red-50 ring-2 ring-red-400'
+                                                        : activeFailures[component.id] === 'latency'
+                                                            ? 'bg-amber-50 ring-2 ring-amber-400'
+                                                            : ''
+                                                    }
+                                            `}
+                                            >
+                                                {(() => {
+                                                    const typesToRender = component.mergedTypes || [component.type];
 
-                                {/* Label - Clean Text Below */}
-                                <div className="mt-2 text-center max-w-full px-1">
-                                    <div className="text-xs font-bold text-slate-700 leading-tight truncate px-1.5 py-0.5 rounded bg-white/50 backdrop-blur-[1px]">
-                                        {component.config?.label || meta.label}
+                                                    // Dynamic color based on failure status
+                                                    const getIconColor = (type) => activeFailures[component.id] === 'outage'
+                                                        ? '#EF4444'
+                                                        : activeFailures[component.id] === 'latency'
+                                                            ? '#F59E0B'
+                                                            : COMPONENT_METADATA[type]?.color || '#64748B';
+
+                                                    return (
+                                                        <div className="flex items-center gap-1.5 px-1">
+                                                            {typesToRender.map((type, idx) => {
+                                                                const IconComp = getIconForType(type);
+                                                                return (
+                                                                    <React.Fragment key={`${component.id}-${type}-${idx}`}>
+                                                                        {idx > 0 && <span className="text-slate-400 font-bold text-xs">+</span>}
+                                                                        <IconComp size={isFullScreen ? 28 : 20} color={getIconColor(type)} />
+                                                                    </React.Fragment>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        )}
+
+                                        {/* Delete Button (Hover) - Top Right */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeComponent(component.id);
+                                            }}
+                                            className="absolute -top-2 -right-2 bg-white text-gray-400 hover:text-red-500 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-gray-100 z-20"
+                                            title="Delete Component"
+                                        >
+                                            <X size={12} />
+                                        </button>
                                     </div>
 
-                                    {/* Optional Subtext */}
-                                    {component.config?.st_type && (
-                                        <div className="text-[9px] text-slate-500 capitalize truncate mt-0.5">
-                                            {component.config.st_type}
+                                    {/* Label - Clean Text Below (Only for Standard Components) */}
+                                    {component.type !== 'bounding_box' && component.type !== 'text_note' && (
+                                        <div className="mt-2 text-center max-w-full px-1">
+                                            <div className="text-xs font-bold text-slate-700 leading-tight truncate px-1.5 py-0.5 rounded bg-white/50 backdrop-blur-[1px]">
+                                                {component.config?.label || meta.label}
+                                            </div>
+
+                                            {/* Optional Subtext */}
+                                            {component.config?.st_type && (
+                                                <div className="text-[9px] text-slate-500 capitalize truncate mt-0.5">
+                                                    {component.config.st_type}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Failure Indicator Badge */}
+                                    {failureType && (
+                                        <div className={`absolute -top-3 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm flex items-center gap-1 ${failureType === 'outage' ? 'bg-red-500' : 'bg-amber-500'
+                                            }`}>
+                                            <AlertTriangle size={10} />
+                                            {failureType.toUpperCase()}
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Failure Indicator Badge */}
-                                {failureType && (
-                                    <div className={`absolute -top-3 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm flex items-center gap-1 ${failureType === 'outage' ? 'bg-red-500' : 'bg-amber-500'
-                                        }`}>
-                                        <AlertTriangle size={10} />
-                                        {failureType.toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
                 </div >
             </div >
 
@@ -1196,8 +1444,8 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center text-gray-400">
                             <p className="text-lg font-semibold mb-2">Start Building Your System Design</p>
-                            <p className="text-sm">Click "Add Component" to get started</p>
-                            <p className="text-xs mt-4 text-gray-500">Drag blue handles to connect • Click connections to delete</p>
+                            <p className="text-sm">Drag the components from the sidebar to get started</p>
+                            <p className="text-xs mt-4 text-gray-500">Toggle connect mode to connect the components • Click on components to configure • Click connections to configure connection</p>
                         </div>
                     </div>
                 )
@@ -1300,18 +1548,23 @@ const SystemDesignCanvas = ({ onDesignChange, onComponentSelect, selectedCompone
                 )
             }
 
-            {/* Conditional Rendering of Config Panel */}
-            {
-                selectedComponentId && (
-                    <ComponentConfigPanel
-                        component={components.find(c => c.id === selectedComponentId)}
-                        onSave={handleComponentSave}
-                        onClose={() => setSelectedComponentId(null)}
-                    />
-                )
-            }
+            {/* Component Config Panel */}
+            {selectedComponentId && !components.find(c => c.id === selectedComponentId)?.type?.includes('text_note') && (
+                <ComponentConfigPanel
+                    component={components.find(c => c.id === selectedComponentId)}
+                    position={componentPopupPos}
+                    onSave={(updatedConfig) => {
+                        updateComponentConfig(selectedComponentId, updatedConfig);
+                        setSelectedComponentId(null);
+                        setComponentPopupPos(null);
+                    }}
+                    onClose={() => {
+                        setSelectedComponentId(null);
+                        setComponentPopupPos(null);
+                    }}
+                />
+            )}
         </div >
     );
 };
-
 export default SystemDesignCanvas;

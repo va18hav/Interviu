@@ -235,14 +235,14 @@ const InterviewReport = () => {
                                 <FileText className="w-4 h-4 text-indigo-600" />
                                 <h1 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900">Technical Dossier</h1>
                             </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {sessionId || 'Internal-System-ID'}</p>
+                            {/* <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {sessionId || 'Internal-System-ID'}</p> */}
                         </div>
                     </div>
 
                     <div className="flex gap-4">
-                        <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest">
+                        {/* <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest">
                             <Share2 className="w-3.5 h-3.5" /> Share
-                        </button>
+                        </button> */}
                         <button className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-slate-900 rounded-xl hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase tracking-widest">
                             <Download className="w-3.5 h-3.5" /> Export PDF
                         </button>

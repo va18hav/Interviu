@@ -407,6 +407,24 @@ const DistributedLockIcon = (props) => (
     </IconBase>
 );
 
+// --- Annotations & Grouping ---
+
+const BoundingBoxIcon = (props) => (
+    <IconBase {...props} viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" fill="none" opacity="0.8" />
+        <path d="M7 3V21M17 3V21M3 7H21M3 17H21" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+    </IconBase>
+);
+
+const TextNoteIcon = (props) => (
+    <IconBase {...props} viewBox="0 0 24 24">
+        <path d="M4 4v16h11l5-5V4H4z" fill="currentColor" opacity="0.2" />
+        <path d="M4 4v16h11l5-5V4H4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+        <path d="M15 20v-5h5" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="M8 9h8M8 13h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </IconBase>
+);
+
 // --- Mapping ---
 
 export const getIconForType = (type) => {
@@ -479,6 +497,10 @@ export const getIconForType = (type) => {
         case COMPONENT_TYPES.FIREWALL: return FirewallIcon;
         case COMPONENT_TYPES.SERVERLESS: return ServerlessIcon;
         case COMPONENT_TYPES.DISTRIBUTED_LOCK: return DistributedLockIcon;
+
+        // Annotations
+        case COMPONENT_TYPES.BOUNDING_BOX: return BoundingBoxIcon;
+        case COMPONENT_TYPES.TEXT_NOTE: return TextNoteIcon;
 
         default: return ServiceIcon;
     }

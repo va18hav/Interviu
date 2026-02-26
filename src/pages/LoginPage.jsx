@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom";
-import { Sparkles, User, Mail, ArrowRight, Shield, Zap, Award, Lock, CheckCircle2, AlertCircle, ChevronRight } from 'lucide-react';
+import { Sparkles, User, Mail, ArrowRight, Shield, Zap, Award, Lock, CheckCircle2, AlertCircle, ChevronRight, AlertTriangle, X } from 'lucide-react';
 import logo from "../assets/images/logo.png"
 import { sanitizeInput } from "../utils/sanitize";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +10,7 @@ const LoginPage = () => {
     const navigate = useNavigate();
     const [isSignUp, setIsSignUp] = React.useState(false); // Toggle between Login and Signup
     const [loading, setLoading] = React.useState(false);
+    const [showJioAlert, setShowJioAlert] = React.useState(true); // Jio Alert State
 
     const [formData, setFormData] = React.useState({
         first_name: "",
@@ -235,6 +236,34 @@ const LoginPage = () => {
             <div className="w-full max-w-[480px] relative z-10 auth-card">
                 <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] overflow-hidden transition-all duration-500 hover:shadow-[0_48px_80px_-12px_rgba(0,0,0,0.12)]">
                     <div className="p-8 md:p-10">
+                        {/* Jio Alert Banner */}
+                        <AnimatePresence>
+                            {showJioAlert && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                    animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+                                    exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
+                                    className="bg-amber-50 border border-amber-200 rounded-2xl p-4 relative"
+                                >
+                                    <button
+                                        onClick={() => setShowJioAlert(false)}
+                                        className="absolute top-3 right-3 text-amber-500 hover:text-amber-700 hover:bg-amber-100 p-1 rounded-full transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                    <div className="flex gap-3">
+                                        <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                                        <div className="pr-4">
+                                            <h3 className="text-amber-800 font-bold text-xs uppercase tracking-widest mb-1">Notice for Jio Users</h3>
+                                            <p className="text-amber-700/80 text-[11px] leading-relaxed font-medium">
+                                                We are currently experiencing connection issues with the Jio network in India. If you are unable to log in, please try switching to a different network provider or WiFi. We apologize for the inconvenience.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         {/* Branding */}
                         <div className="flex flex-col items-center mb-10">
                             <motion.div

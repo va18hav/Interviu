@@ -61,6 +61,8 @@ const App = () => {
           <Route path="/debug-round" element={<DebugRound />} />
           <Route path="/behavioral-round" element={<BehavioralRound />} />
           <Route path="/report" element={<InterviewReport />} />
+          {/* Test Pages */}
+          <Route path="/test-design-ui" element={<TestDesignUI />} />
         </Route>
       </Routes>
     </BrowserRouter>

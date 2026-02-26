@@ -69,7 +69,11 @@ export const COMPONENT_TYPES = {
     DNS: 'dns',
     FIREWALL: 'firewall',
     SERVERLESS: 'serverless',
-    DISTRIBUTED_LOCK: 'distributed_lock'
+    DISTRIBUTED_LOCK: 'distributed_lock',
+
+    // Annotations & Grouping
+    BOUNDING_BOX: 'bounding_box',
+    TEXT_NOTE: 'text_note'
 };
 
 export const COMPONENT_METADATA = {
@@ -395,6 +399,20 @@ export const COMPONENT_METADATA = {
         icon: '',
         color: '#64748B', // Slate 500
         category: 'Reliability'
+    },
+
+    // --- Annotations & Grouping ---
+    [COMPONENT_TYPES.BOUNDING_BOX]: {
+        label: 'Bounding Box / Group',
+        icon: '',
+        color: '#9CA3AF', // Gray 400
+        category: 'Logical'
+    },
+    [COMPONENT_TYPES.TEXT_NOTE]: {
+        label: 'Text Note',
+        icon: '',
+        color: '#FDE047', // Yellow 300
+        category: 'Logical'
     }
 };
 
@@ -766,6 +784,20 @@ export const COMPONENT_CONFIG_SCHEMA = {
             { key: 'backend', label: 'Backing Store', type: 'select', options: ['ZooKeeper', 'Etcd', 'Redis (Redlock)', 'Consul'] },
             { key: 'lease', label: 'Lease Time', type: 'text', placeholder: 'e.g., 10s' }
         ], false)
+    },
+
+    // --- Annotations & Grouping ---
+    [COMPONENT_TYPES.BOUNDING_BOX]: {
+        fields: [
+            { key: 'group_type', label: 'Group Type', type: 'select', options: ['VPC / Network', 'Region / Zone', 'Kubernetes Cluster', 'Logical Boundary'], group: 'Core Configuration' },
+            { key: 'subnet_type', label: 'Network Access', type: 'select', options: ['Public', 'Private', 'Isolated', 'N/A'], group: 'Core Configuration' },
+            { key: 'size', label: 'Box Size', type: 'select', options: ['Small', 'Medium', 'Large', 'Extra Large'], group: 'Core Configuration' }
+        ]
+    },
+    [COMPONENT_TYPES.TEXT_NOTE]: {
+        fields: [
+            { key: 'content', label: 'Note Text', type: 'textarea', placeholder: 'Enter assumptions, math, or notes here...', group: 'Core Configuration' }
+        ]
     }
 };
 
@@ -795,6 +827,13 @@ export const CONNECTION_CONFIG_SCHEMA = {
             label: 'Resilience Strategy',
             type: 'select',
             options: ['None', 'Retries Only', 'Circuit Breaker', 'Retries + Circuit Breaker', 'Dead Letter Queue'],
+            group: 'Core Configuration'
+        },
+        {
+            key: 'sequence_number',
+            label: 'Sequence Step (1, 2, 3...)',
+            type: 'text',
+            placeholder: 'e.g., 1',
             group: 'Core Configuration'
         }
     ]

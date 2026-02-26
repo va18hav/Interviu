@@ -607,15 +607,86 @@ const DesignRound = () => {
     const generateDesignContext = (components, connections) => {
         if (!components || components.length === 0) return "Empty Canvas";
 
-        // Summary of components
-        const componentList = components.map(c => {
-            const label = c.config?.label || c.type;
-            const type = c.type;
+        const coreComponents = [];
+        const boundingBoxes = [];
+        const textNotes = [];
+
+        // 1. Separate components
+        components.forEach(c => {
+            if (c.type === 'bounding_box') boundingBoxes.push(c);
+            else if (c.type === 'text_note') textNotes.push(c);
+            else coreComponents.push(c);
+        });
+
+        const getCompLabel = (c) => c?.config?.label || c?.type || "Unknown";
+
+        // 2. Attach Text Notes to Nearest Component
+        const noteAttachments = {}; // compId -> list of notes
+        textNotes.forEach(note => {
+            const nx = note.position?.x || 0;
+            const ny = note.position?.y || 0;
+
+            let closestComp = null;
+            let minDistance = Infinity;
+
+            coreComponents.forEach(comp => {
+                const cx = comp.position?.x || 0;
+                const cy = comp.position?.y || 0;
+                // Simple Euclidean distance to center-ish (assuming components are roughly 100x80)
+                const dist = Math.sqrt(Math.pow((nx + 80) - (cx + 50), 2) + Math.pow((ny + 60) - (cy + 40), 2));
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestComp = comp;
+                }
+            });
+
+            if (closestComp && minDistance < 400) { // Only attach if reasonably close (< 400px)
+                if (!noteAttachments[closestComp.id]) noteAttachments[closestComp.id] = [];
+                noteAttachments[closestComp.id].push(note.config?.text || "Empty Note");
+            }
+        });
+
+        // 3. Find Bounding Box Memberships (Spatial Containment)
+        const boxGroups = boundingBoxes.map(box => {
+            let bx = box.position?.x || 0;
+            let by = box.position?.y || 0;
+
+            // Replicate default dimensions logic
+            let bw = box.width;
+            let bh = box.height;
+            if (!bw) {
+                const sizeMap = { 'Small': 300, 'Medium': 500, 'Large': 800, 'Extra Large': 1200 };
+                bw = sizeMap[box.config?.size || 'Medium'];
+            }
+            if (!bh) bh = bw * 0.75;
+
+            const containedComps = coreComponents.filter(comp => {
+                const cx = comp.position?.x || 0;
+                const cy = comp.position?.y || 0;
+                // Check if component top-left is inside the box
+                return cx >= bx && cx <= bx + bw && cy >= by && cy <= by + bh;
+            });
+
+            return {
+                label: box.config?.label || 'Unnamed Area',
+                contained: containedComps.map(getCompLabel)
+            };
+        });
+
+        // 4. Summary of components
+        const componentList = coreComponents.map(c => {
+            const label = getCompLabel(c);
+            const notes = noteAttachments[c.id] ? ` [Attached Notes: ${noteAttachments[c.id].map(n => `"${n}"`).join(', ')}]` : '';
             const config = c.config ? JSON.stringify(c.config) : '';
-            return `- ${label} (${type}) ${config ? `Config: ${config}` : ''}`;
+            return `- ${label} (${c.type})${notes} ${config ? `Config: ${config}` : ''}`;
         }).join('\n');
 
-        // Summary of connections
+        // 5. Summary of bounding boxes (Regions)
+        const regionList = boxGroups.length > 0
+            ? boxGroups.map(bg => `- Region [${bg.label}] contains: ${bg.contained.length > 0 ? bg.contained.join(', ') : 'Empty'}`).join('\n')
+            : 'No grouping regions defined.';
+
+        // 6. Summary of connections
         const connectionList = connections.map(c => {
             const sourceId = c.source || c.from;
             const targetId = c.target || c.to;
@@ -623,13 +694,19 @@ const DesignRound = () => {
             const fromComp = components.find(x => x.id === sourceId);
             const toComp = components.find(x => x.id === targetId);
 
-            const from = fromComp?.config?.label || fromComp?.type || "Unknown";
-            const to = toComp?.config?.label || toComp?.type || "Unknown";
-
-            return `- ${from} -> ${to} (${c.protocol || 'Default'})`;
+            return `- ${getCompLabel(fromComp)} -> ${getCompLabel(toComp)} (${c.config?.protocol || 'Default'})`;
         }).join('\n');
 
-        return `Current Design State:\nComponents:\n${componentList}\n\nFlows:\n${connectionList}`;
+        return `Current Design State:
+
+# Components:
+${componentList}
+
+# Architectural Regions (Bounding Boxes):
+${regionList}
+
+# Flows (Connections):
+${connectionList}`;
     };
 
     // Phase 2 Submit Handler

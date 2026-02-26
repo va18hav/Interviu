@@ -20,14 +20,54 @@ const buildGraph = (components, connections) => {
     connections.forEach(conn => {
         // Only valid connections where both ends exist
         if (adj[conn.from] && nodeMap[conn.to]) {
-            adj[conn.from].push(conn.to);
+            adj[conn.from].push({ to: conn.to, seq: parseInt(conn.config?.sequence_number) || 999 });
         }
         if (revAdj[conn.to] && nodeMap[conn.from]) {
-            revAdj[conn.to].push(conn.from);
+            revAdj[conn.to].push({ from: conn.from, seq: parseInt(conn.config?.sequence_number) || 999 });
         }
     });
 
+    // Sort adjacencies by sequence number to ensure deterministic, ordered flows
+    Object.keys(adj).forEach(nodeId => {
+        adj[nodeId].sort((a, b) => a.seq - b.seq);
+    });
+
     return { adj, revAdj, nodeMap };
+};
+
+// Geometric containment for Bounding Boxes
+const detectContainment = (components) => {
+    const boxes = components.filter(c => c.type === 'bounding_box');
+    const containment = {}; // boxId -> array of contained component labels
+
+    boxes.forEach(box => {
+        const bx = box.position.x;
+        const by = box.position.y;
+
+        const sizeMap = { 'Small': 300, 'Medium': 500, 'Large': 800, 'Extra Large': 1200 };
+        const bWidth = sizeMap[box.config?.size || 'Medium'];
+        const bHeight = bWidth * 0.75;
+
+        containment[box.id] = {
+            label: box.config?.label || 'Unnamed Group',
+            type: box.config?.group_type || 'Logical Boundary',
+            children: []
+        };
+
+        components.forEach(c => {
+            if (c.id === box.id || c.type === 'bounding_box') return;
+
+            const cx = c.position.x;
+            const cy = c.position.y;
+
+            // Simple point-in-rect check for the component's top-left origin
+            if (cx >= bx && cx <= bx + bWidth && cy >= by && cy <= by + bHeight) {
+                containment[box.id].children.push(c.config?.label || COMPONENT_METADATA[c.type]?.label || c.type);
+            }
+        });
+    });
+
+    return containment;
 };
 
 // Identify critical paths starting from Clients
@@ -48,19 +88,26 @@ const findUserFlows = (graph, components) => {
         }
 
         let extended = false;
-        graph.adj[nodeId].forEach(neighborId => {
+        // Neighbors are already sorted by sequence number in buildGraph
+        graph.adj[nodeId].forEach(edge => {
+            const neighborId = edge.to;
+            const seqLabel = edge.seq !== 999 ? `(#${edge.seq})` : '';
+
             if (!visited.has(neighborId)) {
                 extended = true;
                 visited.add(neighborId);
-                dfs(neighborId, newPath, visited);
+                // Append the sequence number to the path label if it exists
+                const pathWithSeq = [...path, `${label} ${seqLabel}`.trim()];
+                dfs(neighborId, pathWithSeq, visited);
                 visited.delete(neighborId);
             } else {
-                // Cycle detected - add the closing node to show the loop
+                // Cycle detected
+                const pathWithSeq = [...path, `${label} ${seqLabel}`.trim()];
                 const neighborNode = graph.nodeMap[neighborId];
                 const neighborLabel = COMPONENT_METADATA[neighborNode.type]?.label || neighborNode.type;
-                const cyclePath = [...newPath, neighborLabel];
+                const cyclePath = [...pathWithSeq, `${neighborLabel} (Cycle)`];
                 flows.push(cyclePath.join(' -> '));
-                extended = true; // Treated as extended effectively
+                extended = true;
             }
         });
 
@@ -136,16 +183,36 @@ export const generateArchitectureSummary = (components, connections) => {
         summary += `  - ${cat}: ${count}\n`;
     });
 
-    // 2. Key Flows
+    // 2. Key Flows (Ordered by sequence if provided)
     if (flows.length > 0) {
         summary += `- Detected User Flows:\n`;
-        flows.slice(0, 3).forEach(f => summary += `  - ${f}\n`); // Limit to top 3
-        if (flows.length > 3) summary += `  - ...and ${flows.length - 3} more paths.\n`;
+        flows.slice(0, 5).forEach(f => summary += `  - ${f}\n`); // Limit to top 5
+        if (flows.length > 5) summary += `  - ...and ${flows.length - 5} more paths.\n`;
     } else {
         summary += `- No complete user flows detected (Connecting clients to services).\n`;
     }
 
-    // 3. Reliability Analysis
+    // 3. Logical Groupings
+    const containment = detectContainment(components);
+    const validGroups = Object.values(containment).filter(g => g.children.length > 0);
+    if (validGroups.length > 0) {
+        summary += `- Logical Boundaries / Networks:\n`;
+        validGroups.forEach(g => {
+            summary += `  - [${g.type}] ${g.label} contains: ${g.children.join(', ')}\n`;
+        });
+    }
+
+    // 4. Text Notes/Assumptions
+    const notes = components.filter(c => c.type === 'text_note');
+    if (notes.length > 0) {
+        summary += `- Candidate Notes & Assumptions:\n`;
+        notes.forEach((n, idx) => {
+            const content = n.config?.content || "Empty Note";
+            summary += `  - Note ${idx + 1}: "${content.substring(0, 100).replace(/\n/g, ' ')}${content.length > 100 ? '...' : ''}"\n`;
+        });
+    }
+
+    // 5. Reliability Analysis
     if (spofs.length > 0) {
         summary += `- Reliability Risks (Potential SPOFs): ${spofs.join(', ')}.\n`;
     } else {
