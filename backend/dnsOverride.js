@@ -15,13 +15,6 @@ const resolver = new dns.promises.Resolver();
 resolver.setServers(['8.8.8.8', '1.1.1.1']); // Google, Cloudflare
 
 const originalDnsLookup = dns.lookup;
-const originalDnsPromisesLookup = dns.promises.lookup;
-
-// Ensure globalAgent options object exists
-if (!https.globalAgent.options) {
-    https.globalAgent.options = {};
-}
-const originalAgentLookup = https.globalAgent.options.lookup || originalDnsLookup;
 
 function customLookup(hostname, options, callback) {
     if (typeof options === 'function') {
@@ -52,7 +45,7 @@ function customLookup(hostname, options, callback) {
     }
 }
 
-// 1. Monkey-patch global dns.lookup (Intercepts Undici/Node 18+ native fetch in many cases)
+// 1. Monkey-patch global dns.lookup (Intercepts legacy HTTP agents)
 dns.lookup = customLookup;
 
 // 2. Monkey-patch dns.promises.lookup
@@ -61,7 +54,6 @@ dns.promises.lookup = function (hostname, options) {
         customLookup(hostname, options || {}, (err, address, family) => {
             if (err) return reject(err);
             if (options && options.all) {
-                // When 'all' is true, address is already the formatted array
                 resolve(address);
             } else {
                 resolve({ address, family });
@@ -71,6 +63,22 @@ dns.promises.lookup = function (hostname, options) {
 };
 
 // 3. Monkey-patch https.globalAgent just in case older libraries/polyfills use it
+if (!https.globalAgent.options) https.globalAgent.options = {};
 https.globalAgent.options.lookup = customLookup;
+
+// 4. Undici (Native Fetch in Node 18+) Patch
+// Native global.fetch ignores globalAgent and dns.lookup globally if not set BEFORE its initialization.
+// Supabase-js uses native fetch. We dynamically import undici to set the global dispatcher.
+import('undici').then(({ Agent, setGlobalDispatcher }) => {
+    const customAgent = new Agent({
+        connect: {
+            lookup: customLookup
+        }
+    });
+    setGlobalDispatcher(customAgent);
+    console.log('[DNS Override] Patched Undici global fetch dispatcher for *.supabase.co');
+}).catch(err => {
+    console.error('[DNS Override] Could not patch native fetch (undici not found):', err.message);
+});
 
 console.log('[DNS Override] Patched dns.lookup and https.globalAgent for *.supabase.co to bypass ISP blocks');
