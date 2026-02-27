@@ -307,7 +307,10 @@ const InterviewDashboard = () => {
                             state: {
                               reportData: interview.report_data,
                               role: interview.job_role,
-                              type: interview.title,
+                              title: interview.title,
+                              type: interview.type || 'custom',
+                              company: interview.company,
+                              duration: interview.duration_mins,
                               isPastInterview: true,
                               completedAt: interview.completed_at,
                             }

@@ -240,7 +240,10 @@ const PreviousInterviews = () => {
                                             state: {
                                                 reportData: interview.report_data,
                                                 role: interview.category === 'curated' ? interview.type?.toUpperCase() : interview.job_role,
-                                                type: interview.displayTitle,
+                                                title: interview.displayTitle,
+                                                type: interview.category === 'curated' ? interview.type : 'custom',
+                                                company: interview.company,
+                                                duration: interview.duration_mins,
                                                 isPastInterview: true,
                                                 completedAt: interview.completed_at,
                                             }

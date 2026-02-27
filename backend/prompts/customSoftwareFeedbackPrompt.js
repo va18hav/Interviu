@@ -136,8 +136,16 @@ FIELD SPECIFICATIONS
 **verdict.signal:**
 Must be one of: "Strong Hire", "Hire", "Lean Hire", "Lean No Hire", "No Hire", "Strong No Hire"
 
+Decision tree (MANDATORY mapping):
+- Strong Hire: CONFIDENCE 9-10/10. Exceeds level expectations across all dimensions, zero critical gaps, multiple promotion signals.
+- Hire: CONFIDENCE 7-8/10. Meets level expectations solidly, minor coachable gaps, no risk flags.
+- Lean Hire: CONFIDENCE 6-7/10. Meets level with notable gaps, 1-2 medium risk flags, needs targeted coaching.
+- Lean No Hire: CONFIDENCE 4-5/10. Below level in 1-2 critical areas, 2-3 medium risk flags OR 1 high risk flag.
+- No Hire: CONFIDENCE 2-3/10. Below level across multiple dimensions, multiple high risk flags.
+- Strong No Hire: CONFIDENCE 1/10 ONLY. Far below level, rejection patterns clearly observed.
+
 **verdict.confidence:**
-Number between 1-10. How confident are you in this verdict given the evidence?
+Number between 1-10. This MUST strictly match the signal chosen above (e.g., if verdict is "Strong No Hire", value MUST be 1). This is used for UI indicators, not YOUR internal confidence level.
 
 **verdict.level:**
 Must be one of: "Above Level", "At Level", "Below Level"

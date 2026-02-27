@@ -10,6 +10,7 @@ import PopularInterviewsPage from "./pages/PopularInterviewsPage"
 import InterviewDetails from "./pages/InterviewDetails"
 import LandingPage from "./pages/LandingPage"
 import ProtectedRoute from "./components/ProtectedRoute"
+import SessionRouteGuard from "./components/SessionRouteGuard"
 import GlobalFeedbackModal from "./components/GlobalFeedbackModal"
 import Maintenance from "./pages/Maintenance"
 import './App.css'
@@ -23,9 +24,6 @@ import CodingRound from "./pages/CodingRound"
 import DebugRound from "./pages/DebugRound"
 import BehavioralRound from "./pages/BehavioralRound"
 import InterviewReport from "./pages/InterviewReport"
-
-import TestDesignUI from "./pages/TestDesignUI"
-import InstagramPost1 from "./pages/InstagramPost1"
 
 
 // Test Pages — removed from production routing
@@ -54,15 +52,15 @@ const App = () => {
           <Route path="/profile" element={<ProfileSettings />} />
           <Route path="/credits" element={<CreditsPage />} />
           <Route path="/onboarding" element={<Onboarding />} />
-
-          {/* Interview Rounds */}
-          <Route path="/design-round" element={<DesignRound />} />
-          <Route path="/coding-round" element={<CodingRound />} />
-          <Route path="/debug-round" element={<DebugRound />} />
-          <Route path="/behavioral-round" element={<BehavioralRound />} />
           <Route path="/report" element={<InterviewReport />} />
-          {/* Test Pages */}
-          <Route path="/test-design-ui" element={<TestDesignUI />} />
+
+          {/* Interview Rounds - Protected by Session State */}
+          <Route element={<SessionRouteGuard requiredFields={['role']} />}>
+            <Route path="/design-round" element={<DesignRound />} />
+            <Route path="/coding-round" element={<CodingRound />} />
+            <Route path="/debug-round" element={<DebugRound />} />
+            <Route path="/behavioral-round" element={<BehavioralRound />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

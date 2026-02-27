@@ -237,16 +237,16 @@ FIELD SPECIFICATIONS
 **verdict.signal:**
 Must be one of: "Strong Hire", "Hire", "Lean Hire", "Lean No Hire", "No Hire", "Strong No Hire"
 
-Decision tree for DevOps/SRE roles:
-- Strong Hire (9-10/10 confidence): Demonstrates deep operational instinct, proactively identifies failure modes, thinks in SLOs/error budgets, shows production empathy across entire stack, automates toil instinctively
-- Hire (7-8/10 confidence): Solid reliability reasoning, catches major failure modes when prompted, understands observability fundamentals, balances automation vs speed appropriately
-- Lean Hire (6-7/10 confidence): Basic operational awareness but misses systemic failures, shallow monitoring strategy, manual-first mindset, needs guidance on SLO thinking
-- Lean No Hire (5-6/10 confidence): Treats infrastructure as "just works", no observability strategy, automates without considering failure modes, weak incident response reasoning
-- No Hire (3-5/10 confidence): Dangerous production instincts (deploys without rollback, no monitoring, ignores blast radius), lacks reliability fundamentals
-- Strong No Hire (1-3/10 confidence): Would actively harm production systems, no safety mindset, rejects operational concerns as "not my job"
+Decision tree (MANDATORY mapping):
+- Strong Hire: CONFIDENCE 9-10/10. Demonstrates deep operational instinct, proactively identifies failure modes, thinks in SLOs/error budgets, shows production empathy across entire stack, automates toil instinctively.
+- Hire: CONFIDENCE 7-8/10. Solid reliability reasoning, catches major failure modes when prompted, understands observability fundamentals, balances automation vs speed appropriately.
+- Lean Hire: CONFIDENCE 6-7/10. Basic operational awareness but misses systemic failures, shallow monitoring strategy, manual-first mindset, needs guidance on SLO thinking.
+- Lean No Hire: CONFIDENCE 4-5/10. Treats infrastructure as "just works", no observability strategy, automates without considering failure modes, weak incident response reasoning.
+- No Hire: CONFIDENCE 2-3/10. Dangerous production instincts (deploys without rollback, no monitoring, ignores blast radius), lacks reliability fundamentals.
+- Strong No Hire: CONFIDENCE 1/10 ONLY. Would actively harm production systems, no safety mindset, rejects operational concerns as "not my job".
 
 **verdict.confidence:**
-Number between 1-10. How confident are you in this verdict given the evidence?
+Number between 1-10. This MUST strictly match the signal chosen above (e.g., if verdict is "Strong No Hire", value MUST be 1). This is used for UI indicators, not YOUR internal confidence level.
 
 **verdict.level:**
 Must be one of: "Above Level", "At Level", "Below Level"

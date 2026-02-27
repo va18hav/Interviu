@@ -493,16 +493,24 @@ const InterviewDetails = () => {
                                                         {completion ? (
                                                             <>
                                                                 <button
-                                                                    onClick={() => navigate('/report', {
-                                                                        state: {
-                                                                            isPastInterview: true,
-                                                                            reportData: completion.report_data,
-                                                                            completedAt: completion.completed_at,
-                                                                            type: round.type,
-                                                                            role: interview.role,
-                                                                            firstName: 'Candidate'
-                                                                        }
-                                                                    })}
+                                                                    onClick={() => {
+                                                                        const userCreds = JSON.parse(localStorage.getItem("userCredentials")) || {};
+                                                                        const candidateName = userCreds.first_name ? `${userCreds.first_name} ${userCreds.last_name || ''}`.trim() : 'Candidate';
+
+                                                                        navigate('/report', {
+                                                                            state: {
+                                                                                isPastInterview: true,
+                                                                                reportData: completion.report_data,
+                                                                                completedAt: completion.completed_at,
+                                                                                type: round.type,
+                                                                                role: interview.role,
+                                                                                title: round.title,
+                                                                                company: interview.company,
+                                                                                duration: completion.duration_mins,
+                                                                                firstName: candidateName
+                                                                            }
+                                                                        });
+                                                                    }}
                                                                     className="flex-1 min-w-[140px] px-6 py-3.5 rounded-2xl bg-slate-50 text-slate-900 font-bold hover:bg-slate-100 transition-all text-sm shadow-sm flex items-center justify-center gap-2"
                                                                 >
                                                                     Analyze Results
@@ -557,9 +565,9 @@ const InterviewDetails = () => {
                             </div>
                         </div>
                     </aside>
-                </div>
-            </main>
-        </div>
+                </div >
+            </main >
+        </div >
     );
 };
 

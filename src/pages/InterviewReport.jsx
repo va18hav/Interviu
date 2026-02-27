@@ -6,7 +6,7 @@ import {
     BarChart3, Code, Zap, BrainCircuit, Target,
     ChevronRight, ShieldAlert, Award, TrendingUp,
     AlertOctagon, Check, Download, Share2, Loader2, Sparkles, User,
-    FileText, Activity, Layers, Briefcase, Calendar, Info
+    FileText, Activity, Layers, Briefcase, Calendar, Info, Clock
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -19,15 +19,37 @@ const InterviewReport = () => {
     const [isExporting, setIsExporting] = useState(false);
     const reportRef = useRef(null);
 
-    const { sessionId, triggeredByEndButton, reportData: pastReportData, isPastInterview, completedAt, endInterviewParams } = location.state || {};
+    const {
+        sessionId,
+        triggeredByEndButton,
+        reportData: pastReportData,
+        isPastInterview,
+        completedAt,
+        endInterviewParams,
+        role,
+        type,
+        title,
+        company,
+        duration
+    } = location.state || {};
+
+    const userCreds = JSON.parse(localStorage.getItem("userCredentials")) || {};
+    const fallbackName = userCreds.first_name ? `${userCreds.first_name} ${userCreds.last_name || ''}`.trim() : "Candidate";
+
+    const metaData = {
+        title: title || endInterviewParams?.context?.title || "Interactive Simulation",
+        company: company || endInterviewParams?.context?.company || "",
+        type: type || endInterviewParams?.context?.type || "custom",
+        duration: duration || endInterviewParams?.context?.durationInMinutes || endInterviewParams?.durationInMinutes || 0,
+        role: role || endInterviewParams?.context?.role || "Software Engineer",
+        date: completedAt
+            ? new Date(completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    };
 
     // Initial Placeholder / Default Structure
     const defaultData = {
-        candidateName: location.state?.firstName || "Candidate",
-        role: location.state?.role || "Software Engineer",
-        date: completedAt
-            ? new Date(completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-            : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        candidateName: location.state?.firstName || fallbackName,
         verdict: {
             signal: "Analyzing...",
             confidence: 0,
@@ -124,46 +146,49 @@ const InterviewReport = () => {
             setIsExporting(true);
             const element = reportRef.current;
 
-            const originalBackground = element.style.backgroundColor;
-            element.style.backgroundColor = '#F8F9FA'; // Ensure background is captured properly
-
-            // Generate image data capturing the DOM leveraging native SVG rendering 
-            // This safely bypasses the Tailwind oklch crashes inherent to html2canvas
-            const dataUrl = await toPng(element, {
-                cacheBust: true,
-                backgroundColor: '#F8F9FA',
-                pixelRatio: 2 // High resolution output
-            });
-
-            // Revert background immediately
-            element.style.backgroundColor = originalBackground;
-
+            const targetWidth = 1200;
             const pdf = new jsPDF('p', 'mm', 'a4');
-
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
+            let currentY = 10; // Start with a 10mm top margin
+            const marginX = 10; // 10mm side margins
+            const usableWidth = pdfWidth - (marginX * 2);
 
-            // Calculate proportional height to maintain aspect ratio
-            const imgProps = pdf.getImageProperties(dataUrl);
-            const imgWidth = pdfWidth;
-            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+            // Get all direct semantic sections inside the main reference
+            const sections = Array.from(element.children);
 
-            let heightLeft = imgHeight;
-            let position = 0;
+            for (let i = 0; i < sections.length; i++) {
+                const section = sections[i];
 
-            // Add first page
-            pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pdfHeight;
+                // Generate image for each distinct section
+                const dataUrl = await toPng(section, {
+                    cacheBust: true,
+                    backgroundColor: '#F8F9FA', // Fallback for transparent areas
+                    pixelRatio: 2, // High resolution output
+                    canvasWidth: targetWidth,
+                    width: targetWidth,
+                    style: {
+                        width: `${targetWidth}px`,
+                        maxWidth: 'none',
+                        margin: '0',
+                        padding: '40px' // Padding ensures shadow/border breathing room
+                    }
+                });
 
-            // Add sequential pages if required to fit all content
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pdfHeight;
+                const imgProps = pdf.getImageProperties(dataUrl);
+                const imgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+                // If adding this block exceeds page height, create a clean page break
+                if (currentY + imgHeight > pdfHeight - 10 && currentY > 10) {
+                    pdf.addPage();
+                    currentY = 10; // Reset Y coordinate
+                }
+
+                pdf.addImage(dataUrl, 'PNG', marginX, currentY, usableWidth, imgHeight);
+                currentY += imgHeight + 5; // 5mm spacing between sections
             }
 
-            const safeName = reportData?.candidateName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Candidate';
+            const safeName = (reportData?.candidateName || fallbackName || 'Candidate').replace(/[^a-zA-Z0-9]/g, '_');
             pdf.save(`${safeName}_Technical_Dossier.pdf`);
 
         } catch (error) {
@@ -332,21 +357,41 @@ const InterviewReport = () => {
                 >
                     {/* Identification */}
                     <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm border-b-[4px] border-b-indigo-600 print:rounded-none print:shadow-none print:border-t-0 print:border-x-0 print:border-slate-300 print:break-inside-avoid">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-8">
-                            <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0">
+                        <div className="relative flex flex-col sm:flex-row sm:items-center gap-8">
+                            {/* <div className="absolute top-0 right-0 w-10 h-10 md:w-15 md:h-15 lg:w-20 lg:h-20 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0">
                                 <User className="w-10 h-10 text-white" />
-                            </div>
+                            </div> */}
                             <div className="space-y-4">
                                 <div>
-                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{reportData.candidateName}</h2>
-                                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{reportData?.candidateName || fallbackName || "Candidate"}</h2>
+                                    <div className="flex flex-col items-start gap-4 mt-2">
+                                        <div className="flex items-center gap-4">
+                                            {metaData.company && (
+                                                <>
+                                                    <span className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded-md">
+                                                        {metaData.company}
+                                                    </span>
+                                                </>
+                                            )}
+                                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                                {metaData.type === 'custom' ? 'Custom Scenario' : `${metaData.type} Round`}
+                                            </span>
+                                        </div>
                                         <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                            <Briefcase className="w-3.5 h-3.5" /> {reportData.role}
+                                            {metaData.title}
                                         </span>
-                                        <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                                        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                            <Calendar className="w-3.5 h-3.5" /> {reportData.date}
-                                        </span>
+                                        <div className="flex items-center gap-4">
+                                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                                <Calendar className="w-3.5 h-3.5" /> {metaData.date}
+                                            </span>
+                                            {metaData.duration > 0 && (
+                                                <>
+                                                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                                        <Clock className="w-3.5 h-3.5" /> {metaData.duration}m
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-medium text-slate-600 leading-relaxed italic">
