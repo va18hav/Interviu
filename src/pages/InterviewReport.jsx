@@ -8,12 +8,16 @@ import {
     AlertOctagon, Check, Download, Share2, Loader2, Sparkles, User,
     FileText, Activity, Layers, Briefcase, Calendar, Info
 } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
 const InterviewReport = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [loading, setLoading] = useState(true);
     const [dynamicReport, setDynamicReport] = useState(null);
+    const [isExporting, setIsExporting] = useState(false);
+    const reportRef = useRef(null);
 
     const { sessionId, triggeredByEndButton, reportData: pastReportData, isPastInterview, completedAt, endInterviewParams } = location.state || {};
 
@@ -112,6 +116,62 @@ const InterviewReport = () => {
         // Fallback catch-all
         setLoading(false);
     }, [sessionId, triggeredByEndButton, isPastInterview, endInterviewParams, navigate, location.pathname, pastReportData]);
+
+    const handleExportPDF = async () => {
+        if (!reportRef.current) return;
+
+        try {
+            setIsExporting(true);
+            const element = reportRef.current;
+
+            const originalBackground = element.style.backgroundColor;
+            element.style.backgroundColor = '#F8F9FA'; // Ensure background is captured properly
+
+            // Generate image data capturing the DOM leveraging native SVG rendering 
+            // This safely bypasses the Tailwind oklch crashes inherent to html2canvas
+            const dataUrl = await toPng(element, {
+                cacheBust: true,
+                backgroundColor: '#F8F9FA',
+                pixelRatio: 2 // High resolution output
+            });
+
+            // Revert background immediately
+            element.style.backgroundColor = originalBackground;
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            // Calculate proportional height to maintain aspect ratio
+            const imgProps = pdf.getImageProperties(dataUrl);
+            const imgWidth = pdfWidth;
+            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // Add first page
+            pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            // Add sequential pages if required to fit all content
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
+            const safeName = reportData?.candidateName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Candidate';
+            pdf.save(`${safeName}_Technical_Dossier.pdf`);
+
+        } catch (error) {
+            console.error('Failed to generate PDF:', error);
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     // Helper for Status Colors
     const getStatusColor = (status) => {
@@ -218,9 +278,9 @@ const InterviewReport = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] text-slate-900 font-inter selection:bg-indigo-100">
-            {/* Professional Header / Navigation */}
-            <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4">
+        <div className="min-h-screen bg-[#F8F9FA] text-slate-900 font-inter selection:bg-indigo-100 print:bg-white print:p-0">
+            {/* Professional Header / Navigation - HIDDEN DURING PRINTING */}
+            <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4 print:hidden">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-6">
                         <button
@@ -243,23 +303,35 @@ const InterviewReport = () => {
                         {/* <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest">
                             <Share2 className="w-3.5 h-3.5" /> Share
                         </button> */}
-                        <button className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-slate-900 rounded-xl hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase tracking-widest">
-                            <Download className="w-3.5 h-3.5" /> Export PDF
-                        </button>
+                        {/* <button
+                            onClick={handleExportPDF}
+                            disabled={isExporting}
+                            className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-white bg-slate-900 rounded-xl hover:bg-black transition-all shadow-xl shadow-slate-200 uppercase tracking-widest disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isExporting ? (
+                                <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> EXPORTING...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="w-3.5 h-3.5" /> EXPORT PDF
+                                </>
+                            )}
+                        </button> */}
                     </div>
                 </div>
             </div>
 
-            <main className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+            <main ref={reportRef} className="max-w-6xl mx-auto px-6 py-12 space-y-12 print:max-w-none print:w-full print:p-0 print:space-y-6">
 
                 {/* 1. Executive Identification & Verdict Snapshot */}
                 <motion.section
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block print:space-y-6"
                 >
                     {/* Identification */}
-                    <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm border-b-[4px] border-b-indigo-600">
+                    <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm border-b-[4px] border-b-indigo-600 print:rounded-none print:shadow-none print:border-t-0 print:border-x-0 print:border-slate-300 print:break-inside-avoid">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-8">
                             <div className="w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0">
                                 <User className="w-10 h-10 text-white" />
@@ -285,7 +357,7 @@ const InterviewReport = () => {
                     </div>
 
                     {/* Hiring Verdict Box */}
-                    <div className="bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm flex flex-col justify-between items-center text-center">
+                    <div className="bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm flex flex-col justify-between items-center text-center print:rounded-none print:shadow-none print:border print:border-slate-200 print:break-inside-avoid">
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Recommendation</span>
                         <div className="py-6">
                             <div className={`text-4xl font-black uppercase tracking-tight ${reportData.verdict.signal.toLowerCase().includes('hire') ? 'text-emerald-600' : 'text-slate-900'}`}>
@@ -309,14 +381,14 @@ const InterviewReport = () => {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                    className="grid grid-cols-1 md:grid-cols-3 gap-6 print:grid-cols-3 print:gap-4 print:break-inside-avoid"
                 >
                     {[
                         { label: "Confidence", value: `${reportData.verdict.confidence}/10`, icon: <Target className="w-4 h-4" /> },
                         { label: "Level Calibration", value: reportData.verdict.level, icon: <Layers className="w-4 h-4" /> },
                         { label: "Risk Assessment", value: reportData.verdict.risk, icon: <ShieldAlert className="w-4 h-4" />, highlight: true }
                     ].map((item, i) => (
-                        <div key={i} className="bg-white p-6 sm:p-8 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                        <div key={i} className="bg-white p-6 sm:p-8 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between print:rounded-none print:shadow-none print:border-slate-200 print:p-4">
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
                                 <p className={`text-xl font-black uppercase tracking-tight ${item.highlight && item.value.toLowerCase() !== 'low' ? 'text-amber-600' : 'text-slate-900'}`}>
@@ -331,12 +403,12 @@ const InterviewReport = () => {
                 </motion.section>
 
                 {/* 3. Logical Breakdown (The "Analytical" view) */}
-                <section className="space-y-6">
+                <section className="space-y-6 print:break-inside-avoid print:mt-8">
                     <div className="flex items-center gap-3">
                         <Activity className="w-5 h-5 text-indigo-600" />
                         <h3 className="text-lg font-black uppercase tracking-widest text-slate-900">Logical Evidence</h3>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:grid-cols-3 print:gap-4">
                         {[
                             { title: "Strengths (Worked)", data: reportData.decision.worked, color: "emerald", icon: <CheckCircle2 className="w-5 h-5" /> },
                             { title: "Blockers (Risks)", data: reportData.decision.blocked, color: "rose", icon: <XCircle className="w-5 h-5" /> },
@@ -361,33 +433,33 @@ const InterviewReport = () => {
                 </section>
 
                 {/* 4. Technical Judgment Grid */}
-                <section className="space-y-8 bg-slate-900 rounded-[2.5rem] p-8 sm:p-12 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] pointer-events-none" />
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12 border-b border-white/10">
+                <section className="space-y-8 bg-slate-900 rounded-[2.5rem] p-8 sm:p-12 text-white relative overflow-hidden print:bg-white print:text-slate-900 print:rounded-none print:p-0 print:mt-12 print:break-inside-avoid print:border-t print:border-slate-300 print:pt-8">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] pointer-events-none print:hidden" />
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-12 border-b border-white/10 print:border-slate-200 print:pb-6">
                         <div className="space-y-1">
-                            <h3 className="text-2xl font-black uppercase tracking-tight">Technical Calibration</h3>
-                            <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Engineering Judgment & Core Signals</p>
+                            <h3 className="text-2xl font-black uppercase tracking-tight print:text-slate-900">Technical Calibration</h3>
+                            <p className="text-slate-400 text-sm font-medium uppercase tracking-widest print:text-slate-500">Engineering Judgment & Core Signals</p>
                         </div>
-                        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
-                            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Analytical Pass Complete</span>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl print:bg-transparent print:border-slate-200">
+                            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse print:hidden" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300 print:text-slate-600">Analytical Pass Complete</span>
                         </div>
                     </div>
 
-                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12">
+                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12 print:pt-6 print:grid-cols-3">
                         {reportData.technicalProfile.map((trait, i) => (
-                            <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex flex-col justify-between group">
+                            <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex flex-col justify-between group print:bg-white print:border-slate-200 print:rounded-none tracking-normal">
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <h4 className="text-sm font-black uppercase tracking-widest text-white group-hover:text-indigo-400 transition-colors">{trait.name}</h4>
-                                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${trait.status.toLowerCase() === 'strong' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                            trait.status.toLowerCase() === 'developing' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                                                'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-white group-hover:text-indigo-400 transition-colors print:text-slate-900">{trait.name}</h4>
+                                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${trait.status.toLowerCase() === 'strong' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 print:border-emerald-200 print:text-emerald-700' :
+                                            trait.status.toLowerCase() === 'developing' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 print:border-amber-200 print:text-amber-700' :
+                                                'bg-rose-500/10 border-rose-500/20 text-rose-400 print:border-rose-200 print:text-rose-700'
                                             }`}>
                                             {trait.status}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-slate-400 font-medium leading-relaxed">{trait.desc}</p>
+                                    <p className="text-xs text-slate-400 font-medium leading-relaxed print:text-slate-600">{trait.desc}</p>
                                 </div>
                             </div>
                         ))}
@@ -395,7 +467,7 @@ const InterviewReport = () => {
                 </section>
 
                 {/* 5. Round Specific Insights */}
-                <section className="bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-12 shadow-sm space-y-10">
+                <section className="bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-12 shadow-sm space-y-10 print:break-inside-avoid print:mt-12 print:border-t-0 print:border-x-0 print:border-b-4 print:border-b-indigo-600 print:rounded-none print:shadow-none print:px-0 print:pb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-8 border-b border-slate-100">
                         <div className="space-y-1">
                             <h3 className="text-xl font-black uppercase tracking-widest text-slate-900">{reportData.roundInsight.type} Insight</h3>
@@ -406,7 +478,7 @@ const InterviewReport = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 print:grid-cols-2 print:gap-8">
                         <div className="space-y-6">
                             <p className="text-base font-medium text-slate-700 leading-relaxed italic border-l-4 border-indigo-600 pl-6 py-2">
                                 "{reportData.roundInsight.summary}"
@@ -429,7 +501,7 @@ const InterviewReport = () => {
                 </section>
 
                 {/* 6. Failure Patterns & Readiness */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 print:grid-cols-3 print:gap-8 print:break-inside-avoid print:pt-8">
                     {/* Failure Patterns */}
                     <div className="lg:col-span-2 space-y-8">
                         <div className="flex items-center gap-3">
@@ -438,7 +510,7 @@ const InterviewReport = () => {
                         </div>
                         <div className="grid gap-4">
                             {reportData.failurePatterns.map((pattern, i) => (
-                                <div key={i} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm border-l-[4px] border-l-rose-500 hover:shadow-lg hover:shadow-rose-500/5 transition-all">
+                                <div key={i} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm border-l-[4px] border-l-rose-500 hover:shadow-lg hover:shadow-rose-500/5 transition-all print:shadow-none print:rounded-none print:border-y-0 print:border-r-0 print:bg-rose-50/30">
                                     <h4 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-2">{pattern.title}</h4>
                                     <p className="text-sm text-slate-500 font-medium leading-relaxed">{pattern.desc}</p>
                                 </div>
@@ -480,7 +552,7 @@ const InterviewReport = () => {
                 </div>
 
                 {/* 7. Actionable Improvement & Strategy */}
-                <section className="pt-12 border-t border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <section className="pt-12 border-t border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-12 print:grid-cols-2 print:gap-8 print:break-inside-avoid print:mt-8">
                     <div className="space-y-8">
                         <div className="flex items-center gap-3">
                             <Award className="w-5 h-5 text-indigo-600" />

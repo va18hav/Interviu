@@ -22,8 +22,16 @@ const CreateInterview = () => {
   // -------------------------------------------------------------------------
   // State
   // -------------------------------------------------------------------------
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 912)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 912)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const [formData, setFormData] = useState({
-    roundType: "coding",
+    roundType: window.innerWidth < 912 ? "behavioral" : "coding",
     role: "sde",
     level: "",
     domainFocus: "",
@@ -42,6 +50,12 @@ const CreateInterview = () => {
   })
 
   const [isCompiling, setIsCompiling] = useState(false);
+
+  useEffect(() => {
+    if (isMobile && ['coding', 'debug', 'design'].includes(formData.roundType)) {
+      setFormData(prev => ({ ...prev, roundType: 'behavioral' }))
+    }
+  }, [isMobile, formData.roundType])
 
   // -------------------------------------------------------------------------
   // Handlers
@@ -286,6 +300,9 @@ const CreateInterview = () => {
 
   const RoundTypeCard = ({ type }) => {
     const isSelected = formData.roundType === type.id
+    const isTechnical = ['coding', 'debug', 'design'].includes(type.id)
+    const isDisabled = isMobile && isTechnical
+
     const iconMap = {
       'coding': <Terminal className="w-6 h-6" />,
       'design': <Layers className="w-6 h-6" />,
@@ -296,23 +313,37 @@ const CreateInterview = () => {
     return (
       <button
         type="button"
-        onClick={() => setFormData(p => ({ ...p, roundType: type.id }))}
-        className={`relative flex flex-col p-6 rounded-[2rem] border transition-all duration-500 text-left overflow-hidden group ${isSelected
-          ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200'
-          : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-lg hover:shadow-slate-100'
+        onClick={() => {
+          if (!isDisabled) setFormData(p => ({ ...p, roundType: type.id }))
+        }}
+        disabled={isDisabled}
+        className={`relative flex flex-col p-6 rounded-[2rem] border transition-all duration-500 text-left overflow-hidden group ${isDisabled
+          ? 'bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed'
+          : isSelected
+            ? 'bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-200'
+            : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-lg hover:shadow-slate-100'
           }`}
       >
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors mb-4 ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors mb-4 ${isDisabled
+          ? 'bg-slate-200 text-slate-400'
+          : isSelected ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600'
           }`}>
           {iconMap[type.id] || <Code className="w-6 h-6" />}
         </div>
-        <span className={`text-base font-black transition-colors ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+        <span className={`text-base font-black transition-colors ${isSelected && !isDisabled ? 'text-white' : 'text-slate-900'}`}>
           {type.label}
         </span>
-        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>
+        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors ${isSelected && !isDisabled ? 'text-indigo-100' : 'text-slate-400'}`}>
           Round Module
         </span>
-        {isSelected && (
+
+        {isDisabled && (
+          <span className="text-[9px] font-bold text-amber-500 uppercase mt-3 tracking-wider leading-tight">
+            Requires Desktop
+          </span>
+        )}
+
+        {isSelected && !isDisabled && (
           <motion.div
             layoutId="activeRound"
             className="absolute top-4 right-4"

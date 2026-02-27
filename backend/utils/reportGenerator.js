@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { softwareFeedbackPrompt } from '../prompts/softwareFeedbackPrompt.js';
 import { devopsFeedbackPrompt } from '../prompts/devopsFeedbackPrompt.js';
+import { customSoftwareFeedbackPrompt } from '../prompts/customSoftwareFeedbackPrompt.js';
+import { customDevopsFeedbackPrompt } from '../prompts/customDevopsFeedbackPrompt.js';
 import { resolveTemplate } from '../prompts/index.js';
 import { jsonrepair } from 'jsonrepair';
 import dotenv from 'dotenv';
@@ -19,7 +21,14 @@ export async function generateInterviewReport(session, context) {
             context.role.toLowerCase().includes('reliability')
         );
 
-        const promptTemplate = isDevOps ? devopsFeedbackPrompt : softwareFeedbackPrompt;
+        let promptTemplate;
+        if (context.customInterview) {
+            console.log(`[ReportGenerator] Using CUSTOM feedback prompt for ${isDevOps ? 'DevOps' : 'Software'}...`);
+            promptTemplate = isDevOps ? customDevopsFeedbackPrompt : customSoftwareFeedbackPrompt;
+        } else {
+            console.log(`[ReportGenerator] Using COMPANY-SPECIFIC feedback prompt for ${isDevOps ? 'DevOps' : 'Software'}...`);
+            promptTemplate = isDevOps ? devopsFeedbackPrompt : softwareFeedbackPrompt;
+        }
 
         // Compile transcript
         const fullTranscript = session.history

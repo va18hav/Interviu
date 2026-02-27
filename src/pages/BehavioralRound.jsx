@@ -425,9 +425,6 @@ const BehavioralRound = () => {
     const handleEndInterview = async () => {
         if (isEndingInterview) return;
 
-        // IMMEDIATE CLEANUP of STT/TTS (Mic/AudioContext)
-        stopAudioServices();
-
         setIsEndingInterview(true);
 
         try {
@@ -452,6 +449,9 @@ const BehavioralRound = () => {
                 setIsEndingInterview(false);
                 return;
             }
+
+            // CLEANUP of STT/TTS (Mic/AudioContext) ONLY after user confirms!
+            stopAudioServices();
 
             if (generateReport) {
                 // Navigate instantly, InterviewReport will handle the API call
@@ -503,7 +503,7 @@ const BehavioralRound = () => {
     if (!location.state) return <div className="p-8 text-center text-red-600">No interview state found.</div>;
 
     return (
-        <main className="h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+        <main className="h-[100dvh] min-h-[100dvh] bg-slate-50 flex flex-col relative overflow-hidden">
             {/* Header */}
             <header className="absolute top-0 left-0 right-0 z-50 p-2 md:px-1 md:py-1 pointer-events-none">
                 <div className="flex items-center justify-between mx-auto max-w-8xl">

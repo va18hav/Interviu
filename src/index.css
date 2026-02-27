@@ -188,3 +188,22 @@
 .animate-pulse-very-slow {
     animation: pulse-slow 12s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+@media print {
+    @page {
+        margin: 0;
+        size: A4 portrait;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background-color: white !important;
+        overflow-y: visible !important;
+    }
+
+    * {
+        text-shadow: none !important;
+        box-shadow: none !important;
+    }
+}
