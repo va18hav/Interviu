@@ -1,52 +1,56 @@
 import React from 'react';
-import { Terminal, Layout, Mic, Clock, Share2, Activity, Code, MousePointer2, ChevronRight, Layers, Bot, ShieldCheck } from 'lucide-react';
+import { Terminal, Layers, Mic, ChevronRight, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import codingRound from '../../assets/images/UI/codinground.png';
 import designRound from '../../assets/images/UI/designround.png';
 import behavioralRound from '../../assets/images/UI/interview.png';
 
-const UISnapshots = () => {
-    const snapshots = [
-        {
-            id: 'coding',
-            tag: 'Execution Sandbox',
-            tagIcon: <Terminal />,
-            title: 'Technical Assessment',
-            description: 'A code interface with multi-language support. The AI evaluates not just the solution, but your algorithmic efficiency and edge case handling.',
-            features: ['VS Code Style Interface', 'Language-Aware Evaluation', 'Real-time Complexity Analysis'],
-            image: codingRound,
-            color: 'blue'
-        },
-        {
-            id: 'design',
-            tag: 'Architecture Canvas',
-            tagIcon: <Layers />,
-            title: 'System Design',
-            description: 'An interactive canvas to architect distributed systems. Defend your choices on scaling, sharding, and latency against expert-level critique.',
-            features: ['Live Infrastructure Review', 'Node-Based Logic', 'Failure Mode Scenarios'],
-            image: designRound,
-            color: 'indigo'
-        },
-        {
-            id: 'behavioral',
-            tag: 'Natural Dialogue',
-            tagIcon: <Mic />,
-            title: 'Executive Behavioral',
-            description: 'Voice-based leadership simulations. The AI probes your narratives for senior-level hiring signals and leadership principles.',
-            features: ['STAR Method Probing', 'Acoustic Tone Analysis', 'Leadership Alignment'],
-            image: behavioralRound,
-            color: 'slate'
-        }
-    ];
+const snapshots = [
+    {
+        id: 'coding',
+        label: 'CODING ROUND',
+        tagIcon: <Terminal />,
+        title: 'The problems aren\'t LeetCode.',
+        description: 'You\'re given a production-level feature to implement — the kind of thing that actually ships at the company you\'re targeting. The AI probes your solution the way a bar-raiser would: edge cases, failure modes, complexity trade-offs. Not "is your code correct." But "would this survive production."',
+        features: [
+            'Implements real features, not algorithm puzzles',
+            'Probed for production thinking: concurrency, failure handling, latency',
+            'Hiring signal tracked: do you think like a senior engineer or a student?',
+        ],
+        image: codingRound,
+    },
+    {
+        id: 'design',
+        label: 'SYSTEM DESIGN ROUND',
+        tagIcon: <Layers />,
+        title: 'Design it. Then defend it.',
+        description: 'Build your architecture on an interactive canvas. Then the AI starts asking the questions a senior staff engineer would ask. Why did you choose Kafka over SQS? What happens to your write path when the primary goes down? You don\'t just draw the diagram. You have to own it.',
+        features: [
+            'Full architecture canvas with real infrastructure components',
+            'Defended against staff-engineer-level critique in real time',
+            'Failure mode scenarios: what breaks, when, and what you do about it',
+        ],
+        image: designRound,
+    },
+    {
+        id: 'behavioral',
+        label: 'BEHAVIORAL ROUND',
+        tagIcon: <Mic />,
+        title: 'The bar raiser is listening for something specific.',
+        description: 'Amazon\'s bar raiser isn\'t just checking if you "have leadership experience." They\'re listening for Ownership, Bias for Action, Disagree and Commit — specific signals in specific stories. The AI knows what they\'re looking for. It will probe until it finds it — or until your time runs out.',
+        features: [
+            'Voice-based session — answer the way you would in a real interview',
+            'Probed with STAR-method follow-ups: Situation, but also "what did YOU do?"',
+            'Every Leadership Principle mapped and scored against your answers',
+        ],
+        image: behavioralRound,
+    }
+];
 
+const UISnapshots = () => {
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.3
-            }
-        }
+        visible: { opacity: 1, transition: { staggerChildren: 0.3 } }
     };
 
     const sectionVariants = {
@@ -71,10 +75,13 @@ const UISnapshots = () => {
                     </motion.div>
 
                     <h2 className="text-4xl md:text-5xl font-black text-slate-950 mb-6 leading-tight tracking-tighter">
-                        Calibrated for the<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600"> Entire Hiring Loop.</span>
+                        Three types of sessions.{' '}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-800 to-slate-500">
+                            One verdict at the end.
+                        </span>
                     </h2>
                     <p className="text-lg text-slate-500 max-w-2xl leading-relaxed font-medium">
-                        Standardized interview formats reimagined with adaptive AI to ensure your preparation matches the rigor of top-tier organizations.
+                        Each session is a phase of a real onsite loop. Complete a full programme and walk away knowing exactly where you stand.
                     </p>
                 </div>
 
@@ -89,14 +96,13 @@ const UISnapshots = () => {
                         <motion.div
                             key={snap.id}
                             variants={sectionVariants}
-                            className={`grid grid-cols-1 lg:grid-cols-12 gap-16 items-center ${idx % 2 !== 0 ? 'lg:flex-row-reverse' : ''
-                                }`}
+                            className={`grid grid-cols-1 lg:grid-cols-12 gap-16 items-center`}
                         >
                             <div className={`lg:col-span-5 space-y-8 ${idx % 2 !== 0 ? 'lg:order-2' : ''}`}>
                                 <div className="space-y-6">
                                     <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
                                         {React.cloneElement(snap.tagIcon, { className: "w-3.5 h-3.5" })}
-                                        <span>{snap.tag}</span>
+                                        <span>{snap.label}</span>
                                     </div>
 
                                     <h3 className="text-3xl md:text-4xl font-black text-slate-950 tracking-tight">
@@ -110,18 +116,11 @@ const UISnapshots = () => {
 
                                 <div className="space-y-3">
                                     {snap.features.map((feature, fIdx) => (
-                                        <div key={fIdx} className="flex items-center gap-3 text-slate-900">
-                                            <div className="w-1 h-1 rounded-full bg-indigo-600" />
-                                            <span className="text-[11px] font-black uppercase tracking-widest">{feature}</span>
+                                        <div key={fIdx} className="flex items-start gap-3 text-slate-900">
+                                            <div className="w-1 h-1 rounded-full bg-indigo-600 mt-2 shrink-0" />
+                                            <span className="text-sm font-semibold text-slate-700 leading-relaxed">{feature}</span>
                                         </div>
                                     ))}
-                                </div>
-
-                                <div className="pt-4">
-                                    <button className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-[0.2em] group">
-                                        View Documentation
-                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </button>
                                 </div>
                             </div>
 

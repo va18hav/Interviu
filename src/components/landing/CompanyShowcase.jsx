@@ -54,9 +54,10 @@ const CompanyShowcase = () => {
                         </motion.div>
 
                         <h2 className="text-3xl md:text-4xl font-black text-slate-950 tracking-tighter leading-tight">
-                            Simulations Modeled After Elite <br />
+                            40+ full onsite loops.
+                            <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-500">
-                                Engineering Standards.
+                                Top companies. Every level. Every round.
                             </span>
                         </h2>
                     </div>
@@ -104,9 +105,10 @@ const CompanyShowcase = () => {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.8 }}
-                    className="mt-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]"
+                    className="mt-12 text-slate-500 text-sm font-medium leading-relaxed max-w-xl"
                 >
-                    Validated against senior hiring rubrics and interview loops
+                    Not practice questions. Full loops: coding, debug, system design, and behavioral —
+                    calibrated to the exact bar of the company you're targeting.
                 </motion.p>
             </div>
         </section>

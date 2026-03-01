@@ -155,19 +155,9 @@ const CreditsPage = () => {
                                     Credits & <span className="text-indigo-600">Usage</span>
                                 </h1>
                                 <p className="text-slate-500 font-medium text-lg max-w-xl">
-                                    During our Early Access phase, credits are granted for free to help you sharpen your technical skills. Your feedback sessions directly influence our protocol development.
+                                    During Early Access, credits are free. Use them to run full loops and get your Technical Dossier after each one.
+                                    The more sessions you complete, the better the platform gets at reading your specific gaps.
                                 </p>
-
-                                <div className="flex flex-wrap gap-4 pt-2">
-                                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
-                                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                                        Fair Usage Policy
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
-                                        <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                                        Reward Scaling
-                                    </div>
-                                </div>
                             </div>
 
                             <div className="w-full lg:w-[400px]">
@@ -191,7 +181,7 @@ const CreditsPage = () => {
                                             onClick={() => setShowRequestModal(true)}
                                             className="w-full py-4 rounded-xl bg-white text-slate-900 font-black text-[12px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
                                         >
-                                            Request More Credits
+                                            Get More Credits
 
                                             <ArrowRight className="w-4 h-4" />
                                         </button>
@@ -206,7 +196,7 @@ const CreditsPage = () => {
                 <div className="mt-16 space-y-6">
                     <div className="flex items-center gap-3">
                         <History className="w-5 h-5 text-indigo-600" />
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Usage History</h2>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Session History</h2>
                     </div>
 
                     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[200px] relative">

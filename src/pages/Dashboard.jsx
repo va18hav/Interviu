@@ -187,9 +187,9 @@ const InterviewDashboard = () => {
           <section>
             <SectionTitle
               icon={Sparkles}
-              title="Tailored Simulations"
-              subtitle="High-fidelity environments calibrated to your profile."
-              actionLabel="Explore All Library"
+              title="Recommended For You"
+              subtitle="Based on your target role, level and skills"
+              actionLabel="See Full Catalogue"
               onAction={() => navigate('/dashboard/all-popular-interviews')}
             />
 

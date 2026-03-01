@@ -89,11 +89,11 @@ const PopularInterviewsHero = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
-                        className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-[1.05] tracking-tight"
+                        className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-[1.05] tracking-tight"
                     >
-                        Master the
+                        Your target. Your bar.
                         <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-blue-400 to-indigo-400 animate-gradient-x">
-                            Elite Tier.
+                            Your loop.
                         </span>
                     </motion.h1>
 
@@ -103,8 +103,9 @@ const PopularInterviewsHero = () => {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="text-lg text-slate-400 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0"
                     >
-                        Step into simulations crafted from actual interview data of tech giants.
-                        Practice with production-grade scenarios and receive instant AI feedback.
+                        Company-specific loops. Production-level problems.
+                        <br />
+                        A verdict at the end — not just a score.
                     </motion.p>
 
                     <motion.div
@@ -115,12 +116,7 @@ const PopularInterviewsHero = () => {
                     >
                         <div className="flex flex-col items-center lg:items-start">
                             <span className="text-2xl font-black text-white">40+</span>
-                            <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Simulations</span>
-                        </div>
-                        <div className="w-[1px] h-10 bg-white/10 hidden sm:block" />
-                        <div className="flex flex-col items-center lg:items-start">
-                            <span className="text-2xl font-black text-white">85%</span>
-                            <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Realism Rate</span>
+                            <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">Full Loops</span>
                         </div>
                         <div className="w-[1px] h-10 bg-white/10 hidden sm:block" />
                         <div className="flex flex-col items-center lg:items-start">

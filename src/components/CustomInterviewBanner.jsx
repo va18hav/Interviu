@@ -27,14 +27,16 @@ const CustomInterviewBanner = ({ firstName }) => {
                     <div className="space-y-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 backdrop-blur-md mx-auto md:mx-0">
                             <Workflow className="w-3.5 h-3.5 text-indigo-400" />
-                            <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.15em]">Flexibile Setup</span>
+                            <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.15em]">BUILD YOUR OWN</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-tight">
-                            Custom Interview <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-blue-300">Configuration.</span>
+                            Build Your Own <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-blue-300">Interview Loop.</span>
                         </h2>
                         <p className="text-base text-slate-400 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
-                            Configure your interview session by selecting specific roles, difficulty levels, and technical rounds to match your preparation needs.
+                            Targeting a role not in the catalogue? Know which domain you're weakest in?
+                            Configure every variable — stack, difficulty, failure intensity, round type.
+                            Upload a job description and the loop builds itself around it.
                         </p>
                     </div>
 
@@ -44,15 +46,8 @@ const CustomInterviewBanner = ({ firstName }) => {
                             className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-400 text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2.5 group"
                         >
                             <Plus className="w-4 h-4" />
-                            Create Custom Session
+                            Build My Loop
                             <ChevronRight className="w-4 h-4 text-indigo-300 group-hover:translate-x-1 transition-transform" />
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/dashboard/all-previous-interviews')}
-                            className="w-full sm:w-auto px-8 py-4 rounded-2xl border border-slate-800 bg-white/5 backdrop-blur-md text-white font-black text-[10px] uppercase tracking-[0.15em] hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-                        >
-                            View History
                         </button>
                     </div>
                 </div>

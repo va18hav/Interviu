@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
 import NewHeroSection from "../components/landing/NewHeroSection";
+import SocialProof from "../components/landing/SocialProof";
 import CompanyShowcase from "../components/landing/CompanyShowcase";
-import RealismProof from "../components/landing/RealismProof";
 import UISnapshots from "../components/landing/UISnapshots";
-
+import RealismProof from "../components/landing/RealismProof";
+import TechnicalDossier from "../components/landing/TechnicalDossier";
 import RoleFocus from "../components/landing/RoleFocus";
 import HowItWorks from "../components/landing/HowItWorks";
+import FAQ from "../components/landing/FAQ";
 import FinalCTA from "../components/landing/FinalCTA";
 
 const LandingPage = () => {
@@ -34,20 +36,29 @@ const LandingPage = () => {
             {/* Hero Section with Navigation */}
             <NewHeroSection />
 
+            {/* Social Proof Strip */}
+            {/* <SocialProof /> */}
+
             {/* Company Showcase */}
             <CompanyShowcase />
 
-            {/* UI Snapshots (New Features Section) */}
+            {/* UI Snapshots (Features Section) */}
             <UISnapshots />
 
             {/* Realism & Quality Proof */}
             <RealismProof />
+
+            {/* Technical Dossier */}
+            <TechnicalDossier />
 
             {/* Two-Role Focus */}
             <RoleFocus />
 
             {/* How It Works */}
             <HowItWorks />
+
+            {/* FAQ */}
+            <FAQ />
 
             {/* Final CTA */}
             <FinalCTA />

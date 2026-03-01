@@ -314,7 +314,7 @@ const ProfileSettings = () => {
             <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Synchronizing Protocol</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Loading your profile...</span>
                 </div>
             </div>
         );
@@ -342,10 +342,6 @@ const ProfileSettings = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-[9px] font-black uppercase tracking-widest mb-1.5">
-                                <Settings className="w-3 h-3" />
-                                Account Protocol
-                            </div>
                             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
                                 Profile <span className="text-indigo-600">Settings</span>
                             </h1>
@@ -461,7 +457,7 @@ const ProfileSettings = () => {
                                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-900 border border-slate-100 shadow-inner">
                                                 <UserCircle className="w-5 h-5" />
                                             </div>
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Personal Identification</h3>
+                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Your Info</h3>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -484,7 +480,7 @@ const ProfileSettings = () => {
                                                 />
                                             </div>
                                             <div className="space-y-3 md:col-span-2 relative">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Email Signature</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Email Address</label>
                                                 <div className="relative group">
                                                     <input
                                                         type="email"
@@ -496,7 +492,7 @@ const ProfileSettings = () => {
                                                     <ShieldCheck className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 opacity-60" />
                                                 </div>
                                                 <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-2 flex items-center gap-2">
-                                                    <Lock className="w-2.5 h-2.5" /> Immutable Verification Required to Modify
+                                                    <Lock className="w-2.5 h-2.5" /> Email address can't be changed after signup. Contact support if you need help.
                                                 </p>
                                             </div>
                                         </div>
@@ -508,7 +504,7 @@ const ProfileSettings = () => {
                                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-900 border border-slate-100 shadow-inner">
                                                 <Briefcase className="w-5 h-5" />
                                             </div>
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Professional Configuration</h3>
+                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Professional Info</h3>
                                         </div>
 
                                         <div className="space-y-8">
@@ -535,7 +531,7 @@ const ProfileSettings = () => {
                                             </div>
 
                                             <div className="space-y-4">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Experience Protocol</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Experience Level</label>
                                                 <div className="flex flex-wrap gap-4">
                                                     {[
                                                         { label: 'Junior', sub: '0–2 yrs', db: 'Junior' },
