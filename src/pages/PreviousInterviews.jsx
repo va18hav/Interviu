@@ -242,7 +242,7 @@ const PreviousInterviews = () => {
                                                 reportData: interview.report_data,
                                                 role: interview.category === 'curated' ? interview.type?.toUpperCase() : interview.job_role,
                                                 title: interview.displayTitle,
-                                                type: interview.category === 'curated' ? interview.type : 'custom',
+                                                type: interview.type || (interview.category === 'curated' ? 'Technical Round' : 'custom'),
                                                 company: interview.company,
                                                 duration: interview.duration_mins,
                                                 isPastInterview: true,

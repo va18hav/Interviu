@@ -23,9 +23,13 @@ const ROUND_NAMES = {
     technical: 'Technical Interview'
 };
 
-const getRoundLabel = (type) => {
-    const rawType = type?.toLowerCase();
-    return ROUND_NAMES[rawType] || 'Technical Interview';
+const getRoundLabel = (type = '') => {
+    const t = type.toLowerCase();
+    if (t.includes('coding')) return ROUND_NAMES.coding;
+    if (t.includes('debug')) return ROUND_NAMES.debug;
+    if (t.includes('design')) return ROUND_NAMES.design;
+    if (t.includes('behavioral')) return ROUND_NAMES.behavioral;
+    return ROUND_NAMES.technical;
 };
 
 const ShareCard = React.forwardRef(({ reportData, metaData, candidateName }, ref) => {
@@ -130,9 +134,9 @@ const ShareCard = React.forwardRef(({ reportData, metaData, candidateName }, ref
                 </div>
 
                 {/* Branding */}
-                <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingLeft: '12px' }}>
-                    <img src={LogoImg} style={{ height: '32px', marginBottom: '4px' }} alt="Interviu" />
-                    <span style={{ fontSize: '8px', fontWeight: '800', color: '#6366f1', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Interviu.pro</span>
+                <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '12px' }}>
+                    <img src={LogoImg} style={{ height: '42px', marginBottom: '4px' }} alt="Interviu" />
+                    <span style={{ fontSize: '8px', fontWeight: '800', color: '#6366f1', letterSpacing: '0.1em' }}>Interviu.pro</span>
                 </div>
             </div>
         </div>

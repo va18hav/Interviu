@@ -2,23 +2,30 @@ import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toPng } from 'html-to-image';
 import {
-    X, Copy, Download, Share2, Check, Link,
-    Twitter, Linkedin, MessageCircle, Send,
-    ExternalLink, Instagram, Globe, Loader2
+    X, Download, Share2, Check, Link
 } from 'lucide-react';
 import ShareCard from './ShareCard';
 import LogoImg from '../assets/images/logo.png';
 
-// Custom Social Icons with Brand Colors
-const SocialIcon = ({ type, size = 18 }) => {
-    switch (type) {
-        case 'twitter': return <Twitter size={size} fill="#1DA1F2" color="#1DA1F2" />;
-        case 'linkedin': return <Linkedin size={size} fill="#0077B5" color="#0077B5" />;
-        case 'whatsapp': return <MessageCircle size={size} fill="#25D366" color="#25D366" />;
-        case 'reddit': return <Share2 size={size} fill="#FF4500" color="#FF4500" />;
-        case 'link': return <Link size={size} color="#6366f1" />;
-        default: return <Globe size={size} />;
-    }
+// Official brand logos via Wikimedia Commons
+const SOCIAL_LOGOS = {
+    twitter: 'https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg',
+    whatsapp: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg',
+    reddit: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/Reddit_logo.svg',
+};
+
+const SocialIcon = ({ type, size = 22 }) => {
+    const src = SOCIAL_LOGOS[type];
+    if (!src) return null;
+    return (
+        <img
+            src={src}
+            alt={type}
+            width={size}
+            height={size}
+            style={{ objectFit: 'contain', display: 'block' }}
+        />
+    );
 };
 
 const ROUND_NAMES = {
@@ -29,16 +36,54 @@ const ROUND_NAMES = {
     technical: 'Technical Interview'
 };
 
+const getRoundLabel = (type = '') => {
+    const t = type.toLowerCase();
+    if (t.includes('coding')) return ROUND_NAMES.coding;
+    if (t.includes('debug')) return ROUND_NAMES.debug;
+    if (t.includes('design')) return ROUND_NAMES.design;
+    if (t.includes('behavioral')) return ROUND_NAMES.behavioral;
+    return ROUND_NAMES.technical;
+};
+
 const buildCaption = ({ candidateName, metaData, verdict, shareUrl }) => {
-    const roundType = metaData?.type?.toLowerCase();
-    const roundLabel = ROUND_NAMES[roundType] || 'Technical Interview';
+    const roundLabel = getRoundLabel(metaData?.type);
     const company = metaData?.company;
     const title = metaData?.title;
 
     if (company) {
-        return `Just completed a ${roundLabel} of ${company} Loop at Interviu.pro 🎯\n\n📋 ${title}\n\n⚡ Verdict: ${verdict || '—'}\n\nFull report 👇\n${shareUrl}`;
+        switch (verdict?.toLowerCase().trim()) {
+            case 'strong hire':
+                return `Ran the ${company} ${roundLabel} on Interviu.pro — ${verdict} ✅\n\n📋 ${title}\n\nFull hiring committee debrief 👇\n${shareUrl}`;
+            case 'hire':
+                return `Ran the ${company} ${roundLabel} on Interviu.pro — cleared it with a ${verdict}\n\n📋 ${title}\n\nFull debrief 👇\n${shareUrl}`;
+            case 'lean hire':
+                return `Ran the ${company} ${roundLabel} on Interviu.pro — ${verdict}. Close, but not clean.\n\n📋 ${title}\n\nDebrief breaks down what's holding me back 👇\n${shareUrl}`;
+            case 'lean no hire':
+                return `Ran the ${company} ${roundLabel} on Interviu.pro — ${verdict}. Closer than I'd like to admit.\n\n📋 ${title}\n\nDebrief breaks down exactly where I'm falling short 👇\n${shareUrl}`;
+            case 'no hire':
+                return `Ran the ${company} ${roundLabel} on Interviu.pro — got a ${verdict} 💀\n\n📋 ${title}\n\nDebrief breaks down exactly where I lost it 👇\n${shareUrl}`;
+            case 'strong no hire':
+                return `Ran the ${company} ${roundLabel} on Interviu.pro — ${verdict} 💀\n\nDidn't just fail. The debrief was brutal.\n\nFull breakdown 👇\n${shareUrl}`;
+            default:
+                return `Ran the ${company} ${roundLabel} on Interviu.pro\n\n📋 ${title}\n\n⚡ Verdict: ${verdict || '—'}\n\nFull report 👇\n${shareUrl}`;
+        }
     } else {
-        return `Just completed a custom ${roundLabel} session at Interviu.pro 🎯\n\n📋 ${title}\n\n⚡ Verdict: ${verdict || '—'}\n\nFull report 👇\n${shareUrl}`;
+        switch (verdict?.toLowerCase().trim()) {
+            case 'strong hire':
+                return `Ran a custom ${roundLabel} on Interviu.pro — ${verdict} ✅\n\n📋 ${title}\n\nFull debrief 👇\n${shareUrl}`;
+            case 'hire':
+                return `Ran a custom ${roundLabel} on Interviu.pro — cleared it with a ${verdict}\n\n📋 ${title}\n\nFull debrief 👇\n${shareUrl}`;
+            case 'lean hire':
+                return `Ran a custom ${roundLabel} on Interviu.pro — ${verdict}. Close, but not clean.\n\n📋 ${title}\n\nDebrief breaks down what's holding me back 👇\n${shareUrl}`;
+            case 'lean no hire':
+                return `Ran a custom ${roundLabel} on Interviu.pro — ${verdict}. Closer than I'd like to admit.\n\n📋 ${title}\n\nDebrief breaks down exactly where I'm falling short 👇\n${shareUrl}`;
+            case 'no hire':
+                return `Ran a custom ${roundLabel} on Interviu.pro — got a ${verdict} 💀\n\n📋 ${title}\n\nDebrief breaks down exactly where I lost it 👇\n${shareUrl}`;
+            case 'strong no hire':
+                return `Ran a custom ${roundLabel} on Interviu.pro — ${verdict} 💀\n\nDidn't just fail. The debrief was brutal.\n\nFull breakdown 👇\n${shareUrl}`;
+            default:
+                return `Ran a custom ${roundLabel} on Interviu.pro\n\n📋 ${title}\n\n⚡ Verdict: ${verdict || '—'}\n\nFull report 👇\n${shareUrl}`;
+        }
     }
 };
 
@@ -47,8 +92,6 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
     const [isCapturing, setIsCapturing] = useState(false);
     const [capturedUrl, setCapturedUrl] = useState(null);
     const [copyStatus, setCopyStatus] = useState({ type: null, status: false });
-    const [isUploading, setIsUploading] = useState(false);
-    const [remoteUrl, setRemoteUrl] = useState(null);
 
     const caption = buildCaption({
         candidateName,
@@ -56,42 +99,6 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
         verdict: reportData?.verdict?.signal,
         shareUrl,
     });
-
-    const dataUrlToFile = (dataUrl, filename) => {
-        const arr = dataUrl.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new File([u8arr], filename, { type: mime });
-    };
-
-    const uploadCard = async (dataUrl) => {
-        if (!shareUrl) return;
-        const shortId = shareUrl.split('/').pop();
-        if (!shortId || shortId.length !== 32) return;
-
-        setIsUploading(true);
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/upload-share-card`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ shortId, imageBase64: dataUrl })
-            });
-            const data = await response.json();
-            if (data.success) setRemoteUrl(data.publicUrl);
-        } catch (err) {
-            console.error('[Share] Upload failed', err);
-        } finally {
-            setIsUploading(false);
-        }
-    };
 
     const captureCard = async () => {
         if (!cardRef.current || isCapturing) return;
@@ -104,10 +111,6 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
             });
             setCapturedUrl(dataUrl);
             setIsCapturing(false);
-
-            // Auto-upload for OG tags
-            uploadCard(dataUrl);
-
             return dataUrl;
         } catch (err) {
             console.error('[Share] Capture failed', err);
@@ -124,16 +127,46 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
         a.click();
     };
 
-    const openSocial = (platform) => {
+    const openSocial = async (platform) => {
         const encodedUrl = encodeURIComponent(shareUrl);
-        const encodedText = encodeURIComponent(caption);
-        const urls = {
-            twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-            whatsapp: `https://api.whatsapp.com/send?text=${encodedText}`,
-            reddit: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(`My ${metaData?.company || 'Interview'} Report`)}`,
+        // Build a plain-text version of the caption (emojis work fine in WhatsApp, just need proper encoding)
+        const encodedCaption = encodeURIComponent(caption);
+        const company = metaData?.company || 'Interview';
+        const roundType = metaData?.type?.toLowerCase();
+        const ROUND_NAMES_MODAL = {
+            coding: 'Coding Interview', debug: 'Debugging Interview',
+            design: 'System Design Interview', behavioral: 'Behavioral Interview',
         };
-        if (urls[platform]) window.open(urls[platform], '_blank', 'noopener,noreferrer');
+        const roundLabel = ROUND_NAMES_MODAL[roundType] || 'Technical Interview';
+
+        if (platform === 'whatsapp') {
+            // WhatsApp: wa.me works well on mobile, web.whatsapp.com for desktop fallback
+            // Caption with full text and emojis encoded
+            const isMobile = /iPhone|Android/i.test(navigator.userAgent);
+            const base = isMobile ? 'https://wa.me/' : 'https://web.whatsapp.com/send';
+            const url = isMobile
+                ? `${base}?text=${encodedCaption}`
+                : `${base}?text=${encodedCaption}`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+
+        } else if (platform === 'twitter') {
+            // Twitter: supports text well including emojis
+            window.open(`https://twitter.com/intent/tweet?text=${encodedCaption}`, '_blank', 'noopener,noreferrer');
+
+        } else if (platform === 'linkedin') {
+            // LinkedIn's share API only supports URL - it cannot accept pre-filled body text.
+            // The link preview (OG tags) provides the context on LinkedIn.
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank', 'noopener,noreferrer');
+
+        } else if (platform === 'reddit') {
+            // Reddit: for rich text posts, use the new post flow with type=self and text prefilled
+            const title = encodeURIComponent(`My ${company} ${roundLabel} — Verdict: ${reportData?.verdict?.signal || '—'} | Interviu.pro`);
+            const body = encodeURIComponent(`${caption}\n\n---\n*Powered by [Interviu.pro](${shareUrl})*`);
+            window.open(
+                `https://www.reddit.com/submit?type=self&title=${title}&text=${body}`,
+                '_blank', 'noopener,noreferrer'
+            );
+        }
     };
 
     const handleCopy = async (text, type) => {
@@ -143,29 +176,33 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
     };
 
     const handleNativeShare = async () => {
-        const dataUrl = capturedUrl || await captureCard();
-        if (!dataUrl) return;
-
-        const file = dataUrlToFile(dataUrl, 'Interviu_Report.png');
-
         try {
-            // Check if file sharing is supported
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: `My ${metaData?.company || 'Interview'} Report`,
-                    text: caption,
-                    files: [file],
-                });
-            } else {
-                // Fallback to text share if files aren't supported
-                await navigator.share({
-                    title: `My ${metaData?.company || 'Interview'} Report`,
-                    text: caption,
-                    url: shareUrl,
-                });
+            // First try to share with the card image attached as a file
+            const dataUrl = capturedUrl || await captureCard();
+            if (dataUrl && navigator.canShare) {
+                // Convert dataUrl to File blob
+                const res = await fetch(dataUrl);
+                const blob = await res.blob();
+                const file = new File([blob], `Interviu_Report_${(candidateName || 'Report').replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: `My ${metaData?.company || 'Interview'} Report on Interviu.pro`,
+                        text: caption,
+                        files: [file],
+                    });
+                    return;
+                }
             }
+            // Fallback: share text + link without image
+            await navigator.share({
+                title: `My ${metaData?.company || 'Interview'} Report`,
+                text: caption,
+                url: shareUrl,
+            });
         } catch (err) {
-            if (err.name !== 'AbortError') console.error('[Share] Native share failed', err);
+            if (err.name !== 'AbortError') {
+                console.error('[Share] Native share failed', err);
+            }
         }
     };
 
@@ -221,6 +258,11 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
                                 </div>
                             </div>
 
+                            {/* Desktop image attach hint */}
+                            <p className="text-[10px] font-semibold text-slate-400 text-center mb-6 md:mb-8 max-w-[400px]">
+                                💡 Save the card image above and attach it manually when posting on social platforms
+                            </p>
+
                             {/* Caption Text Below Card */}
                             <div className="w-full max-w-[400px]">
                                 <p className="text-[12px] md:text-[13px] font-medium text-slate-600 leading-relaxed italic border-l-2 border-indigo-500/30 pl-4 md:pl-5 py-1 whitespace-pre-wrap">
@@ -240,18 +282,7 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
 
                                 <div className="space-y-1">
                                     <h2 className="text-xl font-black text-slate-900 leading-none">Share Report</h2>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-xs font-semibold text-slate-400 tracking-tight">Showcase your technical performance</p>
-                                        {shareUrl && !shareUrl.includes('localhost') ? (
-                                            <span className="flex items-center gap-1 text-[8px] font-black uppercase bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full">
-                                                <Globe size={8} /> Live Preview
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1 text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full" title="Images appear when deployed to interviu.pro">
-                                                <Globe size={8} /> Local Link
-                                            </span>
-                                        )}
-                                    </div>
+                                    <p className="text-xs font-semibold text-slate-400 tracking-tight">Showcase your technical performance</p>
                                 </div>
 
                                 {/* Main Actions */}
@@ -259,11 +290,9 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
                                     {canNativeShare && (
                                         <button
                                             onClick={handleNativeShare}
-                                            disabled={isCapturing}
-                                            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
                                         >
-                                            {isCapturing ? <Loader2 className="animate-spin" size={16} /> : <Share2 size={16} />}
-                                            Share via Device
+                                            <Share2 size={16} /> Share via Device
                                         </button>
                                     )}
                                     <button
@@ -284,10 +313,9 @@ const ShareModal = ({ isOpen, onClose, reportData, metaData, candidateName, shar
                                 {/* Social Grid */}
                                 <div className="pt-4">
                                     <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-4">Post directly to</p>
-                                    <div className="grid grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         {[
                                             { id: 'twitter', label: 'X' },
-                                            { id: 'linkedin', label: 'LinkedIn' },
                                             { id: 'whatsapp', label: 'WhatsApp' },
                                             { id: 'reddit', label: 'Reddit' }
                                         ].map(platform => (

@@ -515,7 +515,7 @@ app.get('/api/dashboard', requireAuth(), async (req, res) => {
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('*')
             .eq('id', userId)
@@ -542,7 +542,7 @@ app.get('/api/dashboard', requireAuth(), async (req, res) => {
                 ? profile.skills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
                 : [];
 
-            let query = supabase.from(table).select('*');
+            let query = supabaseAdmin.from(table).select('*');
             if (level) {
                 query = query.ilike('level', level);
             }
@@ -591,7 +591,7 @@ app.get('/api/credits', requireAuth(), async (req, res) => {
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .select('credits, socials_clicked')
             .eq('id', userId)
@@ -618,9 +618,9 @@ app.post('/api/socials/reward', requireAuth(), async (req, res) => {
     }
 
     try {
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
-            .select('credits, socials_clicked')
+            .select('socials_clicked, credits')
             .eq('id', userId)
             .single();
 
@@ -643,7 +643,7 @@ app.post('/api/socials/reward', requireAuth(), async (req, res) => {
         clicked[platform] = true;
         const newCredits = (profile.credits || 0) + 50;
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update({ credits: newCredits, socials_clicked: clicked })
             .eq('id', userId);
@@ -682,7 +682,7 @@ app.post('/api/feedback', requireAuth(), async (req, res) => {
 
     try {
         // Fetch user's name
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await supabaseAdmin
             .from('profiles')
             .select('first_name, last_name, email')
             .eq('id', userId)
@@ -721,13 +721,13 @@ app.get('/api/profile', requireAuth(), async (req, res) => {
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
-        const { data, error } = await supabase
+        const { data: profile, error } = await supabaseAdmin
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single();
         if (error) throw error;
-        res.json(data);
+        res.json(profile);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -757,7 +757,7 @@ app.put('/api/profile', requireAuth(), async (req, res) => {
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(safeUpdates)
             .eq('id', userId)
@@ -776,8 +776,8 @@ app.put('/api/profile', requireAuth(), async (req, res) => {
 app.get('/api/interviews', requireAuth(), async (req, res) => {
     try {
         const [sdeResponse, devopsResponse] = await Promise.all([
-            supabase.from('sde_interviews').select('*'),
-            supabase.from('devops_interviews').select('*')
+            supabaseAdmin.from('sde_interviews').select('*'),
+            supabaseAdmin.from('devops_interviews').select('*')
         ]);
 
         if (sdeResponse.error) throw sdeResponse.error;
@@ -799,7 +799,7 @@ app.get('/api/interviews/progress', requireAuth(), async (req, res) => {
     if (!userId || !role) return res.status(400).json({ error: "User ID and Role required" });
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('interviews')
             .select('feedback_data, score')
             .eq('user_id', userId)
@@ -822,7 +822,7 @@ app.get('/api/interviews/:id', requireAuth(), async (req, res) => {
         if (type === 'sde') table = 'sde_interviews';
         if (type === 'devops') table = 'devops_interviews';
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from(table)
             .select('*')
             .eq('id', id)
@@ -1004,7 +1004,7 @@ app.get('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
 
     try {
         // Try finding in curated first
-        let { data, error } = await supabase
+        let { data, error } = await supabaseAdmin
             .from('completed_curated_interviews')
             .select('*')
             .eq('id', id)
@@ -1013,7 +1013,7 @@ app.get('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
 
         if (error || !data) {
             // Try custom
-            const { data: customData, error: customError } = await supabase
+            const { data: customData, error: customError } = await supabaseAdmin
                 .from('completed_custom_interviews')
                 .select('*')
                 .eq('id', id)
@@ -1028,129 +1028,6 @@ app.get('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
         res.json(data);
     } catch (error) {
         res.status(404).json({ error: "Interview record not found or access denied" });
-    }
-});
-
-// Production-Grade Social Share: Upload captured card to Storage
-app.post('/api/upload-share-card',
-    requireAuth({ checkUserId: false }),
-    express.json({ limit: '10mb' }),
-    async (req, res) => {
-        const { shortId, imageBase64 } = req.body;
-
-        if (!shortId || !imageBase64) {
-            return res.status(400).json({ error: "Missing shortId or image data" });
-        }
-
-        const id = shortId.length === 32
-            ? `${shortId.slice(0, 8)}-${shortId.slice(8, 12)}-${shortId.slice(12, 16)}-${shortId.slice(16, 20)}-${shortId.slice(20)}`
-            : shortId;
-
-        try {
-            // Convert base64 to Buffer (strip metadata if present)
-            const pureBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-            const imageBuffer = Buffer.from(pureBase64, 'base64');
-
-            // Upload to Supabase Storage
-            const fileName = `${shortId}.png`;
-            const { error: uploadError } = await supabaseAdmin
-                .storage
-                .from('share_cards')
-                .upload(fileName, imageBuffer, {
-                    contentType: 'image/png',
-                    upsert: true
-                });
-
-            if (uploadError) throw uploadError;
-
-            // Get Public URL
-            const { data: { publicUrl } } = supabaseAdmin
-                .storage
-                .from('share_cards')
-                .getPublicUrl(fileName);
-
-            // Update Database (Try curated first, then custom)
-            const { error: curatedError } = await supabaseAdmin
-                .from('completed_curated_interviews')
-                .update({ share_card_url: publicUrl })
-                .eq('id', id);
-
-            if (curatedError) {
-                await supabaseAdmin
-                    .from('completed_custom_interviews')
-                    .update({ share_card_url: publicUrl })
-                    .eq('id', id);
-            }
-
-            res.json({ success: true, publicUrl });
-
-        } catch (error) {
-            console.error("[Share] Upload failed:", error);
-            res.status(500).json({ error: "Failed to process share card" });
-        }
-    });
-
-const frontendUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, "");
-
-// Production-Grade Social Share: Serve OG Tags for Bot Crawlers
-app.get('/share/:shortId', async (req, res) => {
-    const { shortId } = req.params;
-    if (!shortId || shortId.length !== 32) return res.redirect(frontendUrl);
-
-    const id = `${shortId.slice(0, 8)}-${shortId.slice(8, 12)}-${shortId.slice(12, 16)}-${shortId.slice(16, 20)}-${shortId.slice(20)}`;
-
-    try {
-        // Fetch report meta data
-        let { data, error } = await supabaseAdmin
-            .from('completed_curated_interviews')
-            .select('title, company, type, share_card_url')
-            .eq('id', id)
-            .single();
-
-        if (error || !data) {
-            const { data: customData } = await supabaseAdmin
-                .from('completed_custom_interviews')
-                .select('title, company, type, share_card_url')
-                .eq('id', id)
-                .single();
-            data = customData;
-        }
-
-        if (!data) return res.redirect(`${frontendUrl}/report/share/${shortId}`);
-
-        const company = data.company || "a top tech company";
-        const title = data.title || "Technical Interview";
-        const imageUrl = data.share_card_url || ""; // Fallback to generic if needed
-
-        // Serve a simple HTML page with OG tags for bots
-        // Real users are redirected via JS immediately
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Interviu.pro - ${title} Report</title>
-                <meta property="og:title" content="${title} Performance Report" />
-                <meta property="og:description" content="Check out my interview performance at ${company} on Interviu.pro!" />
-                <meta property="og:image" content="${imageUrl}" />
-                <meta property="og:url" content="${frontendUrl}/report/share/${shortId}" />
-                <meta property="og:type" content="website" />
-                <meta name="twitter:card" content="summary_large_image" />
-                
-                <script>window.location.href = "${frontendUrl}/report/share/${shortId}";</script>
-            </head>
-            <body style="background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh;">
-                <div style="text-align: center;">
-                    <h1>Redirecting to Interviu.pro...</h1>
-                    <p>Fetching your interview results.</p>
-                </div>
-            </body>
-            </html>
-        `);
-
-    } catch (err) {
-        console.error("[Share] OG Tag serve failed:", err);
-        res.redirect(`${frontendUrl}/report/share/${shortId}`);
     }
 });
 
@@ -1214,13 +1091,13 @@ app.delete('/api/interviews/:id', requireAuth(), async (req, res) => {
     const { id } = req.params;
     const userId = req.userId;
     try {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('interviews')
             .delete()
             .eq('id', id)
             .eq('user_id', userId);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
         res.json({ message: "Interview deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -1235,7 +1112,7 @@ app.post('/api/onboarding', requireAuth(), async (req, res) => {
 
     try {
         // Update profile with onboarding data
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .upsert({
                 id: userId,
@@ -1363,7 +1240,7 @@ app.get('/api/onboarding-interviews', async (req, res) => {
         : [];
 
     try {
-        let query = supabase.from(table).select('*');
+        let query = supabaseAdmin.from(table).select('*');
 
         // Case-insensitive level filter — DB may store 'Intermediate' or 'intermediate', ilike handles both
         if (level) {
@@ -1416,7 +1293,7 @@ app.get('/api/resume', requireAuth(), async (req, res) => {
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('resumes')
             .select('*')
             .eq('user_id', userId)
@@ -1436,7 +1313,7 @@ app.get('/api/resume-analyses', requireAuth(), async (req, res) => {
     if (!userId) return res.status(400).json({ error: "User ID required" });
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('resume_analyses')
             .select('*')
             .eq('user_id', userId)
@@ -1452,7 +1329,7 @@ app.get('/api/resume-analyses', requireAuth(), async (req, res) => {
 app.post('/api/resume-analyses', async (req, res) => {
     const { userId, jobRole, fileName, atsScore, analysisResult } = req.body;
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('resume_analyses')
             .insert([
                 {
@@ -1478,7 +1355,7 @@ app.delete('/api/resume-analyses/:id', requireAuth(), async (req, res) => {
     const userId = req.userId;
 
     try {
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('resume_analyses')
             .delete()
             .eq('id', id)
@@ -1509,7 +1386,7 @@ app.post('/api/start-interview', requireAuth(), validate(startInterviewSchema), 
         }
 
         // 1. Verify Credits (Server-Side)
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('credits')
             .eq('id', userId)
@@ -1569,7 +1446,7 @@ app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), asyn
         console.log(`[EndInterview] Ending session for User ${userId}. Duration: ${durationInMinutes}m. Deducting: ${creditsToDeduct} credits.`);
 
         // 2. Transact with Supabase (Check & Deduct)
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('credits')
             .eq('id', userId)
@@ -1584,7 +1461,7 @@ app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), asyn
         // We will allow it to go negative for now to handle edge cases where user runs over.
         const newBalance = profile.credits - creditsToDeduct;
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update({ credits: newBalance })
             .eq('id', userId);
@@ -1647,6 +1524,7 @@ app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), asyn
                         user_id: userId,
                         title: title,
                         job_role: context.role,
+                        type: context.type || 'Technical Round',
                         job_description: context.job_description || context.problem_statement || null,
                         transcript: sessionData.history,
                         report_data: report,
@@ -1727,11 +1605,11 @@ app.post('/api/deduct-credits', requireAuth(), async (req, res) => {
     const creditsToDeduct = Math.ceil(durationInMinutes);
 
     try {
-        const { data: profile, error } = await supabase.from('profiles').select('credits').eq('id', userId).single();
+        const { data: profile, error } = await supabaseAdmin.from('profiles').select('credits').eq('id', userId).single();
         if (error || !profile) throw new Error("Profile not found");
 
         const newBalance = profile.credits - creditsToDeduct;
-        const { error: updateError } = await supabase.from('profiles').update({ credits: newBalance }).eq('id', userId);
+        const { error: updateError } = await supabaseAdmin.from('profiles').update({ credits: newBalance }).eq('id', userId);
         if (updateError) throw updateError;
 
         console.log(`[DeductCredits] Deducted ${creditsToDeduct} credits for user ${userId}.`);

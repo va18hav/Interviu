@@ -28,6 +28,7 @@ import InterviewReport from "./pages/InterviewReport"
 
 // Test Pages — removed from production routing
 import TestDesignUI from "./pages/TestDesignUI"
+import InstagramPost1 from "./pages/InstagramPost1"
 // import DashboardBlack from "./pages/DashboardBlack"
 
 const App = () => {
@@ -62,7 +63,8 @@ const App = () => {
             <Route path="/debug-round" element={<DebugRound />} />
             <Route path="/behavioral-round" element={<BehavioralRound />} />
           </Route>
-          <Route path="/test-design-ui" element={<TestDesignUI />} />
+          {/* <Route path="/test-design-ui" element={<TestDesignUI />} />
+          <Route path="/instagram-post-1" element={<InstagramPost1 />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>

@@ -12,6 +12,14 @@ import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import ShareModal from '../components/ShareModal';
 
+const ROUND_NAMES = {
+    coding: 'Coding Interview',
+    debug: 'Debugging Interview',
+    design: 'System Design Interview',
+    behavioral: 'Behavioral Interview',
+    technical: 'Technical Interview'
+};
+
 const InterviewReport = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -184,9 +192,8 @@ const InterviewReport = () => {
     const getShareUrl = () => {
         if (!id) return '';
         const uidWithoutHyphens = id.replace(/-/g, '');
-        // Use the API URL for the share link so it hits our OG-tag-serving backend route
-        const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
-        return `${apiBase}/share/${uidWithoutHyphens}`;
+        const base = import.meta.env.VITE_APP_URL || window.location.origin;
+        return `${base}/report/share/${uidWithoutHyphens}`;
     };
 
     const handleShare = () => {
@@ -394,10 +401,20 @@ const InterviewReport = () => {
                     </div>
 
                     <div className="flex gap-4">
-                        {id && (
+                        {shortId ? (
+                            /* Public shared link view — show CTA instead of share button */
+                            <a
+                                href="https://interviu.pro"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-slate-900 rounded-xl hover:bg-black transition-all uppercase tracking-widest shadow-lg"
+                            >
+                                Try Interviu.pro →
+                            </a>
+                        ) : id && (
                             <button
                                 onClick={handleShare}
-                                className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest transition-colors duration-300"
+                                className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest transition-colors duration-300"
                             >
                                 {shareCopied ? (
                                     <><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Copied!</>
@@ -449,7 +466,9 @@ const InterviewReport = () => {
                                                 </>
                                             )}
                                             <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                                {metaData.type === 'custom' ? 'Custom Scenario' : `${metaData.type} Round`}
+                                                {metaData.type === 'custom'
+                                                    ? 'Custom Scenario'
+                                                    : (ROUND_NAMES[metaData.type?.toLowerCase()] || 'Technical Interview')}
                                             </span>
                                         </div>
                                         <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest">
