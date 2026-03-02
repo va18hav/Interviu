@@ -13,7 +13,7 @@ import googleLogo from '../../assets/images/google.png';
 const MAANG_LOGOS = [
     { src: metaLogo, alt: 'Meta' },
     { src: appleLogo, alt: 'Apple' },
-    { src: amazonLogo, alt: 'Amazon' },
+    { src: 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg', alt: 'Amazon' },
     { src: netflixLogo, alt: 'Netflix' },
     { src: googleLogo, alt: 'Google' },
 ];
@@ -46,33 +46,6 @@ const NewHeroSection = () => {
             mouseY.set(e.clientY / window.innerHeight - 0.5);
         });
     };
-
-    // Typewriter effect
-    const [text, setText] = useState('');
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [loopNum, setLoopNum] = useState(0);
-    const [typingSpeed, setTypingSpeed] = useState(150);
-    const phrases = ["Coding", "System Design", "Behavioral"];
-
-    useEffect(() => {
-        const handleTyping = () => {
-            const i = loopNum % phrases.length;
-            const fullText = phrases[i];
-            setText(isDeleting
-                ? fullText.substring(0, text.length - 1)
-                : fullText.substring(0, text.length + 1)
-            );
-            setTypingSpeed(isDeleting ? 100 : 150);
-            if (!isDeleting && text === fullText) {
-                setTimeout(() => setIsDeleting(true), 2000);
-            } else if (isDeleting && text === '') {
-                setIsDeleting(false);
-                setLoopNum(loopNum + 1);
-            }
-        };
-        const timer = setTimeout(handleTyping, typingSpeed);
-        return () => clearTimeout(timer);
-    }, [text, isDeleting, loopNum, typingSpeed]);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -247,7 +220,7 @@ const NewHeroSection = () => {
 
                 {/* Hero Image */}
                 <div
-                    className="relative lg:absolute bottom-[-25%] right-0 lg:right-[5%] xl:right-[5%] pointer-events-none select-none z-10 w-full lg:w-auto mt-auto lg:mt-0 flex justify-center lg:block"
+                    className="relative lg:absolute bottom-[-25%] right-0 lg:right-[-15%] xl:right-[-5%] pointer-events-none select-none z-10 w-full lg:w-auto mt-auto lg:mt-0 flex justify-center lg:block"
                 >
                     {/* Glow behind image — pure CSS, no JS animation */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-slate-400/10 blur-[100px] rounded-full -z-10" />
@@ -291,21 +264,21 @@ const NewHeroSection = () => {
                 .hero-blob-1 {
                     top: -10%; left: -10%;
                     width: 50%; height: 50%;
-                    background: #94a3b8;
+                    background: #79b1ffff;
                     opacity: 0.15;
                     animation: blobDrift1 18s ease-in-out infinite;
                 }
                 .hero-blob-2 {
                     bottom: -10%; right: -10%;
                     width: 50%; height: 50%;
-                    background: #cbd5e1;
+                    background: #d877fbff;
                     opacity: 0.15;
                     animation: blobDrift2 22s ease-in-out infinite;
                 }
                 .hero-blob-3 {
                     top: 20%; right: 10%;
                     width: 40%; height: 40%;
-                    background: #e2e8f0;
+                    background: #92f8ffff;
                     opacity: 0.10;
                     animation: blobDrift1 16s ease-in-out infinite reverse;
                 }

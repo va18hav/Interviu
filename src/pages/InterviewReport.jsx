@@ -1,25 +1,31 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     CheckCircle2, XCircle, AlertTriangle, ArrowRight,
     BarChart3, Code, Zap, BrainCircuit, Target,
     ChevronRight, ShieldAlert, Award, TrendingUp,
     AlertOctagon, Check, Download, Share2, Loader2, Sparkles, User,
-    FileText, Activity, Layers, Briefcase, Calendar, Info, Clock
+    FileText, Activity, Layers, Briefcase, Calendar, Info, Clock, CheckCircle
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import ShareModal from '../components/ShareModal';
 
 const InterviewReport = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { shortId } = useParams();
     const [loading, setLoading] = useState(true);
     const [dynamicReport, setDynamicReport] = useState(null);
     const [isExporting, setIsExporting] = useState(false);
+    const [sharedReportData, setSharedReportData] = useState(null);
+    const [shareCopied, setShareCopied] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
     const reportRef = useRef(null);
 
     const {
+        id,
         sessionId,
         triggeredByEndButton,
         reportData: pastReportData,
@@ -31,7 +37,7 @@ const InterviewReport = () => {
         title,
         company,
         duration
-    } = location.state || {};
+    } = location.state || sharedReportData || {};
 
     const userCreds = JSON.parse(localStorage.getItem("userCredentials")) || {};
     const fallbackName = userCreds.first_name ? `${userCreds.first_name} ${userCreds.last_name || ''}`.trim() : "Candidate";
@@ -81,6 +87,42 @@ const InterviewReport = () => {
     const reportData = isPastInterview && pastReportData ? pastReportData : (dynamicReport || defaultData);
 
     useEffect(() => {
+        // Fetch shared report via public link
+        if (shortId) {
+            const fetchSharedReport = async () => {
+                try {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-report/${shortId}`);
+                    const data = await response.json();
+
+                    if (response.ok && data) {
+                        setSharedReportData({
+                            id: data.id,
+                            candidateName: data.candidate_name || 'Candidate',
+                            reportData: data.report_data,
+                            role: data.job_role || (data.type ? data.type.toUpperCase() : 'SDE'),
+                            title: data.title,
+                            type: data.type || 'custom',
+                            company: data.company,
+                            duration: data.duration_mins,
+                            isPastInterview: true,
+                            completedAt: data.completed_at
+                        });
+                        setDynamicReport(data.report_data);
+                    } else {
+                        console.error('[Shared Report] Error:', data.error);
+                        setDynamicReport({ status: 'failed', error: "Public report not found or access denied." });
+                    }
+                } catch (err) {
+                    console.error('[Shared Report] Fetch Error:', err);
+                    setDynamicReport({ status: 'failed', error: "Failed to load shared report." });
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchSharedReport();
+            return;
+        }
+
         // If this is a past interview with pre-loaded data, skip generation
         if (isPastInterview && pastReportData) {
             setLoading(false);
@@ -137,7 +179,20 @@ const InterviewReport = () => {
 
         // Fallback catch-all
         setLoading(false);
-    }, [sessionId, triggeredByEndButton, isPastInterview, endInterviewParams, navigate, location.pathname, pastReportData]);
+    }, [shortId, sessionId, triggeredByEndButton, isPastInterview, endInterviewParams, navigate, location.pathname, pastReportData]);
+
+    const getShareUrl = () => {
+        if (!id) return '';
+        const uidWithoutHyphens = id.replace(/-/g, '');
+        // Use the API URL for the share link so it hits our OG-tag-serving backend route
+        const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
+        return `${apiBase}/share/${uidWithoutHyphens}`;
+    };
+
+    const handleShare = () => {
+        if (!id) return;
+        setIsShareOpen(true);
+    };
 
     const handleExportPDF = async () => {
         if (!reportRef.current) return;
@@ -291,30 +346,44 @@ const InterviewReport = () => {
                             {message}
                         </p>
                     </div>
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
-                    >
-                        Return to Dashboard
-                    </button>
+                    {!shortId && (
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
+                        >
+                            Return to Dashboard
+                        </button>
+                    )}
                 </div>
             </div>
         );
     }
 
+    const displayName = sharedReportData?.candidateName || fallbackName || 'Candidate';
+
     return (
         <div className="min-h-screen bg-[#F8F9FA] text-slate-900 font-inter selection:bg-indigo-100 print:bg-white print:p-0">
+            <ShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                reportData={reportData}
+                metaData={metaData}
+                candidateName={displayName}
+                shareUrl={getShareUrl()}
+            />
             {/* Professional Header / Navigation - HIDDEN DURING PRINTING */}
             <div className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4 print:hidden">
                 <div className="max-w-6xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => navigate('/dashboard')}
-                            className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl hover:bg-slate-100 transition-all text-slate-500 hover:text-slate-900"
-                        >
-                            <ArrowRight className="w-5 h-5 rotate-180" />
-                        </button>
-                        <div className="h-8 w-[1px] bg-slate-200 hidden sm:block" />
+                        {!shortId && (
+                            <button
+                                onClick={() => navigate('/dashboard')}
+                                className="bg-slate-50 border border-slate-200 p-2.5 rounded-xl hover:bg-slate-100 transition-all text-slate-500 hover:text-slate-900"
+                            >
+                                <ArrowRight className="w-5 h-5 rotate-180" />
+                            </button>
+                        )}
+                        {!shortId && <div className="h-8 w-[1px] bg-slate-200 hidden sm:block" />}
                         <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-indigo-600" />
@@ -325,9 +394,18 @@ const InterviewReport = () => {
                     </div>
 
                     <div className="flex gap-4">
-                        {/* <button className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest">
-                            <Share2 className="w-3.5 h-3.5" /> Share
-                        </button> */}
+                        {id && (
+                            <button
+                                onClick={handleShare}
+                                className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest transition-colors duration-300"
+                            >
+                                {shareCopied ? (
+                                    <><CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Copied!</>
+                                ) : (
+                                    <><Share2 className="w-3.5 h-3.5" /> Share</>
+                                )}
+                            </button>
+                        )}
                         {/* <button
                             onClick={handleExportPDF}
                             disabled={isExporting}
@@ -358,12 +436,9 @@ const InterviewReport = () => {
                     {/* Identification */}
                     <div className="lg:col-span-2 bg-white rounded-[2rem] border border-slate-100 p-8 sm:p-10 shadow-sm border-b-[4px] border-b-indigo-600 print:rounded-none print:shadow-none print:border-t-0 print:border-x-0 print:border-slate-300 print:break-inside-avoid">
                         <div className="relative flex flex-col sm:flex-row sm:items-center gap-8">
-                            {/* <div className="absolute top-0 right-0 w-10 h-10 md:w-15 md:h-15 lg:w-20 lg:h-20 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0">
-                                <User className="w-10 h-10 text-white" />
-                            </div> */}
                             <div className="space-y-4">
                                 <div>
-                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{reportData?.candidateName || fallbackName || "Candidate"}</h2>
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{reportData?.candidateName || displayName}</h2>
                                     <div className="flex flex-col items-start gap-4 mt-2">
                                         <div className="flex items-center gap-4">
                                             {metaData.company && (

@@ -41,6 +41,7 @@ const App = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/report/share/:shortId" element={<InterviewReport />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

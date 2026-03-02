@@ -61,7 +61,11 @@ const limiter = rateLimit({
     max: 150,
     standardHeaders: true,
     legacyHeaders: false,
-    message: 'Too many requests from this IP, please try again later.'
+    message: 'Too many requests from this IP, please try again later.',
+    skip: (req) => {
+        // Skip rate limiting in development environment or for localhost
+        return process.env.NODE_ENV === 'development' || req.hostname === 'localhost';
+    }
 });
 app.use('/api', limiter);
 
@@ -88,7 +92,8 @@ const aiLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: 'Too many AI requests. Please wait before trying again.'
+    message: 'Too many AI requests. Please wait before trying again.',
+    skip: (req) => process.env.NODE_ENV === 'development' || req.hostname === 'localhost'
 });
 
 
@@ -1026,6 +1031,181 @@ app.get('/api/completed-interviews/:id', requireAuth(), async (req, res) => {
     }
 });
 
+// Production-Grade Social Share: Upload captured card to Storage
+app.post('/api/upload-share-card',
+    requireAuth({ checkUserId: false }),
+    express.json({ limit: '10mb' }),
+    async (req, res) => {
+        const { shortId, imageBase64 } = req.body;
+
+        if (!shortId || !imageBase64) {
+            return res.status(400).json({ error: "Missing shortId or image data" });
+        }
+
+        const id = shortId.length === 32
+            ? `${shortId.slice(0, 8)}-${shortId.slice(8, 12)}-${shortId.slice(12, 16)}-${shortId.slice(16, 20)}-${shortId.slice(20)}`
+            : shortId;
+
+        try {
+            // Convert base64 to Buffer (strip metadata if present)
+            const pureBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+            const imageBuffer = Buffer.from(pureBase64, 'base64');
+
+            // Upload to Supabase Storage
+            const fileName = `${shortId}.png`;
+            const { error: uploadError } = await supabaseAdmin
+                .storage
+                .from('share_cards')
+                .upload(fileName, imageBuffer, {
+                    contentType: 'image/png',
+                    upsert: true
+                });
+
+            if (uploadError) throw uploadError;
+
+            // Get Public URL
+            const { data: { publicUrl } } = supabaseAdmin
+                .storage
+                .from('share_cards')
+                .getPublicUrl(fileName);
+
+            // Update Database (Try curated first, then custom)
+            const { error: curatedError } = await supabaseAdmin
+                .from('completed_curated_interviews')
+                .update({ share_card_url: publicUrl })
+                .eq('id', id);
+
+            if (curatedError) {
+                await supabaseAdmin
+                    .from('completed_custom_interviews')
+                    .update({ share_card_url: publicUrl })
+                    .eq('id', id);
+            }
+
+            res.json({ success: true, publicUrl });
+
+        } catch (error) {
+            console.error("[Share] Upload failed:", error);
+            res.status(500).json({ error: "Failed to process share card" });
+        }
+    });
+
+const frontendUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, "");
+
+// Production-Grade Social Share: Serve OG Tags for Bot Crawlers
+app.get('/share/:shortId', async (req, res) => {
+    const { shortId } = req.params;
+    if (!shortId || shortId.length !== 32) return res.redirect(frontendUrl);
+
+    const id = `${shortId.slice(0, 8)}-${shortId.slice(8, 12)}-${shortId.slice(12, 16)}-${shortId.slice(16, 20)}-${shortId.slice(20)}`;
+
+    try {
+        // Fetch report meta data
+        let { data, error } = await supabaseAdmin
+            .from('completed_curated_interviews')
+            .select('title, company, type, share_card_url')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            const { data: customData } = await supabaseAdmin
+                .from('completed_custom_interviews')
+                .select('title, company, type, share_card_url')
+                .eq('id', id)
+                .single();
+            data = customData;
+        }
+
+        if (!data) return res.redirect(`${frontendUrl}/report/share/${shortId}`);
+
+        const company = data.company || "a top tech company";
+        const title = data.title || "Technical Interview";
+        const imageUrl = data.share_card_url || ""; // Fallback to generic if needed
+
+        // Serve a simple HTML page with OG tags for bots
+        // Real users are redirected via JS immediately
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Interviu.pro - ${title} Report</title>
+                <meta property="og:title" content="${title} Performance Report" />
+                <meta property="og:description" content="Check out my interview performance at ${company} on Interviu.pro!" />
+                <meta property="og:image" content="${imageUrl}" />
+                <meta property="og:url" content="${frontendUrl}/report/share/${shortId}" />
+                <meta property="og:type" content="website" />
+                <meta name="twitter:card" content="summary_large_image" />
+                
+                <script>window.location.href = "${frontendUrl}/report/share/${shortId}";</script>
+            </head>
+            <body style="background: #0f172a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh;">
+                <div style="text-align: center;">
+                    <h1>Redirecting to Interviu.pro...</h1>
+                    <p>Fetching your interview results.</p>
+                </div>
+            </body>
+            </html>
+        `);
+
+    } catch (err) {
+        console.error("[Share] OG Tag serve failed:", err);
+        res.redirect(`${frontendUrl}/report/share/${shortId}`);
+    }
+});
+
+// Public route to fetch shared interview reports
+app.get('/api/shared-report/:shortId', async (req, res) => {
+    const { shortId } = req.params;
+
+    // Reconstruct UUID if it's 32 chars without hyphens
+    if (!shortId || shortId.length !== 32) {
+        return res.status(400).json({ error: "Invalid shared link ID format" });
+    }
+
+    const id = `${shortId.slice(0, 8)}-${shortId.slice(8, 12)}-${shortId.slice(12, 16)}-${shortId.slice(16, 20)}-${shortId.slice(20)}`;
+
+    try {
+        // Try finding in curated first using admin client to bypass RLS for public link
+        let { data, error } = await supabaseAdmin
+            .from('completed_curated_interviews')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) {
+            // Try custom
+            const { data: customData, error: customError } = await supabaseAdmin
+                .from('completed_custom_interviews')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (customError) throw customError;
+            data = customData;
+        }
+
+        // Fetch the candidate's real name from profiles using user_id
+        let candidateName = "Candidate";
+        if (data?.user_id) {
+            const { data: profile } = await supabaseAdmin
+                .from('profiles')
+                .select('first_name, last_name')
+                .eq('id', data.user_id)
+                .single();
+            if (profile?.first_name) {
+                candidateName = `${profile.first_name} ${profile.last_name || ''}`.trim();
+            }
+        }
+
+        res.json({ ...data, candidate_name: candidateName });
+    } catch (error) {
+        console.error('[Shared Report]', error.message);
+        res.status(404).json({ error: "Shared interview report not found" });
+    }
+});
+
+
 
 
 
@@ -1496,7 +1676,7 @@ app.post('/api/end-interview', requireAuth(), validate(endInterviewSchema), asyn
                         user_id: userId,
                         round_id: context.roundId,
                         curated_interview_id: curatedId,
-                        type: context.type || 'sde',
+                        type: context.type || 'Technical Round',
                         title: context.title || "Interview",
                         company: context.company,
                         transcript: sessionData.history,

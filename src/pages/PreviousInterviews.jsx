@@ -238,6 +238,7 @@ const PreviousInterviews = () => {
                                         whileHover={{ x: 8 }}
                                         onClick={() => navigate('/report', {
                                             state: {
+                                                id: interview.id,
                                                 reportData: interview.report_data,
                                                 role: interview.category === 'curated' ? interview.type?.toUpperCase() : interview.job_role,
                                                 title: interview.displayTitle,
